@@ -1,0 +1,61 @@
+---
+description: Arwa Weld industrial SaaS UI/UX design system and product context
+alwaysApply: true
+---
+
+# Arwa Weld — Design System
+
+Industrial factory automation / MES-style platform for **Arwa Weld**: orders, planning, production workflows, machines/workstations, inventory, QC, operators, KPIs, alerts, and reports.
+
+Target feel: professional enterprise manufacturing SaaS (ERP / MES / industrial IoT) — usable over decorative.
+
+## Before you build UI
+
+1. Inspect and reuse existing tokens/components: `apps/web/tailwind.config.js`, `apps/web/src/index.css`, `apps/web/src/components/ui.tsx`, `apps/web/src/layouts/AppShell.tsx`.
+2. Match existing nav, KPI cards, tables, badges, buttons, and page headers.
+3. Prefer extending shared patterns over one-off styles.
+
+## Design principles
+
+- Enterprise, industrial, clean, professional
+- Data-dense but scannable; strong hierarchy; clear status
+- Desktop-first for management; responsive for tablet/mobile monitoring
+- Fast for operators; minimal decoration
+- **Avoid:** generic AI aesthetics, heavy gradients, glassmorphism, oversized rounded cards, flashy animation
+
+## Color & status
+
+| Use | Color |
+|-----|--------|
+| Surfaces | Neutral backgrounds (`ink` / slate neutrals) |
+| Brand / primary actions | Strong primary blue (`brand`) |
+| Healthy / running / completed | Green |
+| Warning / delay / at-risk | Amber/orange |
+| Error / stopped / critical | Red |
+| Info / in-progress | Blue |
+
+Never rely on color alone — pair with label, icon, or text status (e.g. badge + wording).
+
+## UX priorities
+
+1. Operations understandable at a glance
+2. Problems/delays immediately visible
+3. Create/track orders with minimal clicks
+4. Production and machine status visually obvious
+5. Critical alerts stand out without noise
+6. Tables: sort, filter, search, pagination
+7. Dashboards: actionable info first
+8. Forms optimized for fast entry
+9. Consistent navigation and interactions
+
+## Core screens / patterns
+
+Factory & production dashboards, order management, planning board / Kanban, work orders, machine monitoring, production timeline, inventory tables, QC forms, KPI cards, charts, data tables, activity feeds, alerts/notifications, detail drawers, modal forms, search/filters.
+
+## Interaction norms
+
+- Large enough hit targets for shop-floor tablets
+- Primary CTA clear; secondary actions quieter
+- Status badges/pills for order, WO, and machine state
+- Prefer drawers/modals for create-edit without losing list context
+- Usability over visual effects; no motion unless it clarifies state change
