@@ -69,13 +69,14 @@ export default function CommonTable({
             <div className="overflow-x-auto">
                 <table className="w-full text-sm text-left">
                     {/* HEADER */}
-                    <thead className="border-b border-brand-700 bg-brand-600 shadow-sm">
+                    <thead className="bg-white">
                         <tr>
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
-                                    className={`px-5 py-4 font-semibold text-xs tracking-wide text-white uppercase whitespace-nowrap 
-                                        ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"}`}
+                                    className={`px-5 py-4 font-semibold text-xs tracking-wide text-ink-600 uppercase whitespace-nowrap 
+                                        ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"} ${col.headerClassName || ""}
+                                        ${col.key === "actions" ? "sticky right-0 z-20 bg-white" : ""}`}
                                 >
                                     {col.label}
                                 </th>
@@ -103,7 +104,8 @@ export default function CommonTable({
                                     {columns.map((col) => (
                                         <td
                                             key={col.key}
-                                            className={`px-5 py-4 overflow-visible ${col.className || ""} ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"}`}
+                                            className={`px-5 py-4 overflow-visible ${col.className || ""} ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"}
+                                                ${col.key === "actions" ? "sticky right-0 z-10 bg-[#f4f7fb] group-hover:bg-[#fafbfc]" : ""}`}
                                         >
                                             {renderCell(col, row, index)}
                                         </td>
