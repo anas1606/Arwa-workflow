@@ -1,0 +1,245 @@
+import React, { useState, useMemo } from 'react';
+import Head from 'next/head';
+import { Building2, MapPin, Search, Plus } from 'lucide-react';
+import CommonTable from '@/common/table/CommonTable';
+import { CUSTOMERS } from '@/common/dummy';
+import AddCustomer from './modal/AddCustomer';
+import Button from '@/common/buttons/Button';
+import Input from '@/common/input/Input';
+import clsx from 'clsx';
+
+function customerInitials(name) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
+export default function Customers() {
+  const [customersData, setCustomersData] = useState(CUSTOMERS);
+  const [query, setQuery] = useState('');
+  const [regionFilter, setRegionFilter] = useState('ALL');
+  const [pageNo, setPageNo] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [addOpen, setAddOpen] = useState(false);
+
+  const regions = useMemo(
+    () => [...new Set(customersData.map((c) => c.region))].sort(),
+    [customersData]
+  );
+
+  const filteredData = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return customersData.filter((c) => {
+      const matchRegion = regionFilter === 'ALL' || c.region === regionFilter;
+      const matchQ =
+        !q ||
+        c.name.toLowerCase().includes(q) ||
+        c.code.toLowerCase().includes(q) ||
+        c.region.toLowerCase().includes(q);
+      return matchRegion && matchQ;
+    });
+  }, [customersData, query, regionFilter]);
+
+  // Reset page when filter changes
+  React.useEffect(() => {
+    setPageNo(1);
+  }, [query, regionFilter]);
+
+  const totalItems = filteredData.length;
+  const totalPages = Math.ceil(totalItems / pageSize);
+
+  const paginatedData = useMemo(() => {
+    const start = (pageNo - 1) * pageSize;
+    return filteredData.slice(start, start + pageSize);
+  }, [filteredData, pageNo, pageSize]);
+
+  // Calculate KPIs
+  const totalBrands = customersData.reduce((sum, c) => sum + (c.brands?.length || 0), 0);
+  // Just dummy "with orders" since we don't have orders data available right here
+  const withOrders = Math.floor(customersData.length * 0.7);
+
+  const kpis = [
+    {
+      label: 'Total customers',
+      value: String(customersData.length),
+      hint: 'Accounts in master data',
+      tone: 'neutral',
+    },
+    {
+      label: 'Regions',
+      value: String(regions.length),
+      hint: 'Geographic coverage',
+      tone: 'info',
+    },
+    {
+      label: 'Brands',
+      value: String(totalBrands),
+      hint: 'Linked brand names',
+      tone: 'neutral',
+    },
+    {
+      label: 'With orders',
+      value: String(withOrders),
+      hint: 'Linked to production orders',
+      tone: 'warning',
+    },
+  ];
+
+  const handleAdd = (customer) => {
+    setCustomersData((list) => [...list, customer]);
+    setAddOpen(false);
+  };
+
+  const columns = [
+    {
+      key: 'name',
+      label: 'Customer',
+      render: (row) => (
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600/10 text-xs font-bold text-brand-800">
+            {customerInitials(row.name)}
+          </span>
+          <span className="font-semibold text-ink-900">{row.name}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'code',
+      label: 'Code',
+      render: (row) => <span className="font-mono text-sm text-ink-700">{row.code}</span>,
+    },
+    {
+      key: 'region',
+      label: 'Region',
+      render: (row) => (
+        <span className="inline-flex items-center gap-1 text-sm text-ink-700">
+          <MapPin className="h-3.5 w-3.5 text-ink-400" aria-hidden />
+          {row.region}
+        </span>
+      ),
+    },
+    {
+      key: 'brands',
+      label: 'Brands',
+      align: 'right',
+      render: (row) => (
+        <span className="font-mono text-sm font-semibold tabular-nums text-ink-800">
+          {row.brands?.length || 0}
+        </span>
+      ),
+    },
+    {
+      key: 'actions',
+      label: '',
+      type: 'action',
+      onClick: (row) => console.log('Action on', row),
+    },
+  ];
+
+  return (
+    <>
+      <Head>
+        <title>Customers | Arwa Weld</title>
+      </Head>
+      <div className="w-full flex flex-col gap-5">
+        {/* Page Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-ink-900">
+              Customers
+            </h1>
+            <p className="mt-1 text-sm leading-snug text-ink-500">
+              Search accounts and manage customer master data.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            className="w-full sm:w-auto shrink-0"
+            onClick={() => setAddOpen(true)}
+            icon={Plus}
+            text="Add customer"
+          />
+        </div>
+
+        {/* KPIs */}
+        <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Customer KPIs">
+          {kpis.map((kpi) => {
+            const toneBar = {
+              neutral: 'bg-brand-600',
+              success: 'bg-success-700',
+              warning: 'bg-warning-700',
+              danger: 'bg-danger-700',
+              info: 'bg-info-700',
+            };
+            return (
+              <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none">
+                <div
+                  className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])}
+                  aria-hidden
+                />
+                <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">
+                  {kpi.label}
+                </p>
+                <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">
+                  {kpi.value}
+                </p>
+                {kpi.hint ? <p className="mt-1 pl-2 text-xs text-ink-500">{kpi.hint}</p> : null}
+              </article>
+            );
+          })}
+        </section>
+
+        {/* Toolbar */}
+        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              type="text"
+              startIcon={Search}
+              placeholder="Search name, code, or region…"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              className="flex-1 min-w-0"
+            />
+            <Input
+              type="select"
+              value={regionFilter}
+              onChange={(e) => setRegionFilter(e.target.value)}
+              className="shrink-0 sm:w-44"
+              options={[
+                { label: 'All regions', value: 'ALL' },
+                ...regions.map((r) => ({ label: r, value: r })),
+              ]}
+            />
+          </div>
+        </div>
+
+        {/* Table */}
+        <CommonTable
+          columns={columns}
+          data={paginatedData}
+          emptyState="No customers match your search or filter."
+          pagination={{
+            totalItems,
+            pageSize,
+            pageNo,
+            totalPages,
+          }}
+          onPageChange={setPageNo}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPageNo(1);
+          }}
+        />
+      </div>
+
+      <AddCustomer
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onAdd={handleAdd}
+      />
+    </>
+  );
+}
