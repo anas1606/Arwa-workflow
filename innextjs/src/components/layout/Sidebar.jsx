@@ -80,23 +80,16 @@ function NestedNavItem({ item, pathname }) {
         onSection && 'nav-branch-current',
       )}
     >
-      <div className="nav-branch-row">
+      <div className="nav-branch-row w-full">
         <button
           type="button"
           className={clsx(
-            'nav-item nav-branch-trigger group min-w-0 flex-1',
-            onSection && 'nav-branch-trigger-active',
+            'nav-item group w-full',
+            onSection && 'nav-item-active',
           )}
           aria-expanded={open}
           aria-controls={submenuId}
-          onClick={() => {
-            if (!onSection) {
-              setOpen(true);
-              router.push(item.to);
-              return;
-            }
-            setOpen((v) => !v);
-          }}
+          onClick={() => setOpen((v) => !v)}
         >
           <span
             className={clsx(
@@ -107,19 +100,11 @@ function NestedNavItem({ item, pathname }) {
             <Icon className="h-4 w-4" aria-hidden />
           </span>
           <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
-        </button>
-        <button
-          type="button"
-          className="nav-branch-toggle"
-          aria-expanded={open}
-          aria-controls={submenuId}
-          aria-label={open ? `Collapse ${item.label}` : `Expand ${item.label}`}
-          onClick={() => setOpen((v) => !v)}
-        >
           <ChevronDown
             className={clsx(
-              'nav-branch-chevron h-3.5 w-3.5',
+              'nav-branch-chevron h-3.5 w-3.5 shrink-0 transition-transform duration-200 text-ink-400',
               open && 'rotate-180',
+              onSection && 'text-brand-600'
             )}
             aria-hidden
           />
@@ -148,7 +133,7 @@ function NestedNavItem({ item, pathname }) {
                 !pathname.startsWith('/orders/by-order-type') &&
                 !pathname.startsWith('/orders/customisation') &&
                 !pathname.startsWith('/orders/config');
-                
+
               const isActive = child.end ? pathname === child.to : pathname.startsWith(child.to);
               const active = isActive || forceAllOrdersActive;
 
@@ -261,7 +246,7 @@ export function Sidebar() {
 export function MobileNav() {
   const router = useRouter();
   const pathname = router.pathname;
-  
+
   return (
     <nav className="glass-nav-mobile" aria-label="Primary mobile">
       {allNav.map((item) => {

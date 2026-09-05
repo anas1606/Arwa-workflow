@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import Head from 'next/head';
 import { Building2, MapPin, Search, Plus } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
-import { CUSTOMERS } from '@/common/dummy';
+import { CUSTOMERS, DUMMY_ORDERS } from '@/common/dummy';
 import AddCustomer from './modal/AddCustomer';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
@@ -57,9 +57,19 @@ export default function Customers() {
   }, [filteredData, pageNo, pageSize]);
 
   // Calculate KPIs
+  const orderCountByCustomer = useMemo(() => {
+    const map = new Map();
+    for (const order of DUMMY_ORDERS) {
+      map.set(order.customerName, (map.get(order.customerName) ?? 0) + 1);
+    }
+    return map;
+  }, []);
+
   const totalBrands = customersData.reduce((sum, c) => sum + (c.brands?.length || 0), 0);
-  // Just dummy "with orders" since we don't have orders data available right here
-  const withOrders = Math.floor(customersData.length * 0.7);
+  
+  const withOrders = customersData.filter(
+    (c) => (orderCountByCustomer.get(c.name) ?? 0) > 0,
+  ).length;
 
   const kpis = [
     {
@@ -130,6 +140,19 @@ export default function Customers() {
           {row.brands?.length || 0}
         </span>
       ),
+    },
+    {
+      key: 'orders',
+      label: 'Orders',
+      align: 'right',
+      render: (row) => {
+        const orders = orderCountByCustomer.get(row.name) ?? 0;
+        return (
+          <span className="font-mono text-sm font-semibold tabular-nums text-ink-800">
+            {orders}
+          </span>
+        );
+      },
     },
     {
       key: 'actions',

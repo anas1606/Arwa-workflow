@@ -1,5 +1,5 @@
 import React, { useState, useRef, useId } from "react";
-import { Upload } from "lucide-react";
+import { Upload, ChevronDown } from "lucide-react";
 import clsx from "clsx";
 
 const Input = ({
@@ -81,7 +81,7 @@ const Input = ({
                 )}
                 <div className="relative">
                     {StartIcon && (
-                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
+                        <span className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 text-ink-400">
                             <StartIcon size={18} />
                         </span>
                     )}
@@ -93,7 +93,7 @@ const Input = ({
                             "focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10",
                             error ? "border-danger-500" : "",
                             StartIcon && "pl-10",
-                            EndIcon && "pr-10"
+                            "pr-10" // Always reserve space for the arrow/EndIcon
                         )}
                         required={required}
                         {...props}
@@ -107,9 +107,13 @@ const Input = ({
                             </option>
                         ))}
                     </select>
-                    {EndIcon && (
-                        <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-400">
+                    {EndIcon ? (
+                        <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-ink-400">
                             <EndIcon size={18} />
+                        </span>
+                    ) : (
+                        <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-ink-400">
+                            <ChevronDown size={18} />
                         </span>
                     )}
                 </div>
@@ -128,7 +132,7 @@ const Input = ({
             )}
             <div className="relative">
                 {StartIcon && (
-                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-ink-400">
+                    <span className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 text-ink-400">
                         <StartIcon size={18} />
                     </span>
                 )}
@@ -148,7 +152,7 @@ const Input = ({
                     {...props}
                 />
                 {EndIcon && (
-                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-ink-400">
+                    <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-ink-400">
                         <EndIcon size={18} />
                     </span>
                 )}

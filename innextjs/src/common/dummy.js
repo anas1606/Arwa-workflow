@@ -223,3 +223,208 @@ export const CUSTOMERS = [
     ],
   },
 ];
+
+export const CUSTOMISATIONS = [
+  {
+    id: 'cust-1',
+    orderNumber: 'ORD-00011',
+    customerName: 'Northline Parts',
+    description: 'Custom powder coat (RAL 5002) for all housing covers.',
+    status: 'Pending',
+    expectedDate: '2026-08-25',
+  },
+  {
+    id: 'cust-2',
+    orderNumber: 'ORD-00008',
+    customerName: 'Vista Fabrication',
+    description: 'Drill 3 extra mounting holes on the backplate.',
+    status: 'In Progress',
+    expectedDate: '2026-08-20',
+  },
+  {
+    id: 'cust-3',
+    orderNumber: 'ORD-00014',
+    customerName: 'Delta Works',
+    description: 'Include metric hardware instead of imperial.',
+    status: 'Completed',
+    expectedDate: '2026-08-18',
+  },
+];
+
+export const CUSTOMISATION_KPIS = [
+  { label: 'Pending requests', value: '12', hint: 'Awaiting engineering review' },
+  { label: 'In progress', value: '4', hint: 'Currently being fabricated' },
+  { label: 'Completed (MTD)', value: '28', hint: 'Customisations finished this month' },
+];
+
+
+const CUSTOMISATION_SPECS = [
+  {
+    key: "body_design",
+    label: "Body Design",
+    type: "select",
+    options: ["Standard", "Compact", "Extended", "Heavy Duty", "Custom Profile"],
+    required: true
+  },
+  {
+    key: "body_color",
+    label: "Body Color",
+    type: "select",
+    options: ["White", "Black", "Grey", "Blue", "Red", "Yellow", "Custom RAL"],
+    required: true
+  },
+  {
+    key: "brand_name",
+    label: "Brand Name",
+    type: "select",
+    /** Resolved from customer.brands at order time. */
+    options: [],
+    required: true
+  },
+  {
+    key: "panel_sticker",
+    label: "Panel Sticker",
+    type: "select",
+    /** Resolved from the selected brand's panelStickers. */
+    options: [],
+    required: true
+  },
+  {
+    key: "accessories",
+    label: "Accessories",
+    type: "customise",
+    options: ["Regular", "Customise"],
+    detailKey: "accessories_detail",
+    required: true,
+    placeholder: "Describe accessory customisation\u2026"
+  },
+  {
+    key: "packing",
+    label: "Packing",
+    type: "customise",
+    options: ["Regular", "Customise"],
+    detailKey: "packing_detail",
+    required: true,
+    placeholder: "Describe packing customisation\u2026"
+  }
+];
+const MODEL_OPTION_KEYS = ["body_design", "body_color"];
+const CUSTOMER_LINKED_SPEC_KEYS = ["brand_name", "panel_sticker"];
+const PRODUCT_MODELS = [
+  {
+    id: "m-steel-frame",
+    code: "SFA-100",
+    name: "Steel Frame Assembly",
+    category: "Structural",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-bracket",
+    code: "BKB-200",
+    name: "Bracket Kit B",
+    category: "Components",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-housing",
+    code: "HCV-310",
+    name: "Housing Cover",
+    category: "Enclosures",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-motor",
+    code: "MMT-450",
+    name: "Motor Mount",
+    category: "Mechanical",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-chassis",
+    code: "CSF-500",
+    name: "Chassis Subframe",
+    category: "Structural",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-guard",
+    code: "GRS-120",
+    name: "Guard Rail Set",
+    category: "Safety",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-panel",
+    code: "PNA-220",
+    name: "Panel Assembly",
+    category: "Electrical",
+    specs: CUSTOMISATION_SPECS
+  },
+  {
+    id: "m-fixture",
+    code: "WFA-001",
+    name: "Weld Fixture A",
+    category: "Tooling",
+    specs: CUSTOMISATION_SPECS
+  }
+];
+const MODEL_CATEGORIES = [
+  ...new Set(PRODUCT_MODELS.map((m) => m.category))
+].sort();
+function getModelById(id) {
+  return PRODUCT_MODELS.find((m) => m.id === id);
+}
+function defaultSpecsForModel(model) {
+  const out = {};
+  for (const field of model.specs) {
+    if (field.type === "number") {
+      out[field.key] = "";
+    } else if (field.type === "select" && field.options?.[0]) {
+      out[field.key] = field.options[0];
+    } else if (field.type === "customise" && field.options?.[0]) {
+      out[field.key] = field.options[0];
+      if (field.detailKey) out[field.detailKey] = "";
+    } else {
+      out[field.key] = "";
+    }
+  }
+  return out;
+}
+function isCustomiseMode(value) {
+  return String(value ?? "").toLowerCase() === "customise";
+}
+function stripHtml(html) {
+  return html.replace(/<[^>]*>/g, " ").replace(/&nbsp;/gi, " ").replace(/\s+/g, " ").trim();
+}
+function isLineSpecsComplete(line, customer) {
+  const model = getModelById(line.modelId);
+  if (!model) return false;
+  for (const field of model.specs) {
+    if (!field.required) continue;
+    const val = line.specs[field.key];
+    if (val === "" || val === void 0 || val === null) return false;
+    if (field.type === "customise" && isCustomiseMode(val) && field.detailKey) {
+      if (!stripHtml(String(line.specs[field.detailKey] ?? ""))) return false;
+    }
+  }
+  if (customer) {
+    const brandName = String(line.specs.brand_name ?? "");
+    const brand = customer.brands.find((b) => b.name === brandName);
+    if (!brand) return false;
+    const sticker = String(line.specs.panel_sticker ?? "");
+    if (!brand.panelStickers.includes(sticker)) return false;
+  }
+  return true;
+}
+export {
+  CUSTOMER_LINKED_SPEC_KEYS,
+  CUSTOMISATION_SPECS,
+  MODEL_CATEGORIES,
+  MODEL_OPTION_KEYS,
+  PRODUCT_MODELS,
+  defaultSpecsForModel,
+  getModelById,
+  isCustomiseMode,
+  isLineSpecsComplete,
+  stripHtml
+};
