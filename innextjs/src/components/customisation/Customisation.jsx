@@ -22,7 +22,7 @@ const FIXED_CUSTOMISE_OPTIONS = ['Regular', 'Customise'];
 const MAX_VISIBLE_OPTIONS = 3;
 const MODEL_OPTION_KEY_SET = new Set(MODEL_OPTION_KEYS);
 
-const toneBar = { neutral: 'bg-ink-600', info: 'bg-brand-600', warning: 'bg-warning-700', success: 'bg-success-700' };
+const toneBar = { neutral: 'bg-grey-text-light', info: 'bg-primary', warning: 'bg-warning-dark', success: 'bg-success-dark' };
 
 /* ════════════════════════════════════════════════════════════════════
    Utility helpers
@@ -77,7 +77,7 @@ function ActionMenu({ onEdit, onDelete }) {
 
   return (
     <div className="relative inline-block text-left" ref={menuRef}>
-      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1.5 text-ink-400 hover:text-ink-900 rounded-full hover:bg-ink-50 transition-colors">
+      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1.5 text-grey-icon hover:text-grey-text-strong rounded-full hover:bg-grey-bg transition-colors">
         <MoreVertical className="h-4 w-4" />
       </button>
       {open && (
@@ -85,7 +85,7 @@ function ActionMenu({ onEdit, onDelete }) {
           <div className="py-1">
             <button
               onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-ink-700 hover:bg-ink-50"
+              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-grey-text hover:bg-grey-bg"
             >
               <Pencil className="h-4 w-4" /> Edit
             </button>
@@ -104,7 +104,7 @@ function ActionMenu({ onEdit, onDelete }) {
 
 function OptionsCell({ field }) {
   const options = field.options ?? [];
-  if (options.length === 0) return <span className="text-ink-400">—</span>;
+  if (options.length === 0) return <span className="text-grey-icon">—</span>;
   const MAX_VISIBLE = 1;
   const overflow = options.length - MAX_VISIBLE;
   const visible = options.slice(0, MAX_VISIBLE);
@@ -112,12 +112,12 @@ function OptionsCell({ field }) {
   return (
     <div className="flex items-center gap-1">
       {visible.map((opt) => (
-        <span key={opt} className="inline-flex rounded-md border border-ink-200/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-ink-800">{opt}</span>
+        <span key={opt} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">{opt}</span>
       ))}
       {overflow > 0 && (
         <span className="relative inline-block">
-          <span className="peer inline-flex rounded-md bg-ink-50 px-1.5 py-0.5 text-2xs font-semibold text-ink-600 cursor-help whitespace-nowrap">+{overflow} more</span>
-          <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-ink-900 px-2 py-1.5 text-xs text-white shadow-lg">
+          <span className="peer inline-flex rounded-md bg-grey-bg px-1.5 py-0.5 text-2xs font-semibold text-grey-text-light cursor-help whitespace-nowrap">+{overflow} more</span>
+          <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-grey-text-strong px-2 py-1.5 text-xs text-white shadow-lg">
             {options.slice(MAX_VISIBLE).join(', ')}
             <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-ink-900"></div>
           </div>
@@ -130,8 +130,8 @@ function OptionsCell({ field }) {
 function LinkedSpecCell({ label, detail }) {
   return (
     <div className="max-w-[140px]">
-      <span className="inline-flex items-center gap-1 rounded-md bg-brand-600/10 px-1.5 py-0.5 text-2xs font-semibold text-brand-800 whitespace-nowrap">{label}</span>
-      <p className="mt-0.5 text-2xs text-ink-400 truncate" title={detail}>{detail}</p>
+      <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark whitespace-nowrap">{label}</span>
+      <p className="mt-0.5 text-2xs text-grey-icon truncate" title={detail}>{detail}</p>
     </div>
   );
 }
@@ -139,7 +139,7 @@ function LinkedSpecCell({ label, detail }) {
 function ChipRemoveButton({ onClick }) {
   return (
     <Button variant="ghost" size="sm"
-      className="!min-h-0 !h-4 !w-4 !min-w-0 !p-0 shrink-0 rounded-md text-ink-400 hover:text-ink-800"
+      className="!min-h-0 !h-4 !w-4 !min-w-0 !p-0 shrink-0 rounded-md text-grey-icon hover:text-grey-text-dark"
       onClick={onClick}
       icon={() => <X className="h-3 w-3" />}
     />
@@ -159,21 +159,21 @@ function OptionChipsEditor({ label, values, onChange, emptyHint }) {
   return (
     <div>
       <div className="flex items-baseline justify-between gap-2 mb-1">
-        <label className="text-xs font-semibold text-ink-700">{label}</label>
-        <span className="text-2xs tabular-nums text-ink-400">{values.length} option{values.length === 1 ? '' : 's'}</span>
+        <label className="text-xs font-semibold text-grey-text">{label}</label>
+        <span className="text-2xs tabular-nums text-grey-icon">{values.length} option{values.length === 1 ? '' : 's'}</span>
       </div>
-      <div className="rounded-md border border-ink-200/70 bg-ink-50/40 p-2">
+      <div className="rounded-md border border-grey-border/70 bg-grey-bg/40 p-2">
         {values.length > 0 ? (
           <div className="flex flex-wrap gap-1.5 mb-2">
             {values.map((opt) => (
-              <span key={opt} className="inline-flex max-w-full items-center gap-1 rounded-md border border-ink-200/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-ink-800">
+              <span key={opt} className="inline-flex max-w-full items-center gap-1 rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">
                 <span className="truncate">{opt}</span>
                 <ChipRemoveButton onClick={() => { onChange(values.filter((v) => v !== opt)); setLocalError(null); }} />
               </span>
             ))}
           </div>
         ) : (
-          <p className="text-2xs text-ink-400 mb-2">{emptyHint ?? 'No options yet — add one below.'}</p>
+          <p className="text-2xs text-grey-icon mb-2">{emptyHint ?? 'No options yet — add one below.'}</p>
         )}
         <div className="flex gap-1.5">
           <Input type="text" value={draft}
@@ -182,7 +182,7 @@ function OptionChipsEditor({ label, values, onChange, emptyHint }) {
             className="flex-1 min-w-0 [&_input]:!h-8 [&_input]:!min-h-0" />
           <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim()} icon={Plus} />
         </div>
-        {localError && <p className="mt-1 text-2xs text-danger-700">{localError}</p>}
+        {localError && <p className="mt-1 text-2xs text-danger-dark">{localError}</p>}
       </div>
     </div>
   );
@@ -191,14 +191,14 @@ function OptionChipsEditor({ label, values, onChange, emptyHint }) {
 function FixedCustomiseField({ label }) {
   return (
     <div>
-      <p className="text-xs font-semibold text-ink-700 mb-1">{label}</p>
-      <div className="rounded-md border border-ink-200/70 bg-ink-50/40 p-2">
+      <p className="text-xs font-semibold text-grey-text mb-1">{label}</p>
+      <div className="rounded-md border border-grey-border/70 bg-grey-bg/40 p-2">
         <div className="mb-1.5 flex flex-wrap gap-1.5">
           {FIXED_CUSTOMISE_OPTIONS.map((opt) => (
-            <span key={opt} className="inline-flex rounded-md border border-ink-200/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-ink-800">{opt}</span>
+            <span key={opt} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">{opt}</span>
           ))}
         </div>
-        <p className="text-2xs text-ink-500">Fixed choices. Customise opens a detail field on the order Specs step.</p>
+        <p className="text-2xs text-grey-muted">Fixed choices. Customise opens a detail field on the order Specs step.</p>
       </div>
     </div>
   );
@@ -217,20 +217,20 @@ function StickerEditor({ brand, onChange }) {
   return (
     <div className="flex flex-col h-full">
       <div className="mb-1 flex items-baseline justify-between gap-2">
-        <label className="text-2xs font-semibold uppercase tracking-wide text-ink-500">Panel stickers · {brand.name}</label>
-        <span className="text-2xs tabular-nums text-ink-400">{brand.panelStickers.length} option{brand.panelStickers.length === 1 ? '' : 's'}</span>
+        <label className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">Panel stickers · {brand.name}</label>
+        <span className="text-2xs tabular-nums text-grey-icon">{brand.panelStickers.length} option{brand.panelStickers.length === 1 ? '' : 's'}</span>
       </div>
       {brand.panelStickers.length > 0 ? (
         <div className="flex flex-wrap gap-1 mb-1.5">
           {brand.panelStickers.map((opt) => (
-            <span key={opt} className="inline-flex max-w-full items-center gap-1 rounded-md border border-ink-200/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-ink-800">
+            <span key={opt} className="inline-flex max-w-full items-center gap-1 rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">
               <span className="truncate">{opt}</span>
               <ChipRemoveButton onClick={() => { onChange(brand.panelStickers.filter((v) => v !== opt)); setLocalError(null); }} />
             </span>
           ))}
         </div>
       ) : (
-        <p className="text-2xs text-ink-400 mb-1.5">Add at least one panel sticker for this brand.</p>
+        <p className="text-2xs text-grey-icon mb-1.5">Add at least one panel sticker for this brand.</p>
       )}
       <div className="flex gap-1.5 mt-auto">
         <Input type="text" value={draft}
@@ -239,7 +239,7 @@ function StickerEditor({ brand, onChange }) {
           className="flex-1 min-w-0 [&_input]:!h-8 [&_input]:!min-h-0" />
         <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim()} icon={Plus} />
       </div>
-      {localError && <p className="mt-1 text-2xs text-danger-700">{localError}</p>}
+      {localError && <p className="mt-1 text-2xs text-danger-dark">{localError}</p>}
     </div>
   );
 }
@@ -437,10 +437,10 @@ export default function Customisation() {
         label: 'Model',
         render: (row) => (
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-brand-600/10 font-mono text-2xs font-bold text-brand-800">{modelInitials(row.code)}</span>
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-2xs font-bold text-primary-dark">{modelInitials(row.code)}</span>
             <div className="min-w-0 max-w-[200px]">
-              <p className="font-semibold text-ink-900 truncate" title={row.name}>{row.name}</p>
-              <p className="font-mono text-2xs text-ink-500 truncate">{row.code} · {row.category}</p>
+              <p className="font-semibold text-grey-text-strong truncate" title={row.name}>{row.name}</p>
+              <p className="font-mono text-2xs text-grey-muted truncate">{row.code} · {row.category}</p>
             </div>
           </div>
         ),
@@ -470,8 +470,8 @@ export default function Customisation() {
       {/* ─── Page Header ─── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-ink-900">Customisation</h1>
-          <p className="mt-1 text-sm leading-snug text-ink-500">Customer brands, panel stickers, and product model options for order specs.</p>
+          <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">Customisation</h1>
+          <p className="mt-1 text-sm leading-snug text-grey-muted">Customer brands, panel stickers, and product model options for order specs.</p>
         </div>
         <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add model" onClick={() => setAddModelOpen(true)} />
       </div>
@@ -481,9 +481,9 @@ export default function Customisation() {
         {kpis.map((kpi) => (
           <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
             <div className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])} aria-hidden />
-            <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">{kpi.label}</p>
-            <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">{kpi.value}</p>
-            {kpi.hint && <p className="mt-1 pl-2 text-xs text-ink-500">{kpi.hint}</p>}
+            <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">{kpi.label}</p>
+            <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">{kpi.value}</p>
+            {kpi.hint && <p className="mt-1 pl-2 text-xs text-grey-muted">{kpi.hint}</p>}
           </article>
         ))}
       </section>
@@ -493,22 +493,22 @@ export default function Customisation() {
         <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 className="text-sm font-bold text-ink-900">Customer brands</h2>
-              <span className="inline-flex flex-wrap items-center gap-1 text-2xs text-ink-400" aria-label="Keyboard shortcuts">
-                <kbd className="px-1 py-0.5 border border-ink-200 rounded-md text-ink-500 bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↑</kbd>
-                <kbd className="px-1 py-0.5 border border-ink-200 rounded-md text-ink-500 bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↓</kbd>
+              <h2 className="text-sm font-bold text-grey-text-strong">Customer brands</h2>
+              <span className="inline-flex flex-wrap items-center gap-1 text-2xs text-grey-icon" aria-label="Keyboard shortcuts">
+                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↑</kbd>
+                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↓</kbd>
                 <span>Move</span>
-                <span className="text-ink-300">·</span>
-                <kbd className="px-1 py-0.5 border border-ink-200 rounded-md text-ink-500 bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Enter</kbd>
+                <span className="text-grey-border-strong">·</span>
+                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Enter</kbd>
                 <span>Select</span>
-                <span className="text-ink-300">·</span>
-                <kbd className="px-1 py-0.5 border border-ink-200 rounded-md text-ink-500 bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Alt</kbd>
-                <kbd className="px-1 py-0.5 border border-ink-200 rounded-md text-ink-500 bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">←</kbd>
-                <kbd className="px-1 py-0.5 border border-ink-200 rounded-md text-ink-500 bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">→</kbd>
+                <span className="text-grey-border-strong">·</span>
+                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Alt</kbd>
+                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">←</kbd>
+                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">→</kbd>
                 <span>Panes</span>
               </span>
             </div>
-            <p className="mt-0.5 text-2xs text-ink-500">Brands per customer · panel stickers per brand</p>
+            <p className="mt-0.5 text-2xs text-grey-muted">Brands per customer · panel stickers per brand</p>
           </div>
           <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-end">
             <Input type="select" label="Customer" className="w-full sm:w-56 [&_select]:!h-9"
@@ -523,11 +523,11 @@ export default function Customisation() {
           <div className="grid gap-2 lg:grid-cols-2">
             {/* Brands pane */}
             <div ref={brandsPaneRef} tabIndex={-1} data-pane="brands" aria-label="Brand names"
-              className={clsx('flex flex-col rounded-md border p-2 outline-none transition-colors', focusPane === 'brands' ? 'border-brand-600/35 bg-brand-600/5 ring-1 ring-brand-600/20' : 'border-ink-200/60 bg-ink-50/30')}
+              className={clsx('flex flex-col rounded-md border p-2 outline-none transition-colors', focusPane === 'brands' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
               onFocusCapture={() => setFocusPane('brands')}>
               <div className="mb-1 flex items-baseline justify-between gap-2 shrink-0">
-                <p className="text-2xs font-semibold uppercase tracking-wide text-ink-500">Brand names</p>
-                <span className="text-2xs tabular-nums text-ink-400">{customerId === 'ALL' ? totalBrands : customer?.brands?.length || 0}</span>
+                <p className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">Brand names</p>
+                <span className="text-2xs tabular-nums text-grey-icon">{customerId === 'ALL' ? totalBrands : customer?.brands?.length || 0}</span>
               </div>
               <div className="flex-1 min-h-0 flex flex-col">
                 {isLoading ? (
@@ -535,30 +535,30 @@ export default function Customisation() {
                     {[1, 2, 3].map((i) => (
                       <li key={i} className="flex items-center gap-1 rounded-md px-1.5 py-1.5 border border-transparent">
                         <div className="flex-1 space-y-1.5">
-                          <div className="h-3.5 w-1/2 animate-pulse rounded bg-ink-200/60"></div>
-                          <div className="h-2.5 w-1/3 animate-pulse rounded bg-ink-100/50"></div>
+                          <div className="h-3.5 w-1/2 animate-pulse rounded bg-grey-border/60"></div>
+                          <div className="h-2.5 w-1/3 animate-pulse rounded bg-grey-surface/50"></div>
                         </div>
-                        <div className="h-6 w-6 animate-pulse rounded bg-ink-100/50"></div>
+                        <div className="h-6 w-6 animate-pulse rounded bg-grey-surface/50"></div>
                       </li>
                     ))}
                   </ul>
                 ) : currentBrands.length === 0 ? (
-                  <p className="mb-1.5 text-2xs text-ink-400">No brands yet.</p>
+                  <p className="mb-1.5 text-2xs text-grey-icon">No brands yet.</p>
                 ) : (
                   <ul className="mb-1.5 space-y-0.5 max-h-[148px] overflow-y-auto pr-1 custom-scrollbar" role="listbox" aria-activedescendant={activeBrand ? `brand-option-${activeBrand.id}` : undefined}>
                     {currentBrands.map((brand) => {
                       const active = brand.id === activeBrand?.id;
                       return (
                         <li key={brand.id} id={`brand-option-${brand.id}`} role="option" aria-selected={active}>
-                          <div className={clsx('flex items-center gap-1 rounded-md px-1.5 py-1', active ? 'border border-brand-600/30 bg-white' : 'border border-transparent hover:bg-white/80')}>
+                          <div className={clsx('flex items-center gap-1 rounded-md px-1.5 py-1', active ? 'border border-primary/30 bg-white' : 'border border-transparent hover:bg-white/80')}>
                             <button type="button" data-brand-select className="min-w-0 flex-1 text-left cursor-pointer"
                               onClick={() => { setActiveBrandId(brand.id); setFocusPane('brands'); }}
                               onDoubleClick={() => { setActiveBrandId(brand.id); focusStickersInput(); }}>
-                              <span className="block truncate text-sm font-semibold text-ink-900">{brand.name}</span>
-                              <span className="block text-2xs text-ink-500">{brand.panelStickers.length} sticker{brand.panelStickers.length === 1 ? '' : 's'}</span>
+                              <span className="block truncate text-sm font-semibold text-grey-text-strong">{brand.name}</span>
+                              <span className="block text-2xs text-grey-muted">{brand.panelStickers.length} sticker{brand.panelStickers.length === 1 ? '' : 's'}</span>
                             </button>
                             <Button variant="ghost" size="square" data-remove-brand
-                              className="!h-7 !w-7 shrink-0 text-ink-400 hover:text-ink-800"
+                              className="!h-7 !w-7 shrink-0 text-grey-icon hover:text-grey-text-dark"
                               aria-label={`Remove brand ${brand.name}`}
                               onClick={() => setBrandToDelete(brand)}
                               icon={() => <X className="h-3.5 w-3.5" />}
@@ -575,25 +575,25 @@ export default function Customisation() {
 
             {/* Stickers pane */}
             <div ref={stickersPaneRef} tabIndex={-1} data-pane="stickers" aria-label="Panel stickers"
-              className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'stickers' ? 'border-brand-600/35 bg-brand-600/5 ring-1 ring-brand-600/20' : 'border-ink-200/60 bg-ink-50/30')}
+              className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'stickers' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
               onFocusCapture={() => setFocusPane('stickers')}>
               {isLoading ? (
                 <div className="flex flex-col h-full">
                   <div className="mb-1 flex items-baseline justify-between gap-2">
-                    <div className="h-3 w-1/3 animate-pulse rounded bg-ink-200/60"></div>
-                    <div className="h-3 w-10 animate-pulse rounded bg-ink-200/60"></div>
+                    <div className="h-3 w-1/3 animate-pulse rounded bg-grey-border/60"></div>
+                    <div className="h-3 w-10 animate-pulse rounded bg-grey-border/60"></div>
                   </div>
                   <div className="mt-1 flex flex-wrap gap-1 mb-1.5">
-                    <div className="h-6 w-20 animate-pulse rounded bg-ink-200/60"></div>
-                    <div className="h-6 w-16 animate-pulse rounded bg-ink-200/60"></div>
+                    <div className="h-6 w-20 animate-pulse rounded bg-grey-border/60"></div>
+                    <div className="h-6 w-16 animate-pulse rounded bg-grey-border/60"></div>
                   </div>
                   <div className="flex gap-1.5 mt-auto">
-                    <div className="h-8 flex-1 animate-pulse rounded bg-ink-100/50"></div>
-                    <div className="h-8 w-10 animate-pulse rounded bg-ink-200/60 shrink-0"></div>
+                    <div className="h-8 flex-1 animate-pulse rounded bg-grey-surface/50"></div>
+                    <div className="h-8 w-10 animate-pulse rounded bg-grey-border/60 shrink-0"></div>
                   </div>
                 </div>
               ) : activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} /> : (
-                <p className="px-1 py-4 text-center text-2xs text-ink-500">Select or add a brand to manage panel stickers.</p>
+                <p className="px-1 py-4 text-center text-2xs text-grey-muted">Select or add a brand to manage panel stickers.</p>
               )}
             </div>
           </div>
@@ -603,8 +603,8 @@ export default function Customisation() {
       {/* ─── Product Models Section ─── */}
       <div className="card-panel flex w-full flex-col gap-3 rounded-md !p-3">
         <div className="flex items-center gap-2">
-          <Tags className="h-4 w-4 text-ink-500" aria-hidden />
-          <h2 className="text-sm font-bold text-ink-900">Product models</h2>
+          <Tags className="h-4 w-4 text-grey-muted" aria-hidden />
+          <h2 className="text-sm font-bold text-grey-text-strong">Product models</h2>
         </div>
         <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
           <Input type="text" startIcon={Search} placeholder="Search model name or code…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0" />
@@ -626,13 +626,13 @@ export default function Customisation() {
       <ul className="space-y-2 lg:hidden">
         {filtered.map((model) => (
           <li key={model.id} className="card-panel !p-3 rounded-md">
-            <div className="mb-3 flex items-start gap-2.5 border-b border-ink-200/40 pb-2.5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-brand-600/10 font-mono text-xs font-bold text-brand-800">{modelInitials(model.code)}</span>
+            <div className="mb-3 flex items-start gap-2.5 border-b border-grey-border/40 pb-2.5">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-xs font-bold text-primary-dark">{modelInitials(model.code)}</span>
               <div className="min-w-0 flex-1">
-                <p className="font-semibold text-ink-900">{model.name}</p>
-                <p className="font-mono text-2xs text-ink-500">{model.code} · {model.category}</p>
+                <p className="font-semibold text-grey-text-strong">{model.name}</p>
+                <p className="font-mono text-2xs text-grey-muted">{model.code} · {model.category}</p>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-md bg-brand-600/10 px-1.5 py-0.5 text-2xs font-semibold text-brand-800">
+              <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark">
                 <Settings2 className="h-3 w-3" aria-hidden />Configured
               </span>
             </div>
@@ -641,7 +641,7 @@ export default function Customisation() {
                 const field = CUSTOMISATION_SPECS.find((f) => f.key === key);
                 if (!field) return null;
                 return (
-                  <div key={key}><dt className="mb-1 text-2xs font-semibold uppercase tracking-wide text-ink-400">{field.label}</dt><dd>{renderSpecCell(model, field)}</dd></div>
+                  <div key={key}><dt className="mb-1 text-2xs font-semibold uppercase tracking-wide text-grey-icon">{field.label}</dt><dd>{renderSpecCell(model, field)}</dd></div>
                 );
               })}
             </dl>
@@ -653,7 +653,7 @@ export default function Customisation() {
         ))}
       </ul>
 
-      <p className="mt-1 flex items-center gap-1.5 text-2xs text-ink-400">
+      <p className="mt-1 flex items-center gap-1.5 text-2xs text-grey-icon">
         <Package className="h-3.5 w-3.5" aria-hidden />
         Model options, customer brands, and brand stickers drive the Specs step when creating an order.
       </p>
@@ -662,15 +662,15 @@ export default function Customisation() {
       <AddCustomer open={addCustomerOpen} onClose={() => setAddCustomerOpen(false)} onAdd={handleAddCustomer} />
       <AddBrandModal open={addBrandOpen} customers={customers} initialCustomerId={customer?.id ?? ''} onClose={() => setAddBrandOpen(false)} onAdd={handleAddBrand} />
       <ConfirmModal open={!!brandToDelete} title="Delete brand" onClose={() => setBrandToDelete(null)} onConfirm={confirmDeleteBrand}>
-        <p className="text-sm text-ink-700">
-          Are you sure you want to delete <strong className="font-semibold text-ink-900">{brandToDelete?.name}</strong>? This action cannot be undone.
+        <p className="text-sm text-grey-text">
+          Are you sure you want to delete <strong className="font-semibold text-grey-text-strong">{brandToDelete?.name}</strong>? This action cannot be undone.
         </p>
       </ConfirmModal>
       <AddCustomisation open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
       <EditCustomisation open={!!editingModel} model={editingModel} onClose={() => setEditingModel(null)} onSave={handleEditModel} />
       <ConfirmModal open={!!modelToDelete} title="Delete model" onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}>
-        <p className="text-sm text-ink-700">
-          Are you sure you want to delete <strong className="font-semibold text-ink-900">{modelToDelete?.name}</strong>? This action cannot be undone.
+        <p className="text-sm text-grey-text">
+          Are you sure you want to delete <strong className="font-semibold text-grey-text-strong">{modelToDelete?.name}</strong>? This action cannot be undone.
         </p>
       </ConfirmModal>
     </div>

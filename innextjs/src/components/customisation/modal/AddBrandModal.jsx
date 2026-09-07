@@ -136,13 +136,13 @@ export default function AddBrandModal({ open, initialCustomerId, onClose, onAdd 
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-ink-200 ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-ink-200 px-4 py-3">
-          <h2 id={titleId} className="text-base font-bold text-ink-900">Add brand</h2>
+        <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
+          <h2 id={titleId} className="text-base font-bold text-grey-text-strong">Add brand</h2>
           <button
             type="button"
-            className="btn-ghost h-9 w-9 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-ink-50 text-ink-500 hover:text-ink-900"
+            className="btn-ghost h-9 w-9 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-grey-bg text-grey-muted hover:text-grey-text-strong"
             onClick={handleClose}
             aria-label="Close"
           >
@@ -155,8 +155,8 @@ export default function AddBrandModal({ open, initialCustomerId, onClose, onAdd 
             <Input type="text" label="Description (Optional)" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter brand description" disabled={isLoading} />
             <Input type="select" label="Customer" required value={selectedCustomerId} onChange={(e) => setSelectedCustomerId(e.target.value)}
               options={customersList.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.id }))} disabled={isLoading} />
-            <p className="text-xs text-ink-500">You can assign this brand to a different customer if needed.</p>
-            {error && <p className="text-sm font-medium text-danger-700" role="alert">{error}</p>}
+            <p className="text-xs text-grey-muted">You can assign this brand to a different customer if needed.</p>
+            {error && <p className="text-sm font-medium text-danger-dark" role="alert">{error}</p>}
             <div className="flex gap-2 pt-2">
               <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" disabled={isLoading} />
               <Button variant="primary" type="submit" className="flex-1" text={isLoading ? 'Adding...' : 'Add brand'} disabled={isLoading} />
