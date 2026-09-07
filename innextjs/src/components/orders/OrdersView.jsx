@@ -1,6 +1,7 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Head from 'next/head';
-import { Search, Plus, Filter, Printer, Pencil } from 'lucide-react';
+import { Search, Plus, Filter, Printer, Pencil, X, Eye, Trash2 } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
 import { DUMMY_ORDERS, ORDER_KPIS, dueDaysLabel, orderTotalQty } from '@/common/dummy';
 import Button from '@/common/buttons/Button';
@@ -8,6 +9,10 @@ import Input from '@/common/input/Input';
 import clsx from 'clsx';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import OrderDetailsModal from './modals/OrderDetailsModal';
+import EditOrderModal from './modals/EditOrderModal';
+import FilterModal from './modals/FilterModal';
+import DeleteModal from '@/common/modal/DeleteModal';
 
 export default function OrdersView() {
   const router = useRouter();
@@ -16,20 +21,107 @@ export default function OrdersView() {
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
 
+  const [activeTab, setActiveTab] = useState('order_list');
+  const [selectedOrder, setSelectedOrder] = useState(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [actionMenu, setActionMenu] = useState(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+  const [activeFilters, setActiveFilters] = useState({});
+
+  useEffect(() => {
+    if (!actionMenu) return;
+    const handleClose = () => setActionMenu(null);
+    window.addEventListener('click', handleClose);
+    window.addEventListener('scroll', handleClose, true);
+    return () => {
+      window.removeEventListener('click', handleClose);
+      window.removeEventListener('scroll', handleClose, true);
+    };
+  }, [actionMenu]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && e.key === '1') { e.preventDefault(); setActiveTab('order_list'); }
+      if (e.altKey && e.key === '2') { e.preventDefault(); setActiveTab('by_product'); }
+      if (e.altKey && e.key === '3') { e.preventDefault(); setActiveTab('by_order_type'); }
+      if (e.altKey && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        document.getElementById('search-orders')?.focus();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const filteredData = useMemo(() => {
+    let data = [...ordersData];
+
+    // Apply active filters
+    if (activeFilters && Object.keys(activeFilters).length > 0) {
+      if (activeFilters.orderNumber?.length) data = data.filter(d => activeFilters.orderNumber.includes(d.orderNumber));
+      
+      if (activeFilters.orderDate) {
+        const { from, to } = activeFilters.orderDate;
+        if (from) data = data.filter(d => new Date(d.orderDate || 'N/A') >= new Date(from));
+        if (to) data = data.filter(d => new Date(d.orderDate || 'N/A') <= new Date(to));
+      }
+      
+      if (activeFilters.dueDate) {
+        const { from, to } = activeFilters.dueDate;
+        if (from) data = data.filter(d => new Date(d.dueDate) >= new Date(from));
+        if (to) data = data.filter(d => new Date(d.dueDate) <= new Date(to));
+      }
+      
+      if (activeFilters.quantity) {
+        const { min, max } = activeFilters.quantity;
+        data = data.filter(d => {
+          const qty = d.products?.reduce((sum, p) => sum + p.qty, 0) || 0;
+          if (min && qty < parseInt(min, 10)) return false;
+          if (max && qty > parseInt(max, 10)) return false;
+          return true;
+        });
+      }
+      
+      if (activeFilters.customer?.length) data = data.filter(d => activeFilters.customer.includes(d.customerName));
+      if (activeFilters.priority?.length) data = data.filter(d => activeFilters.priority.includes(d.priority));
+      if (activeFilters.status?.length) data = data.filter(d => activeFilters.status.includes(d.status));
+      if (activeFilters.product?.length) data = data.filter(d => {
+        return d.products?.some(p => activeFilters.product.includes(p.name));
+      });
+    }
+
+    // Add data according to tabs change
+    if (activeTab === 'by_product') {
+      data.sort((a, b) => (b.products?.length || 0) - (a.products?.length || 0));
+    } else if (activeTab === 'by_order_type') {
+      data.sort((a, b) => a.orderType.localeCompare(b.orderType));
+    }
+
     const q = query.trim().toLowerCase();
-    return ordersData.filter((o) => {
+    return data.filter((o) => {
       if (!q) return true;
       return (
         o.orderNumber.toLowerCase().includes(q) ||
         o.customerName.toLowerCase().includes(q)
       );
     });
-  }, [ordersData, query]);
+  }, [ordersData, activeFilters, activeTab]);
+
+  const totalFilters = useMemo(() => {
+    return Object.values(activeFilters).reduce((sum, filter) => {
+      if (Array.isArray(filter)) return sum + filter.length;
+      if (typeof filter === 'object' && filter !== null) {
+        return sum + Object.values(filter).filter(v => v !== '').length;
+      }
+      return sum;
+    }, 0);
+  }, [activeFilters]);
 
   React.useEffect(() => {
     setPageNo(1);
-  }, [query]);
+  }, [query, activeTab]);
 
   const totalItems = filteredData.length;
   const totalPages = Math.ceil(totalItems / pageSize);
@@ -39,20 +131,25 @@ export default function OrdersView() {
     return filteredData.slice(start, start + pageSize);
   }, [filteredData, pageNo, pageSize]);
 
-  const tabs = [
-    { label: 'Order list', count: 18, path: '/orders' },
-    { label: 'By product', count: 2, path: '/orders/by-product' },
-    { label: 'By order type', count: 3, path: '/orders/by-order-type' },
-  ];
+  const getStatusStyles = (status) => {
+    const s = status.toUpperCase().replace('_', ' ');
+    if (s === 'CANCELLED') return 'border-danger-200 text-danger-700 bg-danger-50';
+    if (s === 'IN PRODUCTION') return 'border-ink-200 text-brand-700 bg-white';
+    if (s === 'CONFIRMED') return 'border-ink-200 text-indigo-700 bg-white';
+    return 'border-ink-200 text-ink-700 bg-white';
+  };
 
   const columns = [
     {
       key: 'orderNumber',
       label: 'Order',
       render: (row) => (
-        <Link href={`/orders/new`} className="font-mono text-sm font-semibold text-brand-600 hover:underline">
+        <button
+          onClick={() => { setSelectedOrder(row); setIsDetailsModalOpen(true); }}
+          className="font-mono text-sm font-semibold text-brand-600 hover:underline cursor-pointer"
+        >
           {row.orderNumber}
-        </Link>
+        </button>
       ),
     },
     {
@@ -130,7 +227,7 @@ export default function OrdersView() {
         <span className={clsx(
           "text-xs font-semibold",
           row.priority === 'High' ? "text-danger-700" :
-          row.priority === 'Medium' ? "text-warning-700" : "text-success-700"
+            row.priority === 'Medium' ? "text-warning-700" : "text-success-700"
         )}>
           {row.priority}
         </span>
@@ -141,8 +238,8 @@ export default function OrdersView() {
       label: 'Status',
       render: (row) => {
         return (
-          <span className="badge border border-ink-200 text-ink-700 bg-white">
-            {row.status.replace('_', ' ')}
+          <span className={clsx("badge px-2 py-1 rounded-md text-xs font-semibold shadow-sm whitespace-nowrap", getStatusStyles(row.status))}>
+            {row.status.toUpperCase().replace('_', ' ')}
           </span>
         );
       },
@@ -150,13 +247,21 @@ export default function OrdersView() {
     {
       key: 'actions',
       label: 'Actions',
-      align: 'right',
-      render: (row) => (
-        <div className="flex items-center justify-end gap-1">
-           <button className="text-ink-400 hover:text-ink-900 p-1 rounded-md hover:bg-ink-100 transition"><Printer size={16}/></button>
-           <button className="text-ink-400 hover:text-ink-900 p-1 rounded-md hover:bg-ink-100 transition"><Pencil size={16}/></button>
-        </div>
-      ),
+      type: 'action',
+      align: 'center',
+      onClick: (row, e) => {
+        if (e) {
+          const rect = e.currentTarget.getBoundingClientRect();
+          setActionMenu({
+            row,
+            top: rect.bottom + window.scrollY + 4,
+            left: rect.right + window.scrollX - 160
+          });
+        } else {
+          setSelectedOrder(row);
+          setIsDetailsModalOpen(true);
+        }
+      }
     }
   ];
 
@@ -166,7 +271,7 @@ export default function OrdersView() {
         <title>Orders | Arwa Weld</title>
       </Head>
       <div className="w-full flex flex-col gap-5">
-        
+
         {/* Page Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
@@ -192,12 +297,12 @@ export default function OrdersView() {
         {/* KPIs */}
         <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4">
           {ORDER_KPIS.map((kpi, i) => (
-            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none">
+            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
               <div
-                className={clsx('absolute inset-y-0 left-0 w-1', 
-                  i === 0 ? 'bg-brand-600' : 
-                  i === 1 ? 'bg-brand-600' : 
-                  i === 2 ? 'bg-brand-600' : 'bg-warning-700'
+                className={clsx('absolute inset-y-0 left-0 w-1',
+                  i === 0 ? 'bg-brand-600' :
+                    i === 1 ? 'bg-brand-600' :
+                      i === 2 ? 'bg-brand-600' : 'bg-warning-700'
                 )}
                 aria-hidden
               />
@@ -212,37 +317,79 @@ export default function OrdersView() {
           ))}
         </section>
 
-        {/* Tabs */}
-        <div className="flex items-center gap-2 p-1.5 rounded-xl bg-white/40 backdrop-blur-md border border-white/50 w-max">
-           {tabs.map((t) => {
-             const active = router.pathname === t.path;
-             return (
-               <Link href={t.path} key={t.label} className={clsx(
-                 "flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors",
-                 active ? "bg-white text-ink-900 shadow-sm" : "text-ink-600 hover:bg-white/50"
-               )}>
-                 {t.label}
-                 <span className={clsx(
-                   "px-1.5 py-0.5 rounded-md text-2xs tabular-nums",
-                   active ? "bg-ink-100 text-ink-700" : "bg-white/60 text-ink-500"
-                 )}>{t.count}</span>
-               </Link>
-             )
-           })}
-        </div>
+        {/* Tabs & Toolbar Container */}
+        <div className="card-panel flex w-full flex-col gap-4 border-none !p-4 bg-white/40 backdrop-blur-md rounded-md shadow-sm">
+          {/* Tabs */}
+          <div className="flex items-center gap-2">
+            {[
+              { id: 'order_list', label: 'Order list', count: 18, shortcut: '1' },
+              { id: 'by_product', label: 'By product', count: 2, shortcut: '2' },
+              { id: 'by_order_type', label: 'By order type', count: 3, shortcut: '3' },
+            ].map((t) => {
+              const active = activeTab === t.id;
+              return (
+                <button
+                  key={t.id}
+                  onClick={() => setActiveTab(t.id)}
+                  className={clsx(
+                    "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors border",
+                    active ? "bg-white text-ink-900 border-ink-200 shadow-sm" : "bg-transparent text-ink-600 border-transparent hover:bg-white/50"
+                  )}
+                >
+                  {t.label}
+                  <span className={clsx(
+                    "px-1.5 py-0.5 rounded-md text-xs tabular-nums font-mono",
+                    active ? "bg-ink-100 text-ink-700" : "bg-white/60 text-ink-500"
+                  )}>{t.count}</span>
+                </button>
+              )
+            })}
+          </div>
 
-        {/* Toolbar */}
-        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
+          {/* Search & Filters */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Input
-              type="text"
-              startIcon={Search}
-              placeholder="Search order #, customer..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="flex-1 min-w-0"
-            />
-            <Button variant="secondary" icon={Filter} text="Filters" />
+            <div className="relative flex-1">
+              <Input
+                id="search-orders"
+                type="text"
+                startIcon={Search}
+                placeholder="Search order #, customer..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                className="w-full bg-white rounded-md border-ink-200 shadow-sm"
+              />
+            </div>
+            <button 
+              onClick={() => setIsFilterModalOpen(true)}
+              className={clsx(
+                "flex items-center gap-2 px-3 h-10 rounded-md border text-sm font-bold transition-colors shrink-0",
+                totalFilters > 0 ? "border-brand-200 bg-brand-50 text-brand-700" : "bg-white border-ink-200 shadow-sm text-ink-700 hover:bg-ink-50"
+              )}
+            >
+              <Filter size={16} className={totalFilters > 0 ? "text-brand-600" : "text-ink-500"} />
+              Filters
+              {totalFilters > 0 && (
+                <span className="bg-brand-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] ml-0.5">
+                  {totalFilters}
+                </span>
+              )}
+            </button>
+          </div>
+
+          {/* Hints */}
+          <div className="flex items-center gap-1 text-xs text-ink-400 font-medium flex-wrap">
+            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">Alt</span>
+            <span>+</span>
+            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">S</span>
+            <span>search ·</span>
+            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">Alt</span>
+            <span>+</span>
+            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">1</span>
+            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">2</span>
+            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">3</span>
+            <span>switch views ·</span>
+            <Filter size={12} className="inline ml-1" />
+            <span>Filters — order, order date, due date, quantity, customer, priority, status, product</span>
           </div>
         </div>
 
@@ -264,6 +411,81 @@ export default function OrdersView() {
           }}
         />
       </div>
+
+      <OrderDetailsModal
+        open={isDetailsModalOpen}
+        selectedOrder={selectedOrder}
+        onClose={() => setIsDetailsModalOpen(false)}
+        onEdit={() => { setIsDetailsModalOpen(false); setIsEditModalOpen(true); }}
+        getStatusStyles={getStatusStyles}
+      />
+
+      <EditOrderModal
+        open={isEditModalOpen}
+        selectedOrder={selectedOrder}
+        onClose={() => setIsEditModalOpen(false)}
+        onSave={() => setIsEditModalOpen(false)}
+      />
+      <DeleteModal
+        open={isDeleteModalOpen}
+        onClose={() => setIsDeleteModalOpen(false)}
+        onConfirm={() => setIsDeleteModalOpen(false)}
+        title="Delete order"
+      />
+
+      <FilterModal
+        open={isFilterModalOpen}
+        onClose={() => setIsFilterModalOpen(false)}
+        ordersData={ordersData}
+        initialFilters={activeFilters}
+        onApply={(filters) => {
+          setActiveFilters(filters);
+          setPageNo(1);
+        }}
+      />
+      {actionMenu && typeof document !== 'undefined' && createPortal(
+        <div
+          className="absolute z-[9999] bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-ink-100 py-1.5 w-40 flex flex-col"
+          style={{ top: actionMenu.top, left: actionMenu.left }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <Button
+            variant="ghost"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-ink-50 !text-ink-700 !min-h-0 !h-auto !font-medium border-0"
+            onClick={() => { setSelectedOrder(actionMenu.row); setIsDetailsModalOpen(true); setActionMenu(null); }}
+            icon={() => <Eye size={16} className="text-ink-400" />}
+            text="View details"
+          />
+          <Button
+            variant="ghost"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-ink-50 !text-ink-700 !min-h-0 !h-auto !font-medium border-0"
+            onClick={() => { setSelectedOrder(actionMenu.row); setIsEditModalOpen(true); setActionMenu(null); }}
+            icon={() => <Pencil size={16} className="text-ink-400" />}
+            text="Edit"
+          />
+          <Button
+            variant="ghost"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-ink-50 !text-ink-700 !min-h-0 !h-auto !font-medium border-0"
+            onClick={() => { setActionMenu(null); window.print(); }}
+            icon={() => <Printer size={16} className="text-ink-400" />}
+            text="Print"
+          />
+          <div className="h-px bg-ink-100 my-1 mx-2 shrink-0" />
+          <Button
+            variant="ghost"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-danger-50 !text-danger-600 !min-h-0 !h-auto !font-medium border-0"
+            onClick={() => {
+              setActionMenu(null);
+              setIsDeleteModalOpen(true);
+
+            }}
+            icon={() => <Trash2 size={16} className="text-danger-600" />}
+            text="Delete"
+          />
+        </div>,
+        document.body
+      )}
     </>
   );
 }
+
