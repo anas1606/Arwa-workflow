@@ -228,18 +228,18 @@ export default function CreateOrderView() {
           <Button
             variant="ghost"
             onClick={() => router.push('/orders')}
-            className="!px-0 !bg-transparent text-ink-500 hover:text-ink-900 mt-0.5"
+            className="!px-0 !bg-transparent text-grey-muted hover:text-grey-text-strong mt-0.5"
             icon={ArrowLeft}
             text="Back to orders"
           />
           <div>
-            <h1 className="text-md font-bold text-ink-900 leading-tight">Create new order</h1>
-            <p className="text-sm text-ink-500 mt-1">{WIZARD_STEPS[stepIndex]?.desc}</p>
+            <h1 className="text-md font-bold text-grey-text-strong leading-tight">Create new order</h1>
+            <p className="text-sm text-grey-muted mt-1">{WIZARD_STEPS[stepIndex]?.desc}</p>
           </div>
         </div>
 
         {/* STEPPER HEADER */}
-        <div className="bg-white border-y border-ink-200/60 shrink-0">
+        <div className="bg-white border-y border-grey-border/60 shrink-0">
           <div className="w-full mx-auto px-6 lg:px-8 rounded-md">
             <div className="flex items-center">
               {WIZARD_STEPS.map((step, idx) => {
@@ -250,19 +250,19 @@ export default function CreateOrderView() {
                     key={step.id}
                     className={clsx(
                       'flex-1 flex items-center gap-2.5 px-4 py-4 border-b-2 cursor-pointer transition-colors',
-                      isActive ? 'border-brand-600' : isDone ? 'border-brand-400' : 'border-transparent'
+                      isActive ? 'border-primary' : isDone ? 'border-primary-muted' : 'border-transparent'
                     )}
                     onClick={() => { if (isDone || isActive) setStepIndex(idx); }}
                   >
                     <div className={clsx(
                       'w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
-                      isActive ? 'bg-brand-600 text-white' : isDone ? 'bg-brand-100 text-brand-700 border-2 border-brand-400' : 'bg-ink-100 text-ink-500'
+                      isActive ? 'bg-primary text-white' : isDone ? 'bg-primary-subtle text-primary-dark border-2 border-primary-muted' : 'bg-grey-surface text-grey-muted'
                     )}>
                       {isDone ? <Check size={12} /> : idx + 1}
                     </div>
                     <div className="hidden sm:block min-w-0">
-                      <p className={clsx('text-sm font-bold leading-tight truncate', isActive ? 'text-brand-900' : isDone ? 'text-brand-600' : 'text-ink-400')}>{step.title}</p>
-                      <p className="text-[11px] text-ink-400 truncate leading-tight mt-0.5">{step.desc}</p>
+                      <p className={clsx('text-sm font-bold leading-tight truncate', isActive ? 'text-primary-text' : isDone ? 'text-primary' : 'text-grey-icon')}>{step.title}</p>
+                      <p className="text-[11px] text-grey-icon truncate leading-tight mt-0.5">{step.desc}</p>
                     </div>
                   </div>
                 );
@@ -280,10 +280,10 @@ export default function CreateOrderView() {
               <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
                 {/* LEFT: Customer list */}
                 <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
-                  <div className="flex-1 bg-white rounded-md border border-ink-200/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
+                  <div className="flex-1 bg-white rounded-md border border-grey-border/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
                     <div className="px-5 pt-5 pb-3 shrink-0">
-                    <h2 className="text-base font-bold text-ink-900">Select customer</h2>
-                    <p className="text-xs text-ink-500 mt-0.5">Search and pick the account for this production order.</p>
+                    <h2 className="text-base font-bold text-grey-text-strong">Select customer</h2>
+                    <p className="text-xs text-grey-muted mt-0.5">Search and pick the account for this production order.</p>
                   </div>
 
                   {/* Search */}
@@ -304,14 +304,14 @@ export default function CreateOrderView() {
 
                   {/* Shortcuts */}
                   <div className="px-5 pb-3 flex items-center gap-4 flex-wrap shrink-0">
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">S</span> Search</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↓</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">↑</span> Move list</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ENTER</span> Select</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">←</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">→</span> Switch sections</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">S</span> Search</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">↓</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">↑</span> Move list</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ENTER</span> Select</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">←</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">→</span> Switch sections</span>
                   </div>
 
                   {/* List */}
-                  <div ref={customerListRef} className="flex-1 overflow-y-auto border-t border-ink-100">
+                  <div ref={customerListRef} className="flex-1 overflow-y-auto border-t border-grey-surface">
                     {filteredCustomers.map((c, idx) => {
                       const isSelected = customer?.code === c.code;
                       const isFocused = focusedCustomerIndex === idx;
@@ -321,28 +321,28 @@ export default function CreateOrderView() {
                           onClick={() => setCustomer(c)}
                           onMouseEnter={() => setFocusedCustomerIndex(idx)}
                           className={clsx(
-                            'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-ink-100/50 transition-colors',
-                            isSelected ? 'bg-brand-50' : isFocused ? 'bg-ink-100 ring-1 ring-inset ring-ink-300 z-10 relative' : 'hover:bg-ink-50/40'
+                            'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-grey-surface/50 transition-colors',
+                            isSelected ? 'bg-primary-bg' : isFocused ? 'bg-grey-surface ring-1 ring-inset ring-grey-border-strong z-10 relative' : 'hover:bg-grey-bg/40'
                           )}
                         >
                           <div className={clsx(
                             'w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold shrink-0',
-                            isSelected ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-600'
+                            isSelected ? 'bg-primary text-white' : 'bg-grey-surface text-grey-text-light'
                           )}>
                             {c.name.substring(0, 2).toUpperCase()}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={clsx('font-bold text-sm', isSelected ? 'text-brand-900' : 'text-ink-900')}>{c.name}</p>
-                            <p className="text-xs text-ink-500 flex items-center gap-1 mt-0.5">
+                            <p className={clsx('font-bold text-sm', isSelected ? 'text-primary-text' : 'text-grey-text-strong')}>{c.name}</p>
+                            <p className="text-xs text-grey-muted flex items-center gap-1 mt-0.5">
                               <span className="text-[10px]">⊙</span> {c.code} · {c.region}
                             </p>
                           </div>
-                          {isSelected && <Check size={16} className="text-brand-600 shrink-0" />}
+                          {isSelected && <Check size={16} className="text-primary shrink-0" />}
                         </div>
                       );
                     })}
                     {filteredCustomers.length === 0 && (
-                      <div className="py-12 text-center text-ink-400 text-sm">No customers found.</div>
+                      <div className="py-12 text-center text-grey-icon text-sm">No customers found.</div>
                     )}
                   </div>
                 </div>
@@ -350,32 +350,32 @@ export default function CreateOrderView() {
 
                 {/* RIGHT: Order Summary sidebar */}
                 <div className="w-full lg:w-[280px] shrink-0 space-y-3 h-full overflow-y-auto pb-5">
-                  <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400 px-1">Order Summary</p>
+                  <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon px-1">Order Summary</p>
 
                   {/* Customer card */}
-                  <div className={clsx('bg-white rounded-md border border-ink-200/60 shadow-sm p-3', customer ? 'flex items-center gap-3' : 'flex items-center justify-center py-4')}>
+                  <div className={clsx('bg-white rounded-md border border-grey-border/60 shadow-sm p-3', customer ? 'flex items-center gap-3' : 'flex items-center justify-center py-4')}>
                     {customer ? (
                       <>
-                        <div className="w-9 h-9 rounded-md bg-brand-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        <div className="w-9 h-9 rounded-md bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
                           {customer.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-bold text-sm text-ink-900 leading-tight">{customer.name}</p>
-                          <p className="text-xs text-ink-500 mt-0.5">Production order draft</p>
+                          <p className="font-bold text-sm text-grey-text-strong leading-tight">{customer.name}</p>
+                          <p className="text-xs text-grey-muted mt-0.5">Production order draft</p>
                         </div>
                       </>
                     ) : (
-                      <p className="text-sm text-ink-400 font-medium">No customer selected</p>
+                      <p className="text-sm text-grey-icon font-medium">No customer selected</p>
                     )}
                   </div>
 
                   {/* Due date */}
-                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm p-4 space-y-3">
+                  <div className="bg-white rounded-md border border-grey-border/60 shadow-sm p-4 space-y-3">
                     <div className="flex items-center justify-between">
-                      <label className="flex items-center gap-1.5 text-xs font-bold text-ink-700">
-                        <Calendar size={13} className="text-ink-400" /> Due date *
+                      <label className="flex items-center gap-1.5 text-xs font-bold text-grey-text">
+                        <Calendar size={13} className="text-grey-icon" /> Due date *
                       </label>
-                      {dueDate && <span className="text-xs font-bold text-brand-600">{formatDueLabel(dueDate)}</span>}
+                      {dueDate && <span className="text-xs font-bold text-primary">{formatDueLabel(dueDate)}</span>}
                     </div>
                     <Input
                       type="date"
@@ -390,7 +390,7 @@ export default function CreateOrderView() {
                           onClick={() => setDueDate(addDays(p.days))}
                           className={clsx(
                             'text-[11px] font-medium py-1.5 rounded-md border transition-colors',
-                            dueDate === addDays(p.days) ? 'bg-brand-50 text-brand-700 border-brand-200' : 'bg-ink-50 text-ink-600 border-transparent hover:bg-ink-100'
+                            dueDate === addDays(p.days) ? 'bg-primary-bg text-primary-dark border-primary-subtle' : 'bg-grey-bg text-grey-text-light border-transparent hover:bg-grey-surface'
                           )}
                         >
                           {p.label}
@@ -398,14 +398,14 @@ export default function CreateOrderView() {
                       ))}
                     </div>
                     {dueDate && (
-                      <p className="text-[11px] text-ink-400">{daysDiff(dueDate)} days from today</p>
+                      <p className="text-[11px] text-grey-icon">{daysDiff(dueDate)} days from today</p>
                     )}
                   </div>
 
                   {/* Priority */}
-                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm p-4">
-                    <label className="flex items-center gap-1.5 text-xs font-bold text-ink-700 mb-3">
-                      <Flag size={13} className="text-ink-400" /> Priority *
+                  <div className="bg-white rounded-md border border-grey-border/60 shadow-sm p-4">
+                    <label className="flex items-center gap-1.5 text-xs font-bold text-grey-text mb-3">
+                      <Flag size={13} className="text-grey-icon" /> Priority *
                     </label>
                     <div className="flex gap-2">
                       {['Low', 'Medium', 'High'].map(p => (
@@ -414,9 +414,9 @@ export default function CreateOrderView() {
                           onClick={() => setPriority(p)}
                           className={clsx(
                             'flex-1 py-1.5 rounded-md text-xs font-bold border transition-colors',
-                            p === 'Low' ? (priority === 'Low' ? 'bg-success-100 text-success-800 border-success-200' : 'bg-success-50/50 text-success-700 border-transparent hover:bg-success-100') :
-                            p === 'Medium' ? (priority === 'Medium' ? 'bg-warning-100 text-warning-800 border-warning-200' : 'bg-warning-50/50 text-warning-700 border-transparent hover:bg-warning-100') :
-                            (priority === 'High' ? 'bg-danger-100 text-danger-800 border-danger-200' : 'bg-danger-50/50 text-danger-700 border-transparent hover:bg-danger-100')
+                            p === 'Low' ? (priority === 'Low' ? 'bg-success-subtle text-success-text border-success-subtle' : 'bg-success-bg/50 text-success-dark border-transparent hover:bg-success-subtle') :
+                            p === 'Medium' ? (priority === 'Medium' ? 'bg-warning-subtle text-warning-text border-warning-subtle' : 'bg-warning-bg/50 text-warning-dark border-transparent hover:bg-warning-subtle') :
+                            (priority === 'High' ? 'bg-danger-subtle text-danger-text border-danger-subtle' : 'bg-danger-bg/50 text-danger-dark border-transparent hover:bg-danger-subtle')
                           )}
                         >
                           {p}
@@ -426,10 +426,10 @@ export default function CreateOrderView() {
                   </div>
 
                   {/* Planner notes */}
-                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm p-4">
-                    <label className="text-xs font-bold text-ink-700 block mb-2">Planner notes <span className="text-ink-400 font-normal">(optional)</span></label>
+                  <div className="bg-white rounded-md border border-grey-border/60 shadow-sm p-4">
+                    <label className="text-xs font-bold text-grey-text block mb-2">Planner notes <span className="text-grey-icon font-normal">(optional)</span></label>
                     <textarea
-                      className="w-full text-sm text-ink-900 bg-ink-50/40 border border-ink-200/60 rounded-md p-3 resize-none h-[88px] placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                      className="w-full text-sm text-grey-text-strong bg-grey-bg/40 border border-grey-border/60 rounded-md p-3 resize-none h-[88px] placeholder:text-grey-icon focus:outline-none focus:ring-2 focus:ring-primary-muted/30"
                       placeholder="Delivery instructions, shift preferences, material constraints..."
                       value={plannerNotes}
                       onChange={e => setPlannerNotes(e.target.value)}
@@ -444,19 +444,19 @@ export default function CreateOrderView() {
               <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
                 {/* LEFT */}
                 <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
-                  <div className="flex-1 bg-white rounded-md border border-ink-200/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
+                  <div className="flex-1 bg-white rounded-md border border-grey-border/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
                   <div className="px-5 pt-5 pb-3 shrink-0">
-                    <h2 className="text-base font-bold text-ink-900">Select models</h2>
+                    <h2 className="text-base font-bold text-grey-text-strong">Select models</h2>
                   </div>
 
                   {/* Shortcuts */}
                   <div className="px-5 pb-3 flex flex-wrap gap-4 shrink-0">
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">←</span> Catalog</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">→</span> Selected</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">S</span> Search</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↑↓</span> Lines</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">+</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">-</span> Qty</span>
-                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">X</span> Remove</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">←</span> Catalog</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">→</span> Selected</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">S</span> Search</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">↑↓</span> Lines</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">+</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">-</span> Qty</span>
+                    <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">X</span> Remove</span>
                   </div>
 
                   {/* Search + Category */}
@@ -484,7 +484,7 @@ export default function CreateOrderView() {
                   </div>
 
                   {/* Model List */}
-                  <div ref={modelListRef} className="flex-1 overflow-y-auto border-t border-ink-100">
+                  <div ref={modelListRef} className="flex-1 overflow-y-auto border-t border-grey-surface">
                     {filteredModels.map((m, idx) => {
                       const isSelected = lines.some(l => l.model.code === m.code);
                       const isFocused = focusedModelIndex === idx;
@@ -494,23 +494,23 @@ export default function CreateOrderView() {
                           onClick={() => handleAddLineClick(m)}
                           onMouseEnter={() => setFocusedModelIndex(idx)}
                           className={clsx(
-                            'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-ink-100/50 transition-colors',
-                            isSelected ? 'bg-brand-50' : isFocused ? 'bg-ink-100 ring-1 ring-inset ring-ink-300 z-10 relative' : 'hover:bg-ink-50/40'
+                            'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-grey-surface/50 transition-colors',
+                            isSelected ? 'bg-primary-bg' : isFocused ? 'bg-grey-surface ring-1 ring-inset ring-grey-border-strong z-10 relative' : 'hover:bg-grey-bg/40'
                           )}
                         >
                           <div className={clsx(
                             'w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold shrink-0',
-                            isSelected ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-600'
+                            isSelected ? 'bg-primary text-white' : 'bg-grey-surface text-grey-text-light'
                           )}>
                             {m.code.substring(0, 2)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={clsx('font-bold text-sm', isSelected ? 'text-brand-900' : 'text-ink-900')}>{m.name}</p>
-                            <p className="text-xs text-ink-500 mt-0.5 flex items-center gap-1">
+                            <p className={clsx('font-bold text-sm', isSelected ? 'text-primary-text' : 'text-grey-text-strong')}>{m.name}</p>
+                            <p className="text-xs text-grey-muted mt-0.5 flex items-center gap-1">
                               <span className="text-[10px]">⊙</span> {m.code} · {m.category}
                             </p>
                           </div>
-                          {isSelected && <Check size={16} className="text-brand-600 shrink-0" />}
+                          {isSelected && <Check size={16} className="text-primary shrink-0" />}
                         </div>
                       );
                     })}
@@ -520,49 +520,49 @@ export default function CreateOrderView() {
                 
                 {/* RIGHT: Selected */}
                 <div className="w-full lg:w-[280px] shrink-0 h-full overflow-y-auto pb-5">
-                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm overflow-hidden">
-                    <div className="flex items-center justify-between px-4 py-3 border-b border-ink-100">
-                      <span className="text-[10px] font-bold uppercase tracking-wide text-ink-400">Selected</span>
+                  <div className="bg-white rounded-md border border-grey-border/60 shadow-sm overflow-hidden">
+                    <div className="flex items-center justify-between px-4 py-3 border-b border-grey-surface">
+                      <span className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">Selected</span>
                       {lines.length > 0 && (
                         <div className="flex items-center gap-2">
-                          <span className="text-[11px] text-ink-500 font-medium">Qty {lines.reduce((a, b) => a + b.quantity, 0)}</span>
-                          <span className="w-5 h-5 rounded-full bg-brand-600 text-white text-[10px] font-bold flex items-center justify-center">{lines.length}</span>
+                          <span className="text-[11px] text-grey-muted font-medium">Qty {lines.reduce((a, b) => a + b.quantity, 0)}</span>
+                          <span className="w-5 h-5 rounded-full bg-primary text-white text-[10px] font-bold flex items-center justify-center">{lines.length}</span>
                         </div>
                       )}
                     </div>
 
                     {lines.length === 0 ? (
-                      <div className="py-12 flex flex-col items-center text-center text-ink-400 px-4">
+                      <div className="py-12 flex flex-col items-center text-center text-grey-icon px-4">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="w-10 h-10 opacity-30 mb-3">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
                         </svg>
-                        <p className="font-bold text-sm text-ink-700">No models yet</p>
-                        <p className="text-xs mt-1 text-ink-400">Select a model, set qty, then adjust with + / -</p>
+                        <p className="font-bold text-sm text-grey-text">No models yet</p>
+                        <p className="text-xs mt-1 text-grey-icon">Select a model, set qty, then adjust with + / -</p>
                       </div>
                     ) : (
-                      <div className="divide-y divide-ink-100">
+                      <div className="divide-y divide-grey-surface">
                         {lines.map((line, idx) => (
                           <div key={line.model.code} className="p-3">
                             <div className="flex items-center gap-2">
-                              <span className="text-[10px] font-bold text-ink-400 w-4">{idx + 1}</span>
-                              <div className="w-7 h-7 rounded-md bg-brand-100 text-brand-700 text-xs font-bold flex items-center justify-center">
+                              <span className="text-[10px] font-bold text-grey-icon w-4">{idx + 1}</span>
+                              <div className="w-7 h-7 rounded-md bg-primary-subtle text-primary-dark text-xs font-bold flex items-center justify-center">
                                 {line.model.code.substring(0, 2)}
                               </div>
                               <div className="flex-1 min-w-0">
-                                <p className="font-bold text-xs text-ink-900 truncate">{line.model.name}</p>
-                                <p className="text-[10px] text-ink-400 font-mono">{line.model.code}</p>
+                                <p className="font-bold text-xs text-grey-text-strong truncate">{line.model.name}</p>
+                                <p className="text-[10px] text-grey-icon font-mono">{line.model.code}</p>
                               </div>
                               <button
                                 onClick={() => { const n = [...lines]; n.splice(idx, 1); setLines(n); }}
-                                className="text-ink-300 hover:text-danger-500 transition-colors"
+                                className="text-grey-border-strong hover:text-danger-muted transition-colors"
                               >
                                 <X size={14} />
                               </button>
                             </div>
-                            <div className="mt-2 flex items-center bg-ink-50 rounded-md overflow-hidden border border-ink-200/60">
-                              <button className="w-9 h-9 flex items-center justify-center text-ink-500 hover:bg-ink-100 font-bold text-base" onClick={() => handleUpdateLineQty(idx, -1)}>-</button>
-                              <div className="flex-1 text-center font-bold text-sm text-ink-900">{line.quantity}</div>
-                              <button className="w-9 h-9 flex items-center justify-center text-ink-500 hover:bg-ink-100 font-bold text-base" onClick={() => handleUpdateLineQty(idx, 1)}>+</button>
+                            <div className="mt-2 flex items-center bg-grey-bg rounded-md overflow-hidden border border-grey-border/60">
+                              <button className="w-9 h-9 flex items-center justify-center text-grey-muted hover:bg-grey-surface font-bold text-base" onClick={() => handleUpdateLineQty(idx, -1)}>-</button>
+                              <div className="flex-1 text-center font-bold text-sm text-grey-text-strong">{line.quantity}</div>
+                              <button className="w-9 h-9 flex items-center justify-center text-grey-muted hover:bg-grey-surface font-bold text-base" onClick={() => handleUpdateLineQty(idx, 1)}>+</button>
                             </div>
                           </div>
                         ))}
@@ -575,13 +575,13 @@ export default function CreateOrderView() {
 
             {/* ─── STEP 3: SPECS ─── */}
             {stepIndex === 2 && (
-              <div className="bg-white rounded-md border border-ink-200/60 shadow-sm overflow-hidden flex flex-col lg:flex-row h-full">
+              <div className="bg-white rounded-md border border-grey-border/60 shadow-sm overflow-hidden flex flex-col lg:flex-row h-full">
 
                 {/* LEFT SIDEBAR */}
-                <div className="w-full lg:w-[200px] shrink-0 border-b lg:border-b-0 lg:border-r border-ink-100 flex flex-col">
-                  <div className="px-3 py-3 border-b border-ink-100">
-                    <p className="text-[10px] font-bold uppercase tracking-wide text-ink-500">Models</p>
-                    <p className="text-xs text-ink-400 mt-0.5">{activeSpecLineIndex + 1}/{lines.length}</p>
+                <div className="w-full lg:w-[200px] shrink-0 border-b lg:border-b-0 lg:border-r border-grey-surface flex flex-col">
+                  <div className="px-3 py-3 border-b border-grey-surface">
+                    <p className="text-[10px] font-bold uppercase tracking-wide text-grey-muted">Models</p>
+                    <p className="text-xs text-grey-icon mt-0.5">{activeSpecLineIndex + 1}/{lines.length}</p>
                   </div>
                   <div className="flex-1 overflow-y-auto py-2">
                     {lines.map((line, idx) => {
@@ -592,31 +592,31 @@ export default function CreateOrderView() {
                           onClick={() => setActiveSpecLineIndex(idx)}
                           className={clsx(
                             'flex items-center gap-2 mx-2 px-2 py-2 rounded-md cursor-pointer transition-colors mb-1',
-                            isActive ? 'bg-brand-50 border border-brand-200/50' : 'hover:bg-ink-50'
+                            isActive ? 'bg-primary-bg border border-primary-subtle/50' : 'hover:bg-grey-bg'
                           )}
                         >
-                          <div className={clsx('w-6 h-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0', isActive ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-500')}>
+                          <div className={clsx('w-6 h-6 rounded text-[10px] font-bold flex items-center justify-center shrink-0', isActive ? 'bg-primary text-white' : 'bg-grey-surface text-grey-muted')}>
                             {idx + 1}
                           </div>
-                          <div className={clsx('w-7 h-7 rounded-md text-xs font-bold flex items-center justify-center shrink-0', isActive ? 'bg-brand-600 text-white' : 'bg-brand-100 text-brand-700')}>
+                          <div className={clsx('w-7 h-7 rounded-md text-xs font-bold flex items-center justify-center shrink-0', isActive ? 'bg-primary text-white' : 'bg-primary-subtle text-primary-dark')}>
                             {line.model.code.substring(0, 2)}
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className={clsx('text-xs font-bold truncate', isActive ? 'text-brand-900' : 'text-ink-800')}>{line.model.name}</p>
-                            <p className="text-[10px] text-ink-400 truncate font-mono">{line.model.code} · Qty {line.quantity}</p>
+                            <p className={clsx('text-xs font-bold truncate', isActive ? 'text-primary-text' : 'text-grey-text-dark')}>{line.model.name}</p>
+                            <p className="text-[10px] text-grey-icon truncate font-mono">{line.model.code} · Qty {line.quantity}</p>
                           </div>
-                          {isActive && <Check size={12} className="text-brand-500 shrink-0" />}
+                          {isActive && <Check size={12} className="text-primary-muted shrink-0" />}
                         </div>
                       );
                     })}
                   </div>
                   {/* Sidebar footer shortcuts */}
-                  <div className="border-t border-ink-100 px-3 py-3 space-y-2">
-                    <button className="flex items-center gap-2 text-xs text-ink-500 hover:text-ink-800 transition-colors w-full">
+                  <div className="border-t border-grey-surface px-3 py-3 space-y-2">
+                    <button className="flex items-center gap-2 text-xs text-grey-muted hover:text-grey-text-dark transition-colors w-full">
                       <Copy size={12} /> <span>Copy previous</span>
                       <span className="ml-auto wizard-kbd text-[9px]">ALT C</span>
                     </button>
-                    <button className="flex items-center gap-2 text-xs text-ink-500 hover:text-ink-800 transition-colors w-full">
+                    <button className="flex items-center gap-2 text-xs text-grey-muted hover:text-grey-text-dark transition-colors w-full">
                       <Check size={12} /> <span>Apply to all</span>
                       <span className="ml-auto wizard-kbd text-[9px]">ALT A</span>
                     </button>
@@ -626,32 +626,32 @@ export default function CreateOrderView() {
                 {/* MAIN SPEC AREA */}
                 <div className="flex-1 min-w-0 flex flex-col">
                   {/* Header */}
-                  <div className="px-5 py-4 border-b border-ink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
-                    <h2 className="text-base font-bold text-ink-900">Technical specifications</h2>
+                  <div className="px-5 py-4 border-b border-grey-surface flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
+                    <h2 className="text-base font-bold text-grey-text-strong">Technical specifications</h2>
                     <div className="flex flex-wrap gap-4">
-                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↓</span> Next model</span>
-                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↑</span> Previous</span>
-                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">1-9</span> Jump</span>
-                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">TAB</span> Fields</span>
+                      <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">↓</span> Next model</span>
+                      <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">↑</span> Previous</span>
+                      <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">1-9</span> Jump</span>
+                      <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">TAB</span> Fields</span>
                     </div>
                   </div>
 
                   {lines.length === 0 ? (
-                    <div className="flex-1 flex items-center justify-center text-ink-400 text-sm">Go back and select models first.</div>
+                    <div className="flex-1 flex items-center justify-center text-grey-icon text-sm">Go back and select models first.</div>
                   ) : (
                     <div className="flex-1 overflow-y-auto p-5 space-y-6">
                       {/* Active model header */}
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                        <div className="w-11 h-11 rounded-md bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
                           {activeLine?.model?.code?.substring(0, 2)}
                         </div>
                         <div className="flex-1">
-                          <h3 className="font-bold text-base text-ink-900">{activeLine?.model?.name}</h3>
-                          <p className="text-xs text-ink-500 mt-0.5">{activeLine?.model?.code} · Model {activeSpecLineIndex + 1} of {lines.length} · Complete</p>
+                          <h3 className="font-bold text-base text-grey-text-strong">{activeLine?.model?.name}</h3>
+                          <p className="text-xs text-grey-muted mt-0.5">{activeLine?.model?.code} · Model {activeSpecLineIndex + 1} of {lines.length} · Complete</p>
                         </div>
                         <div className="flex flex-col items-end gap-1">
-                          <span className="text-[10px] font-bold text-ink-400 uppercase tracking-wide">QTY</span>
-                          <div className="h-9 w-12 border border-ink-200 rounded-md flex items-center justify-center font-bold text-sm text-ink-900 bg-ink-50">
+                          <span className="text-[10px] font-bold text-grey-icon uppercase tracking-wide">QTY</span>
+                          <div className="h-9 w-12 border border-grey-border rounded-md flex items-center justify-center font-bold text-sm text-grey-text-strong bg-grey-bg">
                             {activeLine?.quantity}
                           </div>
                         </div>
@@ -659,8 +659,8 @@ export default function CreateOrderView() {
 
                       {/* Appearance & Branding */}
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400 mb-1">Appearance &amp; Branding</p>
-                        <p className="text-xs text-ink-500 mb-4">Brand Name comes from the selected customer. Panel Sticker options depend on the brand.</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-grey-icon mb-1">Appearance &amp; Branding</p>
+                        <p className="text-xs text-grey-muted mb-4">Brand Name comes from the selected customer. Panel Sticker options depend on the brand.</p>
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                           {(CUSTOMISATION_SPECS || []).slice(0, 4).map(spec => (
                             <div key={spec.key}>
@@ -680,19 +680,19 @@ export default function CreateOrderView() {
 
                       {/* Accessories & Packing */}
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400 mb-4">Accessories &amp; Packing</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wider text-grey-icon mb-4">Accessories &amp; Packing</p>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                           {(CUSTOMISATION_SPECS || []).slice(4, 6).map(spec => (
                             <div key={spec.key}>
                               <label className="label text-xs !mb-2">{spec.label} *</label>
-                              <div className="flex bg-ink-50 rounded-md p-0.5 border border-ink-200/60">
+                              <div className="flex bg-grey-bg rounded-md p-0.5 border border-grey-border/60">
                                 {['Regular', 'Customise'].map(opt => (
                                   <button
                                     key={opt}
                                     onClick={() => handleUpdateSpec(activeSpecLineIndex, spec.key, opt)}
                                     className={clsx(
                                       'flex-1 h-9 rounded-md text-xs font-bold transition-all',
-                                      (activeLine?.specs?.[spec.key] || 'Regular') === opt ? 'bg-brand-100 text-brand-700 shadow-sm' : 'text-ink-600 hover:bg-white'
+                                      (activeLine?.specs?.[spec.key] || 'Regular') === opt ? 'bg-primary-subtle text-primary-dark shadow-sm' : 'text-grey-text-light hover:bg-white'
                                     )}
                                   >
                                     {opt}
@@ -700,7 +700,7 @@ export default function CreateOrderView() {
                                 ))}
                               </div>
                               {activeLine?.specs?.[spec.key] === 'Customise' && (
-                                <div className="mt-2 rounded-md bg-white overflow-hidden [&_.ql-toolbar]:bg-ink-50/50 [&_.ql-toolbar]:border-ink-200/60 [&_.ql-toolbar]:rounded-t-md [&_.ql-container]:border-ink-200/60 [&_.ql-container]:rounded-b-md [&_.ql-editor]:min-h-[80px] [&_.ql-editor]:text-sm">
+                                <div className="mt-2 rounded-md bg-white overflow-hidden [&_.ql-toolbar]:bg-grey-bg/50 [&_.ql-toolbar]:border-grey-border/60 [&_.ql-toolbar]:rounded-t-md [&_.ql-container]:border-grey-border/60 [&_.ql-container]:rounded-b-md [&_.ql-editor]:min-h-[80px] [&_.ql-editor]:text-sm">
                                   <ReactQuill
                                     theme="snow"
                                     value={activeLine?.specs?.[spec.key + '_note'] || ''}
@@ -727,49 +727,49 @@ export default function CreateOrderView() {
 
             {/* ─── STEP 4: REVIEW ─── */}
             {stepIndex === 3 && (
-              <div className="bg-white rounded-md border border-ink-200/60 shadow-sm overflow-hidden h-full flex flex-col">
+              <div className="bg-white rounded-md border border-grey-border/60 shadow-sm overflow-hidden h-full flex flex-col">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-ink-100 shrink-0">
-                  <h2 className="text-base font-bold text-ink-900">Review order</h2>
+                <div className="px-5 py-4 border-b border-grey-surface shrink-0">
+                  <h2 className="text-base font-bold text-grey-text-strong">Review order</h2>
                 </div>
                 <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
                   {/* Customer hero row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                      <div className="w-11 h-11 rounded-md bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
                         {customer?.name?.substring(0, 2).toUpperCase() || 'NA'}
                       </div>
                       <div>
-                        <p className="font-bold text-base text-ink-900">{customer?.name || 'No Customer'}</p>
-                        <p className="text-xs text-ink-500">{lines.length} model · {lines.reduce((a, b) => a + b.quantity, 0)} total qty</p>
+                        <p className="font-bold text-base text-grey-text-strong">{customer?.name || 'No Customer'}</p>
+                        <p className="text-xs text-grey-muted">{lines.length} model · {lines.reduce((a, b) => a + b.quantity, 0)} total qty</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-5">
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400">DUE</p>
-                        <p className="text-sm font-bold text-ink-900 mt-0.5">{dueDate ? formatDueLabel(dueDate) : '—'}</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">DUE</p>
+                        <p className="text-sm font-bold text-grey-text-strong mt-0.5">{dueDate ? formatDueLabel(dueDate) : '—'}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400">PRIORITY</p>
+                        <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">PRIORITY</p>
                         <p className={clsx(
                           'text-sm font-bold mt-0.5',
-                          priority === 'Low' ? 'text-success-600' : priority === 'Medium' ? 'text-warning-600' : 'text-danger-600'
+                          priority === 'Low' ? 'text-success-main' : priority === 'Medium' ? 'text-warning-main' : 'text-danger-main'
                         )}>{priority}</p>
                       </div>
                     </div>
                   </div>
 
                   {/* Ready to create */}
-                  <div className="bg-ink-50/60 border border-ink-100 rounded-md px-4 py-3">
+                  <div className="bg-grey-bg/60 border border-grey-surface rounded-md px-4 py-3">
                     <div className="flex items-center justify-between mb-2">
-                      <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400">Ready to create</p>
-                      <span className="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-full">4/4</span>
+                      <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">Ready to create</p>
+                      <span className="text-[10px] font-bold text-primary-dark bg-primary-subtle px-2 py-0.5 rounded-full">4/4</span>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {['Customer', 'Models', 'Specs', 'Schedule'].map(label => (
-                        <span key={label} className="inline-flex items-center gap-1 text-xs font-semibold text-brand-700">
-                          <Check size={12} className="text-brand-500" /> {label}
+                        <span key={label} className="inline-flex items-center gap-1 text-xs font-semibold text-primary-dark">
+                          <Check size={12} className="text-primary-muted" /> {label}
                         </span>
                       ))}
                     </div>
@@ -778,42 +778,42 @@ export default function CreateOrderView() {
                   {/* Models & Customisation */}
                   <div>
                     <div className="flex items-center justify-between mb-3">
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-ink-400">Models &amp; Customisation</p>
-                      <p className="text-xs text-ink-400">{lines.length} line{lines.length !== 1 ? 's' : ''}</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-grey-icon">Models &amp; Customisation</p>
+                      <p className="text-xs text-grey-icon">{lines.length} line{lines.length !== 1 ? 's' : ''}</p>
                     </div>
                     <div className="space-y-3">
                       {lines.map((line, idx) => (
-                        <div key={idx} className="border border-ink-200/60 rounded-md overflow-hidden">
+                        <div key={idx} className="border border-grey-border/60 rounded-md overflow-hidden">
                           {/* Row header */}
-                          <div className="flex items-center gap-3 px-4 py-3 bg-ink-50/40 border-b border-ink-100">
-                            <span className="text-xs font-bold text-ink-500 w-4">{idx + 1}</span>
-                            <div className="w-8 h-8 rounded-md bg-brand-100 text-brand-700 font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
+                          <div className="flex items-center gap-3 px-4 py-3 bg-grey-bg/40 border-b border-grey-surface">
+                            <span className="text-xs font-bold text-grey-muted w-4">{idx + 1}</span>
+                            <div className="w-8 h-8 rounded-md bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
                             <div className="flex-1">
-                              <p className="font-bold text-sm text-ink-900">{line.model.name}</p>
-                              <p className="text-[11px] text-ink-400 font-mono">{line.model.code}</p>
+                              <p className="font-bold text-sm text-grey-text-strong">{line.model.name}</p>
+                              <p className="text-[11px] text-grey-icon font-mono">{line.model.code}</p>
                             </div>
-                            <span className="text-xs font-bold text-ink-500 bg-ink-100 px-2 py-0.5 rounded">×{line.quantity}</span>
+                            <span className="text-xs font-bold text-grey-muted bg-grey-surface px-2 py-0.5 rounded">×{line.quantity}</span>
                           </div>
                           {/* Specs display */}
                           <div className="px-4 py-4 space-y-4">
                             <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-400 mb-3">Appearance &amp; Branding</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-grey-icon mb-3">Appearance &amp; Branding</p>
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-3">
                                 {(CUSTOMISATION_SPECS || []).slice(0, 4).map(spec => (
                                   <div key={spec.key}>
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400 mb-0.5">{spec.label}</p>
-                                    <p className="text-sm font-bold text-ink-900">{line.specs?.[spec.key] || '—'}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon mb-0.5">{spec.label}</p>
+                                    <p className="text-sm font-bold text-grey-text-strong">{line.specs?.[spec.key] || '—'}</p>
                                   </div>
                                 ))}
                               </div>
                             </div>
                             <div>
-                              <p className="text-[10px] font-bold uppercase tracking-widest text-ink-400 mb-3">Accessories &amp; Packing</p>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-grey-icon mb-3">Accessories &amp; Packing</p>
                               <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                                 {(CUSTOMISATION_SPECS || []).slice(4, 6).map(spec => (
                                   <div key={spec.key}>
-                                    <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400 mb-0.5">{spec.label}</p>
-                                    <p className="text-sm font-bold text-ink-900">{line.specs?.[spec.key] || 'Regular'}</p>
+                                    <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon mb-0.5">{spec.label}</p>
+                                    <p className="text-sm font-bold text-grey-text-strong">{line.specs?.[spec.key] || 'Regular'}</p>
                                   </div>
                                 ))}
                               </div>
@@ -839,7 +839,7 @@ export default function CreateOrderView() {
         />
 
         {/* FOOTER */}
-        <div className="bg-white border-t border-ink-200/60 shrink-0">
+        <div className="bg-white border-t border-grey-border/60 shrink-0">
           <div className="w-full mx-auto px-6 lg:px-8 py-4 flex items-center justify-end gap-3 rounded-md">
             <Button
               variant="secondary"

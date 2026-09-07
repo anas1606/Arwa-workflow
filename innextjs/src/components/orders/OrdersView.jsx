@@ -133,10 +133,10 @@ export default function OrdersView() {
 
   const getStatusStyles = (status) => {
     const s = status.toUpperCase().replace('_', ' ');
-    if (s === 'CANCELLED') return 'border-danger-200 text-danger-700 bg-danger-50';
-    if (s === 'IN PRODUCTION') return 'border-ink-200 text-brand-700 bg-white';
-    if (s === 'CONFIRMED') return 'border-ink-200 text-indigo-700 bg-white';
-    return 'border-ink-200 text-ink-700 bg-white';
+    if (s === 'CANCELLED') return 'border-danger-subtle text-danger-dark bg-danger-bg';
+    if (s === 'IN PRODUCTION') return 'border-grey-border text-primary-dark bg-white';
+    if (s === 'CONFIRMED') return 'border-grey-border text-primary-dark bg-white';
+    return 'border-grey-border text-grey-text bg-white';
   };
 
   const columns = [
@@ -146,7 +146,7 @@ export default function OrdersView() {
       render: (row) => (
         <button
           onClick={() => { setSelectedOrder(row); setIsDetailsModalOpen(true); }}
-          className="font-mono text-sm font-semibold text-brand-600 hover:underline cursor-pointer"
+          className="font-mono text-sm font-semibold text-primary hover:underline cursor-pointer"
         >
           {row.orderNumber}
         </button>
@@ -155,13 +155,13 @@ export default function OrdersView() {
     {
       key: 'customerName',
       label: 'Customer',
-      render: (row) => <span className="text-sm font-semibold text-ink-900">{row.customerName}</span>,
+      render: (row) => <span className="text-sm font-semibold text-grey-text-strong">{row.customerName}</span>,
     },
     {
       key: 'orderType',
       label: 'Order Type',
       render: (row) => (
-        <span className="badge border border-brand-200 text-brand-800 bg-brand-50">
+        <span className="badge border border-primary-subtle text-primary-dark bg-primary-bg">
           {row.orderType}
         </span>
       ),
@@ -175,14 +175,14 @@ export default function OrdersView() {
           <div className="flex flex-col">
             <span className={clsx(
               "text-sm font-semibold",
-              due.tone === 'danger' && "text-danger-700",
-              due.tone === 'warning' && "text-warning-700",
-              due.tone === 'info' && "text-brand-700",
-              due.tone === 'neutral' && "text-ink-800"
+              due.tone === 'danger' && "text-danger-dark",
+              due.tone === 'warning' && "text-warning-dark",
+              due.tone === 'info' && "text-primary-dark",
+              due.tone === 'neutral' && "text-grey-text-dark"
             )}>
               {due.text}
             </span>
-            <span className="text-2xs font-mono text-ink-400">{row.dueDate}</span>
+            <span className="text-2xs font-mono text-grey-icon">{row.dueDate}</span>
           </div>
         );
       },
@@ -196,13 +196,13 @@ export default function OrdersView() {
         return (
           <div className="flex items-center gap-1 flex-wrap">
             {firstTwo.map((p, i) => (
-              <span key={i} className="text-xs font-medium text-ink-800 flex items-center">
-                {i > 0 && <span className="text-ink-300 mx-1">·</span>}
+              <span key={i} className="text-xs font-medium text-grey-text-dark flex items-center">
+                {i > 0 && <span className="text-grey-border-strong mx-1">·</span>}
                 {p.name}
               </span>
             ))}
             {extra > 0 && (
-              <span className="ml-1 rounded bg-brand-50 px-1.5 py-0.5 text-2xs font-bold text-brand-700">
+              <span className="ml-1 rounded bg-primary-bg px-1.5 py-0.5 text-2xs font-bold text-primary-dark">
                 +{extra}
               </span>
             )}
@@ -215,7 +215,7 @@ export default function OrdersView() {
       label: 'Qty',
       align: 'right',
       render: (row) => (
-        <span className="text-sm font-semibold tabular-nums text-ink-800">
+        <span className="text-sm font-semibold tabular-nums text-grey-text-dark">
           {orderTotalQty(row)}
         </span>
       ),
@@ -226,8 +226,8 @@ export default function OrdersView() {
       render: (row) => (
         <span className={clsx(
           "text-xs font-semibold",
-          row.priority === 'High' ? "text-danger-700" :
-            row.priority === 'Medium' ? "text-warning-700" : "text-success-700"
+          row.priority === 'High' ? "text-danger-dark" :
+            row.priority === 'Medium' ? "text-warning-dark" : "text-success-dark"
         )}>
           {row.priority}
         </span>
@@ -275,10 +275,10 @@ export default function OrdersView() {
         {/* Page Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-ink-900">
+            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
               Orders
             </h1>
-            <p className="mt-1 text-sm leading-snug text-ink-500">
+            <p className="mt-1 text-sm leading-snug text-grey-muted">
               Search, filter, and track customer / production orders.
             </p>
           </div>
@@ -300,19 +300,19 @@ export default function OrdersView() {
             <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
               <div
                 className={clsx('absolute inset-y-0 left-0 w-1',
-                  i === 0 ? 'bg-brand-600' :
-                    i === 1 ? 'bg-brand-600' :
-                      i === 2 ? 'bg-brand-600' : 'bg-warning-700'
+                  i === 0 ? 'bg-primary' :
+                    i === 1 ? 'bg-primary' :
+                      i === 2 ? 'bg-primary' : 'bg-warning-dark'
                 )}
                 aria-hidden
               />
-              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">
+              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">
                 {kpi.label}
               </p>
-              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">
+              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">
                 {kpi.value}
               </p>
-              {kpi.hint ? <p className="mt-1 pl-2 text-xs text-ink-500">{kpi.hint}</p> : null}
+              {kpi.hint ? <p className="mt-1 pl-2 text-xs text-grey-muted">{kpi.hint}</p> : null}
             </article>
           ))}
         </section>
@@ -333,13 +333,13 @@ export default function OrdersView() {
                   onClick={() => setActiveTab(t.id)}
                   className={clsx(
                     "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors border",
-                    active ? "bg-white text-ink-900 border-ink-200 shadow-sm" : "bg-transparent text-ink-600 border-transparent hover:bg-white/50"
+                    active ? "bg-white text-grey-text-strong border-grey-border shadow-sm" : "bg-transparent text-grey-text-light border-transparent hover:bg-white/50"
                   )}
                 >
                   {t.label}
                   <span className={clsx(
                     "px-1.5 py-0.5 rounded-md text-xs tabular-nums font-mono",
-                    active ? "bg-ink-100 text-ink-700" : "bg-white/60 text-ink-500"
+                    active ? "bg-grey-surface text-grey-text" : "bg-white/60 text-grey-muted"
                   )}>{t.count}</span>
                 </button>
               )
@@ -356,20 +356,20 @@ export default function OrdersView() {
                 placeholder="Search order #, customer..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-white rounded-md border-ink-200 shadow-sm"
+                className="w-full bg-white rounded-md border-grey-border shadow-sm"
               />
             </div>
             <button 
               onClick={() => setIsFilterModalOpen(true)}
               className={clsx(
                 "flex items-center gap-2 px-3 h-10 rounded-md border text-sm font-bold transition-colors shrink-0",
-                totalFilters > 0 ? "border-brand-200 bg-brand-50 text-brand-700" : "bg-white border-ink-200 shadow-sm text-ink-700 hover:bg-ink-50"
+                totalFilters > 0 ? "border-primary-subtle bg-primary-bg text-primary-dark" : "bg-white border-grey-border shadow-sm text-grey-text hover:bg-grey-bg"
               )}
             >
-              <Filter size={16} className={totalFilters > 0 ? "text-brand-600" : "text-ink-500"} />
+              <Filter size={16} className={totalFilters > 0 ? "text-primary" : "text-grey-muted"} />
               Filters
               {totalFilters > 0 && (
-                <span className="bg-brand-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] ml-0.5">
+                <span className="bg-primary text-white w-5 h-5 rounded-full flex items-center justify-center text-[11px] ml-0.5">
                   {totalFilters}
                 </span>
               )}
@@ -377,16 +377,16 @@ export default function OrdersView() {
           </div>
 
           {/* Hints */}
-          <div className="flex items-center gap-1 text-xs text-ink-400 font-medium flex-wrap">
-            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">Alt</span>
+          <div className="flex items-center gap-1 text-xs text-grey-icon font-medium flex-wrap">
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">Alt</span>
             <span>+</span>
-            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">S</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">S</span>
             <span>search ·</span>
-            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">Alt</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">Alt</span>
             <span>+</span>
-            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">1</span>
-            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">2</span>
-            <span className="px-1 py-0.5 bg-ink-100 rounded text-ink-600 border border-ink-200 font-mono text-2xs">3</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">1</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">2</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">3</span>
             <span>switch views ·</span>
             <Filter size={12} className="inline ml-1" />
             <span>Filters — order, order date, due date, quantity, customer, priority, status, product</span>
@@ -445,41 +445,41 @@ export default function OrdersView() {
       />
       {actionMenu && typeof document !== 'undefined' && createPortal(
         <div
-          className="absolute z-[9999] bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-ink-100 py-1.5 w-40 flex flex-col"
+          className="absolute z-[9999] bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-grey-surface py-1.5 w-40 flex flex-col"
           style={{ top: actionMenu.top, left: actionMenu.left }}
           onClick={(e) => e.stopPropagation()}
         >
           <Button
             variant="ghost"
-            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-ink-50 !text-ink-700 !min-h-0 !h-auto !font-medium border-0"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-grey-bg !text-grey-text !min-h-0 !h-auto !font-medium border-0"
             onClick={() => { setSelectedOrder(actionMenu.row); setIsDetailsModalOpen(true); setActionMenu(null); }}
-            icon={() => <Eye size={16} className="text-ink-400" />}
+            icon={() => <Eye size={16} className="text-grey-icon" />}
             text="View details"
           />
           <Button
             variant="ghost"
-            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-ink-50 !text-ink-700 !min-h-0 !h-auto !font-medium border-0"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-grey-bg !text-grey-text !min-h-0 !h-auto !font-medium border-0"
             onClick={() => { setSelectedOrder(actionMenu.row); setIsEditModalOpen(true); setActionMenu(null); }}
-            icon={() => <Pencil size={16} className="text-ink-400" />}
+            icon={() => <Pencil size={16} className="text-grey-icon" />}
             text="Edit"
           />
           <Button
             variant="ghost"
-            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-ink-50 !text-ink-700 !min-h-0 !h-auto !font-medium border-0"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-grey-bg !text-grey-text !min-h-0 !h-auto !font-medium border-0"
             onClick={() => { setActionMenu(null); window.print(); }}
-            icon={() => <Printer size={16} className="text-ink-400" />}
+            icon={() => <Printer size={16} className="text-grey-icon" />}
             text="Print"
           />
-          <div className="h-px bg-ink-100 my-1 mx-2 shrink-0" />
+          <div className="h-px bg-grey-surface my-1 mx-2 shrink-0" />
           <Button
             variant="ghost"
-            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-danger-50 !text-danger-600 !min-h-0 !h-auto !font-medium border-0"
+            className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-danger-bg !text-danger-main !min-h-0 !h-auto !font-medium border-0"
             onClick={() => {
               setActionMenu(null);
               setIsDeleteModalOpen(true);
 
             }}
-            icon={() => <Trash2 size={16} className="text-danger-600" />}
+            icon={() => <Trash2 size={16} className="text-danger-main" />}
             text="Delete"
           />
         </div>,

@@ -183,24 +183,24 @@ export default function Customers() {
       label: 'Customer',
       render: (row) => (
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600/10 text-xs font-bold text-brand-800">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary-dark">
             {customerInitials(row.name)}
           </span>
-          <span className="font-semibold text-ink-900 truncate max-w-[180px] sm:max-w-[250px]" title={row.name}>{row.name}</span>
+          <span className="font-semibold text-grey-text-strong truncate max-w-[180px] sm:max-w-[250px]" title={row.name}>{row.name}</span>
         </div>
       ),
     },
     {
       key: 'code',
       label: 'Code',
-      render: (row) => <span className="font-mono text-sm text-ink-700 block truncate max-w-[120px]" title={row.code}>{row.code || '-'}</span>,
+      render: (row) => <span className="font-mono text-sm text-grey-text block truncate max-w-[120px]" title={row.code}>{row.code || '-'}</span>,
     },
     {
       key: 'region',
       label: 'Region',
       render: (row) => (
-        <span className="inline-flex items-center gap-1 text-sm text-ink-700 max-w-[150px]" title={row.region}>
-          <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-400" aria-hidden />
+        <span className="inline-flex items-center gap-1 text-sm text-grey-text max-w-[150px]" title={row.region}>
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-grey-icon" aria-hidden />
           <span className="truncate">{row.region || '-'}</span>
         </span>
       ),
@@ -210,7 +210,7 @@ export default function Customers() {
       label: 'Brands',
       align: 'right',
       render: (row) => (
-        <span className="font-mono text-sm font-semibold tabular-nums text-ink-800">
+        <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
           {row.brands?.length || 0}
         </span>
       ),
@@ -222,7 +222,7 @@ export default function Customers() {
       render: (row) => {
         const orders = orderCountByCustomer.get(row.name) ?? 0;
         return (
-          <span className="font-mono text-sm font-semibold tabular-nums text-ink-800">
+          <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
             {orders}
           </span>
         );
@@ -252,10 +252,10 @@ export default function Customers() {
         {/* Page Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-ink-900">
+            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
               Customers
             </h1>
-            <p className="mt-1 text-sm leading-snug text-ink-500">
+            <p className="mt-1 text-sm leading-snug text-grey-muted">
               Search accounts and manage customer master data.
             </p>
           </div>
@@ -272,11 +272,11 @@ export default function Customers() {
         <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Customer KPIs">
           {kpis.map((kpi) => {
             const toneBar = {
-              neutral: 'bg-brand-600',
-              success: 'bg-success-700',
-              warning: 'bg-warning-700',
-              danger: 'bg-danger-700',
-              info: 'bg-info-700',
+              neutral: 'bg-primary',
+              success: 'bg-success-dark',
+              warning: 'bg-warning-dark',
+              danger: 'bg-danger-dark',
+              info: 'bg-primary-dark',
             };
             return (
               <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none">
@@ -284,13 +284,13 @@ export default function Customers() {
                   className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])}
                   aria-hidden
                 />
-                <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">
+                <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">
                   {kpi.label}
                 </p>
-                <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">
+                <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">
                   {kpi.value}
                 </p>
-                {kpi.hint ? <p className="mt-1 pl-2 text-xs text-ink-500">{kpi.hint}</p> : null}
+                {kpi.hint ? <p className="mt-1 pl-2 text-xs text-grey-muted">{kpi.hint}</p> : null}
               </article>
             );
           })}
@@ -321,21 +321,21 @@ export default function Customers() {
               ]}
             />
           </div>
-          <div className="flex items-center gap-4 px-1 text-xs text-ink-500 font-medium">
+          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
             <span className="flex items-center gap-1.5">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 font-sans shadow-sm">Alt</kbd>
-                <span className="text-ink-400">+</span>
-                <kbd className="px-1.5 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 font-sans shadow-sm">S</kbd>
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
+                <span className="text-grey-icon">+</span>
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
               </span>
               Focus search
             </span>
             <span className="flex items-center gap-1.5">
               <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                <span className="text-ink-400">+</span>
-                <kbd className="px-1 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
-                <kbd className="px-1 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
+                <span className="text-grey-icon">+</span>
+                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
+                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
               </span>
               Switch focus
             </span>
@@ -364,12 +364,12 @@ export default function Customers() {
 
       {dropdownState && (
         <div
-          className="absolute z-50 bg-white border border-ink-200 shadow-lg rounded-md py-1 w-32 flex flex-col"
+          className="absolute z-50 bg-white border border-grey-border shadow-lg rounded-md py-1 w-32 flex flex-col"
           style={{ top: dropdownState.y, left: dropdownState.x }}
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="text-left px-4 py-2 text-sm text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors"
+            className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors"
             onClick={() => {
               setSelectedCustomer(dropdownState.row);
               setEditOpen(true);
@@ -379,7 +379,7 @@ export default function Customers() {
             Edit
           </button>
           <button
-            className="text-left px-4 py-2 text-sm text-danger-600 hover:bg-danger-50 transition-colors"
+            className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors"
             onClick={() => {
               setSelectedCustomer(dropdownState.row);
               setDeleteOpen(true);

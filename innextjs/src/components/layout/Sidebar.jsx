@@ -46,12 +46,19 @@ function NavItemLink({ item }) {
   return (
     <Link
       href={item.to}
-      className={clsx('nav-item group', isActive && 'nav-item-active')}
+      className={clsx(
+        'group relative flex min-h-11 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary',
+        isActive
+          ? 'bg-primary/10 font-bold text-primary-text shadow-[inset_3px_0_0_0_var(--color-primary)]'
+          : 'text-grey-text-light hover:bg-white/65 hover:text-grey-text-strong active:bg-white/78'
+      )}
     >
       <span
         className={clsx(
-          'nav-icon-wrap',
-          isActive && 'nav-icon-wrap-active',
+          'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors duration-150',
+          isActive
+            ? 'bg-primary/10 text-primary-dark'
+            : 'text-grey-icon group-hover:bg-white/55 group-hover:text-grey-text'
         )}
       >
         <Icon className="h-4 w-4" aria-hidden />
@@ -75,17 +82,19 @@ function NestedNavItem({ item, pathname }) {
   return (
     <li
       className={clsx(
-        'nav-branch',
+        'group/branch',
         open && 'nav-branch-open',
         onSection && 'nav-branch-current',
       )}
     >
-      <div className="nav-branch-row w-full">
+      <div className="flex w-full items-center gap-0.5">
         <button
           type="button"
           className={clsx(
-            'nav-item group w-full',
-            onSection && 'nav-item-active',
+            'group relative flex w-full min-h-11 cursor-pointer items-center gap-2.5 rounded-md px-2.5 text-sm font-semibold transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary text-left',
+            onSection
+              ? 'bg-primary/10 font-bold text-primary-text shadow-[inset_3px_0_0_0_var(--color-primary)]'
+              : 'text-grey-text-light hover:bg-white/65 hover:text-grey-text-strong active:bg-white/78'
           )}
           aria-expanded={open}
           aria-controls={submenuId}
@@ -93,8 +102,10 @@ function NestedNavItem({ item, pathname }) {
         >
           <span
             className={clsx(
-              'nav-icon-wrap',
-              onSection && 'nav-icon-wrap-active',
+              'flex h-7 w-7 shrink-0 items-center justify-center rounded-md transition-colors duration-150',
+              onSection
+                ? 'bg-primary/10 text-primary-dark'
+                : 'text-grey-icon group-hover:bg-white/55 group-hover:text-grey-text'
             )}
           >
             <Icon className="h-4 w-4" aria-hidden />
@@ -102,9 +113,9 @@ function NestedNavItem({ item, pathname }) {
           <span className="min-w-0 flex-1 truncate text-left">{item.label}</span>
           <ChevronDown
             className={clsx(
-              'nav-branch-chevron h-3.5 w-3.5 shrink-0 transition-transform duration-200 text-ink-400',
+              'h-3.5 w-3.5 shrink-0 transition-transform duration-200 ease-out text-grey-icon',
               open && 'rotate-180',
-              onSection && 'text-brand-600'
+              onSection && 'text-primary'
             )}
             aria-hidden
           />
@@ -114,15 +125,15 @@ function NestedNavItem({ item, pathname }) {
       <div
         id={submenuId}
         className={clsx(
-          'nav-submenu',
-          open ? 'nav-submenu-open' : 'nav-submenu-closed',
+          'overflow-hidden p-0 transition-all duration-200 ease-out',
+          open ? 'max-h-[12rem] mt-[2px] opacity-100 pointer-events-auto' : 'm-0 max-h-0 opacity-0 pointer-events-none'
         )}
         role="group"
         aria-label={`${item.label} views`}
         aria-hidden={!open}
       >
-        <div className="nav-submenu-panel">
-          <ul className="nav-submenu-list">
+        <div className="rounded-[10px] border border-primary/7 bg-primary/[3.5%] p-1 pr-0">
+          <ul className="relative ml-3.5 min-h-0 space-y-0.5 border-l-[2px] border-primary/20 pl-3">
             {item.children?.map((child) => {
               const ChildIcon = child.icon;
               const isAllOrdersChild = child.to === '/orders' && child.end;
@@ -143,8 +154,10 @@ function NestedNavItem({ item, pathname }) {
                     href={child.to}
                     tabIndex={open ? undefined : -1}
                     className={clsx(
-                      'nav-subitem group',
-                      active && 'nav-subitem-active',
+                      'group relative flex min-h-9 cursor-pointer items-center gap-2 rounded-md py-1 pl-2 pr-2.5 text-[13px] font-medium transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-primary',
+                      active
+                        ? 'bg-primary/10 font-bold text-primary-text shadow-[inset_3px_0_0_0_var(--color-primary)]'
+                        : 'text-grey-muted hover:bg-primary/6 hover:text-primary-text'
                     )}
                     aria-current={
                       forceAllOrdersActive && pathname !== '/orders'
@@ -152,13 +165,26 @@ function NestedNavItem({ item, pathname }) {
                         : undefined
                     }
                   >
-                    <span className="nav-subitem-connector" aria-hidden>
-                      <span className="nav-subitem-dot" />
+                    <span 
+                      className={clsx(
+                        "pointer-events-none absolute left-[-13px] top-1/2 h-[2px] w-[10px] -translate-y-1/2",
+                        active ? "bg-primary" : "bg-primary/22 group-hover:bg-primary/45"
+                      )}
+                      aria-hidden 
+                    >
+                      <span 
+                        className={clsx(
+                          "absolute left-0 top-1/2 h-[7px] w-[7px] -translate-x-1/2 -translate-y-1/2 rounded-full border-[1.5px] transition-colors duration-150",
+                          active ? "border-primary bg-primary" : "border-primary/45 bg-white group-hover:border-primary/75 group-hover:bg-white"
+                        )}
+                      />
                     </span>
                     <span
                       className={clsx(
-                        'nav-subitem-icon',
-                        active && 'nav-subitem-icon-active',
+                        'flex h-6 w-6 shrink-0 items-center justify-center rounded-md transition-all duration-150',
+                        active
+                          ? 'bg-primary/18 text-primary-dark'
+                          : 'text-grey-icon group-hover:bg-primary/8 group-hover:text-primary-dark'
                       )}
                     >
                       <ChildIcon className="h-3.5 w-3.5" aria-hidden />
@@ -180,7 +206,7 @@ function NavSection({ title, items }) {
 
   return (
     <div className="mb-5">
-      <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-wider text-ink-400/90">
+      <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-wider text-grey-icon/90">
         {title}
       </p>
       <ul className="flex flex-col gap-0.5">
@@ -204,16 +230,16 @@ export function Sidebar() {
       <div className="glass-nav-header">
         <Link
           href="/"
-          className="flex cursor-pointer items-center gap-2.5 rounded-md outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-brand-600"
+          className="flex cursor-pointer items-center gap-2.5 rounded-md outline-offset-2 focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary"
         >
-          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-brand-600 text-xs font-bold text-white shadow-sm shadow-brand-600/25">
+          <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-white shadow-sm shadow-primary/25">
             AW
           </span>
           <span className="min-w-0">
-            <span className="block truncate text-sm font-bold leading-tight text-ink-900">
+            <span className="block truncate text-sm font-bold leading-tight text-grey-text-strong">
               Arwa Weld
             </span>
-            <span className="block text-2xs font-medium uppercase tracking-wide text-ink-500">
+            <span className="block text-2xs font-medium uppercase tracking-wide text-grey-muted">
               Factory workflow
             </span>
           </span>
@@ -227,12 +253,12 @@ export function Sidebar() {
 
       <div className="glass-nav-footer">
         <div className="glass-nav-status">
-          <p className="text-2xs font-semibold uppercase tracking-wide text-ink-400">
+          <p className="text-2xs font-semibold uppercase tracking-wide text-grey-icon">
             Plant status
           </p>
-          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-ink-800">
+          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-grey-text-dark">
             <span
-              className="h-1.5 w-1.5 rounded-full bg-success-700 shadow-[0_0_0_3px_rgba(21,128,61,0.15)]"
+              className="h-1.5 w-1.5 rounded-full bg-success-dark shadow-[0_0_0_3px_rgba(21,128,61,0.15)]"
               aria-hidden
             />
             Shift A · Live
@@ -264,12 +290,12 @@ export function MobileNav() {
             href={item.to}
             className={clsx(
               'relative flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 px-1 py-2 text-2xs font-semibold transition-colors duration-150',
-              active ? 'text-brand-700' : 'text-ink-400 active:text-ink-700',
+              active ? 'text-primary-dark' : 'text-grey-icon active:text-grey-text',
             )}
           >
             {active ? (
               <span
-                className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-brand-600"
+                className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-primary"
                 aria-hidden
               />
             ) : null}

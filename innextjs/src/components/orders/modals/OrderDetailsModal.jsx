@@ -75,9 +75,9 @@ export default function OrderDetailsModal({
       >
         
         {/* Header - Fixed */}
-        <div className="flex-none flex items-center justify-between p-5 border-b border-ink-100 bg-white/50">
-          <h2 className="text-lg font-bold text-ink-900">Order {selectedOrder.orderNumber}</h2>
-          <button onClick={onClose} className="text-ink-500 hover:text-ink-700 transition-colors">
+        <div className="flex-none flex items-center justify-between p-5 border-b border-grey-surface bg-white/50">
+          <h2 className="text-lg font-bold text-grey-text-strong">Order {selectedOrder.orderNumber}</h2>
+          <button onClick={onClose} className="text-grey-muted hover:text-grey-text transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -85,49 +85,49 @@ export default function OrderDetailsModal({
         {/* Body - Scrollable */}
         <div className="flex-1 overflow-y-auto p-5 grid grid-cols-2 gap-y-6 gap-x-4">
           <div>
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Customer</p>
-            <p className="text-sm font-semibold text-ink-900">{selectedOrder.customerName}</p>
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Customer</p>
+            <p className="text-sm font-semibold text-grey-text-strong">{selectedOrder.customerName}</p>
           </div>
           <div>
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Order Type</p>
-            <span className="badge border border-brand-200 text-brand-800 bg-brand-50 inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold shadow-sm whitespace-nowrap">
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Order Type</p>
+            <span className="badge border border-primary-subtle text-primary-dark bg-primary-bg inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold shadow-sm whitespace-nowrap">
                {selectedOrder.orderType}
             </span>
           </div>
           <div>
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Status</p>
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Status</p>
             <span className={clsx("badge px-2 py-1 rounded-md text-xs font-semibold shadow-sm inline-block whitespace-nowrap", getStatusStyles(selectedOrder.status))}>
                {selectedOrder.status.toUpperCase().replace('_', ' ')}
             </span>
           </div>
           <div>
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Due</p>
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Due</p>
             <div className="flex flex-col">
-              <span className={clsx("text-sm font-bold whitespace-nowrap", dueDaysLabel(selectedOrder.dueDate).tone === 'danger' ? 'text-danger-700' : 'text-ink-900')}>
+              <span className={clsx("text-sm font-bold whitespace-nowrap", dueDaysLabel(selectedOrder.dueDate).tone === 'danger' ? 'text-danger-dark' : 'text-grey-text-strong')}>
                  {dueDaysLabel(selectedOrder.dueDate).text}
               </span>
-              <span className="text-xs text-ink-400 whitespace-nowrap">{selectedOrder.dueDate}</span>
+              <span className="text-xs text-grey-icon whitespace-nowrap">{selectedOrder.dueDate}</span>
             </div>
           </div>
           <div>
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Priority</p>
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Priority</p>
             <span className={clsx("text-sm font-semibold", 
-               selectedOrder.priority === 'High' ? "text-danger-700" :
-               selectedOrder.priority === 'Medium' ? "text-warning-700" : "text-success-700"
+               selectedOrder.priority === 'High' ? "text-danger-dark" :
+               selectedOrder.priority === 'Medium' ? "text-warning-dark" : "text-success-dark"
             )}>{selectedOrder.priority}</span>
           </div>
           <div>
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Total Qty</p>
-            <p className="text-sm font-semibold text-ink-900">{orderTotalQty(selectedOrder)}</p>
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Total Qty</p>
+            <p className="text-sm font-semibold text-grey-text-strong">{orderTotalQty(selectedOrder)}</p>
           </div>
           <div className="col-span-2">
-            <p className="text-xs font-bold text-ink-500 uppercase tracking-wide mb-1">Lines</p>
-            <p className="text-sm font-semibold text-ink-900 mb-2">{selectedOrder.products?.length || 0} product(s)</p>
+            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Lines</p>
+            <p className="text-sm font-semibold text-grey-text-strong mb-2">{selectedOrder.products?.length || 0} product(s)</p>
             <div className="space-y-2">
                {selectedOrder.products?.map((p, i) => (
-                  <div key={i} className="flex justify-between items-center bg-white p-3 rounded-md border border-ink-100 shadow-sm">
-                     <span className="text-sm font-medium text-ink-800">{p.name}</span>
-                     <button className="text-ink-400 hover:text-ink-900 transition-colors p-1 rounded-md hover:bg-ink-100">
+                  <div key={i} className="flex justify-between items-center bg-white p-3 rounded-md border border-grey-surface shadow-sm">
+                     <span className="text-sm font-medium text-grey-text-dark">{p.name}</span>
+                     <button className="text-grey-icon hover:text-grey-text-strong transition-colors p-1 rounded-md hover:bg-grey-surface">
                          <X size={16} />
                      </button>
                   </div>
@@ -137,7 +137,7 @@ export default function OrderDetailsModal({
         </div>
         
         {/* Footer - Fixed */}
-        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-ink-50/50 border-t border-ink-100">
+        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-grey-bg/50 border-t border-grey-surface">
           <Button variant="secondary" text="Close" onClick={onClose} className="bg-white rounded-md shadow-sm" />
           <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-md shadow-sm" />
           <Button variant="primary" text="Edit order" icon={Pencil} onClick={onEdit} className="rounded-md shadow-sm" />

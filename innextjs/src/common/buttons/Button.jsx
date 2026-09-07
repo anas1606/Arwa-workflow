@@ -26,10 +26,10 @@ const Button = ({
     };
 
     const variants = {
-        primary: "bg-brand-600 text-white shadow-md shadow-brand-600/20 hover:bg-brand-700",
-        secondary: "border border-ink-400/28 text-ink-800 hover:bg-white/85 bg-white/62 backdrop-blur-md backdrop-saturate-150 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-white)_85%,transparent)]",
-        ghost: "text-ink-600 hover:bg-white/55 hover:text-ink-900",
-        danger: "bg-danger-600 text-white hover:bg-danger-700 shadow-md shadow-danger-600/20",
+        primary: "bg-primary text-white shadow-md shadow-primary/20 hover:bg-primary-dark",
+        secondary: "border border-grey-icon/28 text-grey-text-dark hover:bg-white/85 bg-white/62 backdrop-blur-md backdrop-saturate-150 shadow-[inset_0_1px_0_color-mix(in_srgb,var(--color-white)_85%,transparent)]",
+        ghost: "text-grey-text-light hover:bg-white/55 hover:text-grey-text-strong",
+        danger: "bg-danger-main text-white hover:bg-danger-dark shadow-md shadow-danger-main/20",
     };
 
     const iconSize = size === "sm" || size === "square" ? 14 : 18;

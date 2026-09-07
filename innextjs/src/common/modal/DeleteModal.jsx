@@ -112,15 +112,15 @@ export default function DeleteModal({ open, onClose, onConfirm, item, itemNameKe
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-xl border border-ink-200 ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-md w-full`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-md w-full`}
       >
         <div className="flex shrink-0 items-center justify-between px-6 py-5">
-          <h2 id={titleId} className="text-lg font-bold text-ink-900">
+          <h2 id={titleId} className="text-lg font-bold text-grey-text-strong">
             {title}
           </h2>
           <button
             type="button"
-            className="btn-ghost h-8 w-8 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-ink-100 text-ink-500 hover:text-ink-900"
+            className="btn-ghost h-8 w-8 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-grey-surface text-grey-muted hover:text-grey-text-strong"
             onClick={handleClose}
             aria-label="Close"
           >
@@ -130,16 +130,16 @@ export default function DeleteModal({ open, onClose, onConfirm, item, itemNameKe
         <div className="min-h-0 flex-1 overflow-y-auto px-6 pb-2">
           <form id="generic-delete-form" className="flex flex-col gap-4" onSubmit={submit}>
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-ink-700">
+              <p className="text-sm text-grey-text">
                 Are you sure you want to delete the <strong>{item[itemNameKey]}</strong> {itemType}?
               </p>
-              <p className="text-sm font-semibold text-danger-600">
+              <p className="text-sm font-semibold text-danger-main">
                 This can not be undone.
               </p>
             </div>
             
             <div className="flex flex-col gap-2">
-              <p className="text-sm text-ink-700">
+              <p className="text-sm text-grey-text">
                 Type <strong>{verificationWord}</strong> to confirm.
               </p>
               <Input
@@ -153,13 +153,13 @@ export default function DeleteModal({ open, onClose, onConfirm, item, itemNameKe
             </div>
 
             {error ? (
-              <p className="text-sm font-medium text-danger-700" role="alert">
+              <p className="text-sm font-medium text-danger-dark" role="alert">
                 {error}
               </p>
             ) : null}
           </form>
         </div>
-        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-ink-200 px-4 py-3 sm:flex-row sm:justify-end">
+        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-grey-border px-4 py-3 sm:flex-row sm:justify-end">
           <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" />
           <Button 
             variant="danger" 
