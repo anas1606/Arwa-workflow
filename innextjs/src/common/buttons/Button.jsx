@@ -14,6 +14,7 @@ const Button = ({
     className = "",
     disabled = false,
     href = "",
+    ...props
 }) => {
     const baseStyle =
         "inline-flex cursor-pointer items-center justify-center gap-2 rounded-md font-semibold transition-all duration-150 disabled:cursor-not-allowed disabled:opacity-50";
@@ -49,7 +50,7 @@ const Button = ({
 
     if (href) {
         return (
-            <Link href={href} className={commonClasses}>
+            <Link href={href} className={commonClasses} {...props}>
                 {content}
             </Link>
         );
@@ -61,6 +62,7 @@ const Button = ({
             onClick={onClick}
             disabled={disabled}
             className={commonClasses}
+            {...props}
         >
             {content}
         </button>

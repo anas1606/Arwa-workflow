@@ -2,6 +2,8 @@ import "@/styles/globals.css";
 import { Layout } from "@/components/layout/Layout";
 import Head from 'next/head';
 
+import { Toaster } from 'sonner';
+
 export default function App({ Component, pageProps }) {
   return (
     <>
@@ -12,6 +14,7 @@ export default function App({ Component, pageProps }) {
       <Layout>
         <Component {...pageProps} />
       </Layout>
+      <Toaster position="top-right" richColors duration={1500} />
     </>
   );
 }

@@ -6,6 +6,7 @@ export default function CommonTable({
     data = [],
     onRowClick,
     emptyState = "No data available",
+    isLoading = false,
     pagination = {
         totalItems: 0,
         pageSize: 10,
@@ -51,7 +52,7 @@ export default function CommonTable({
                     <button
                         onClick={(e) => {
                             e.stopPropagation();
-                            col.onClick && col.onClick(row);
+                            col.onClick && col.onClick(row, e);
                         }}
                         className="p-1.5 hover:bg-white/20 rounded-full text-ink-400 cursor-pointer transition-colors"
                     >
@@ -86,7 +87,17 @@ export default function CommonTable({
 
                     {/* BODY */}
                     <tbody className="divide-y divide-white/10">
-                        {data.length === 0 ? (
+                        {isLoading ? (
+                            Array.from({ length: Math.min(pageSize, 10) }).map((_, idx) => (
+                                <tr key={`skeleton-${idx}`} className="animate-pulse">
+                                    {columns.map((col) => (
+                                        <td key={`sk-${col.key}`} className="px-5 py-4">
+                                            <div className="h-4 bg-ink-200 rounded w-3/4 opacity-50"></div>
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : data.length === 0 ? (
                             <tr>
                                 <td colSpan={columns.length} className="text-center py-10 text-ink-500">
                                     <div className="flex flex-col items-center gap-2">
