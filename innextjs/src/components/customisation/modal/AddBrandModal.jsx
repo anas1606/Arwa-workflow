@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Input from '@/common/input/Input';
 import Button from '@/common/buttons/Button';
+import { getCustomersApi, createBrandApi } from '@/lib/fetcher';
+import { toast } from 'sonner';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -15,10 +17,13 @@ function getModalRoot() {
   return root;
 }
 
-export default function AddBrandModal({ open, customers, initialCustomerId, onClose, onAdd }) {
+export default function AddBrandModal({ open, initialCustomerId, onClose, onAdd }) {
+  const [customersList, setCustomersList] = useState([]);
   const [brandName, setBrandName] = useState('');
-  const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || customers[0]?.id || '');
+  const [description, setDescription] = useState('');
+  const [selectedCustomerId, setSelectedCustomerId] = useState(initialCustomerId || '');
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
@@ -31,21 +36,60 @@ export default function AddBrandModal({ open, customers, initialCustomerId, onCl
   useEffect(() => { 
     if (open) { 
       setBrandName(''); 
+      setDescription('');
       setError(null); 
-      setSelectedCustomerId(initialCustomerId || customers[0]?.id || ''); 
+      
+      // Fetch dynamic customers
+      getCustomersApi(1, 100).then(res => {
+        if (res.data && res.data.success) {
+          const list = res.data.data.data;
+          setCustomersList(list);
+          if (!initialCustomerId && list.length > 0) {
+            setSelectedCustomerId(list[0].id);
+          } else if (initialCustomerId) {
+            setSelectedCustomerId(initialCustomerId);
+          }
+        }
+      });
     } 
-  }, [open, initialCustomerId, customers]);
+  }, [open, initialCustomerId]);
   
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     const name = brandName.trim();
     if (!name) return setError('Brand name is required.');
     if (!selectedCustomerId) return setError('Select a customer.');
-    const customer = customers.find((c) => c.id === selectedCustomerId);
-    if (customer?.brands.some((b) => b.name.toLowerCase() === name.toLowerCase())) {
+    
+    // Check local state first if brands are available
+    const customer = customersList.find((c) => c.id === selectedCustomerId);
+    if (customer?.brands && customer.brands.some((b) => b.brandname?.toLowerCase() === name.toLowerCase() || b.name?.toLowerCase() === name.toLowerCase())) {
       return setError(`Brand "${name}" already exists for this customer.`);
     }
-    onAdd(selectedCustomerId, { id: `b-${Date.now()}`, name, panelStickers: ['None'] });
+
+    setIsLoading(true);
+    setError(null);
+    try {
+      const res = await createBrandApi({
+        brandname: name,
+        customer_id: selectedCustomerId,
+        description: description.trim() || undefined,
+      });
+
+      if (res.error || (res.data && !res.data.success)) {
+        const errorMsg = res.error?.message || res.data?.message || 'Failed to create brand';
+        setError(errorMsg);
+        toast.error(errorMsg);
+      } else {
+        onAdd(selectedCustomerId, { ...res.data.data, name: res.data.data.brandname, panelStickers: ['None'] });
+        toast.success('Brand created successfully');
+        handleClose();
+      }
+    } catch (err) {
+      setError('An unexpected error occurred.');
+      toast.error('An unexpected error occurred.');
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   useEffect(() => {
@@ -107,14 +151,15 @@ export default function AddBrandModal({ open, customers, initialCustomerId, onCl
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <form className="flex flex-col gap-4" onSubmit={submit}>
-            <Input type="text" label="Brand name" required value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="e.g. Acme Pro" autoFocus />
+            <Input type="text" label="Brand name" required value={brandName} onChange={(e) => setBrandName(e.target.value)} placeholder="e.g. Acme Pro" autoFocus disabled={isLoading} />
+            <Input type="text" label="Description (Optional)" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Enter brand description" disabled={isLoading} />
             <Input type="select" label="Customer" required value={selectedCustomerId} onChange={(e) => setSelectedCustomerId(e.target.value)}
-              options={customers.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.id }))} />
+              options={customersList.map((c) => ({ label: `${c.name} · ${c.code}`, value: c.id }))} disabled={isLoading} />
             <p className="text-xs text-ink-500">You can assign this brand to a different customer if needed.</p>
             {error && <p className="text-sm font-medium text-danger-700" role="alert">{error}</p>}
             <div className="flex gap-2 pt-2">
-              <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" />
-              <Button variant="primary" type="submit" className="flex-1" text="Add brand" />
+              <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" disabled={isLoading} />
+              <Button variant="primary" type="submit" className="flex-1" text={isLoading ? 'Adding...' : 'Add brand'} disabled={isLoading} />
             </div>
           </form>
         </div>

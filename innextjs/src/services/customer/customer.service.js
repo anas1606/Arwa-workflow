@@ -50,6 +50,11 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
                 take,
                 orderBy: {
                     createdAt: 'desc'
+                },
+                include: {
+                    brands: {
+                        where: { is_deleted: false }
+                    }
                 }
             }),
             prisma.customer.count({ where }),

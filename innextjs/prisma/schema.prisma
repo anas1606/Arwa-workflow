@@ -25,4 +25,23 @@ model Customer {
   is_deleted Boolean  @default(false)
   deletedAt DateTime?
   deletedBy String?
+  brands    Brand[]
+}
+
+model Brand {
+  id          String    @id @default(uuid())
+  customer_id String
+  brandname   String
+  description String?
+  
+  customer    Customer  @relation(fields: [customer_id], references: [id])
+  
+  // Audit fields
+  createdAt   DateTime  @default(now())
+  createdBy   String?
+  updatedAt   DateTime  @updatedAt
+  updatedBy   String?
+  is_deleted  Boolean   @default(false)
+  deletedAt   DateTime?
+  deletedBy   String?
 }
