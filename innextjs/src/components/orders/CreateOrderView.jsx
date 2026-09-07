@@ -1,8 +1,13 @@
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
+import dynamic from 'next/dynamic';
 import { ArrowLeft, ArrowRight, Search, Plus, Check, Calendar, Flag, X, Copy } from 'lucide-react';
 import Button from '@/common/buttons/Button';
+import Input from '@/common/input/Input';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
+import 'react-quill-new/dist/quill.snow.css';
 import clsx from 'clsx';
 import { CUSTOMERS, PRODUCT_MODELS, CUSTOMISATION_SPECS } from '@/common/dummy';
 import SetQuantityModal from './modals/SetQuantityModal';
@@ -135,9 +140,11 @@ export default function CreateOrderView() {
       }
 
       if (e.altKey && e.key === 'ArrowRight') {
+        e.preventDefault();
         if (stepIndex < WIZARD_STEPS.length - 1) setStepIndex(s => s + 1);
       }
       if (e.altKey && e.key === 'ArrowLeft') {
+        e.preventDefault();
         if (stepIndex > 0) setStepIndex(s => s - 1);
       }
     };
@@ -215,11 +222,25 @@ export default function CreateOrderView() {
   return (
     <>
       <Head><title>Create Order | Arwa Weld</title></Head>
-      <div className="flex flex-col h-screen overflow-hidden bg-[#f0f2f7]">
+      <div className="flex flex-col h-screen overflow-hidden ">
+
+        <div className="shrink-0  py-1 flex items-start gap-6">
+          <Button
+            variant="ghost"
+            onClick={() => router.push('/orders')}
+            className="!px-0 !bg-transparent text-ink-500 hover:text-ink-900 mt-0.5"
+            icon={ArrowLeft}
+            text="Back to orders"
+          />
+          <div>
+            <h1 className="text-md font-bold text-ink-900 leading-tight">Create new order</h1>
+            <p className="text-sm text-ink-500 mt-1">{WIZARD_STEPS[stepIndex]?.desc}</p>
+          </div>
+        </div>
 
         {/* STEPPER HEADER */}
-        <div className="bg-white border-b border-ink-200/60 shrink-0">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6">
+        <div className="bg-white border-y border-ink-200/60 shrink-0">
+          <div className="w-full mx-auto px-6 lg:px-8 rounded-md">
             <div className="flex items-center">
               {WIZARD_STEPS.map((step, idx) => {
                 const isActive = idx === stepIndex;
@@ -234,7 +255,7 @@ export default function CreateOrderView() {
                     onClick={() => { if (isDone || isActive) setStepIndex(idx); }}
                   >
                     <div className={clsx(
-                      'w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
+                      'w-6 h-6 rounded-md flex items-center justify-center text-xs font-bold shrink-0 transition-colors',
                       isActive ? 'bg-brand-600 text-white' : isDone ? 'bg-brand-100 text-brand-700 border-2 border-brand-400' : 'bg-ink-100 text-ink-500'
                     )}>
                       {isDone ? <Check size={12} /> : idx + 1}
@@ -251,41 +272,42 @@ export default function CreateOrderView() {
         </div>
 
         {/* MAIN CONTENT */}
-        <div className="flex-1 min-h-0 overflow-y-auto">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-5">
+        <div className="flex-1 min-h-0 overflow-hidden">
+          <div className="w-full mx-auto py-3  h-full">
 
             {/* ─── STEP 1: CUSTOMER ─── */}
             {stepIndex === 0 && (
-              <div className="flex flex-col lg:flex-row gap-5 min-h-0">
+              <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
                 {/* LEFT: Customer list */}
-                <div className="flex-1 min-w-0 bg-white rounded-xl border border-ink-200/60 shadow-sm flex flex-col overflow-hidden">
-                  <div className="px-5 pt-5 pb-3 shrink-0">
+                <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
+                  <div className="flex-1 bg-white rounded-md border border-ink-200/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
+                    <div className="px-5 pt-5 pb-3 shrink-0">
                     <h2 className="text-base font-bold text-ink-900">Select customer</h2>
                     <p className="text-xs text-ink-500 mt-0.5">Search and pick the account for this production order.</p>
                   </div>
 
                   {/* Search */}
                   <div className="px-5 pb-3 flex items-center gap-3 shrink-0">
-                    <div className="wizard-search-field flex-1">
-                      <Search className="wizard-search-icon" />
-                      <input
+                    <div className="flex-1">
+                      <Input
                         ref={customerSearchRef}
                         type="text"
-                        className="wizard-search-input !h-10 !pl-10 !text-sm !rounded-lg"
+                        startIcon={Search}
+                        className="!text-sm"
                         placeholder="Search name, code, or region..."
                         value={customerQuery}
                         onChange={e => setCustomerQuery(e.target.value)}
                       />
                     </div>
-                    <Button variant="secondary" icon={Plus} text="Add customer" className="!h-10 !rounded-lg !text-sm" />
+                    <Button variant="secondary" icon={Plus} text="Add customer" className="!h-10 !rounded-md !text-sm" />
                   </div>
 
                   {/* Shortcuts */}
-                  <div className="px-5 pb-2 flex items-center gap-3 flex-wrap shrink-0">
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">S</span> Search</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">↓</span><span className="wizard-kbd">↑</span> Move list</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ENTER</span> Select</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">←</span><span className="wizard-kbd">→</span> Switch sections</span>
+                  <div className="px-5 pb-3 flex items-center gap-4 flex-wrap shrink-0">
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">S</span> Search</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↓</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">↑</span> Move list</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ENTER</span> Select</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">←</span><span className="px-1.5 py-0.5 border border-ink-200 rounded-md text-[10px] font-bold bg-white text-ink-700 shadow-sm">→</span> Switch sections</span>
                   </div>
 
                   {/* List */}
@@ -300,11 +322,11 @@ export default function CreateOrderView() {
                           onMouseEnter={() => setFocusedCustomerIndex(idx)}
                           className={clsx(
                             'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-ink-100/50 transition-colors',
-                            isSelected ? 'bg-brand-50' : isFocused ? 'bg-ink-50/60' : 'hover:bg-ink-50/40'
+                            isSelected ? 'bg-brand-50' : isFocused ? 'bg-ink-100 ring-1 ring-inset ring-ink-300 z-10 relative' : 'hover:bg-ink-50/40'
                           )}
                         >
                           <div className={clsx(
-                            'w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
+                            'w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold shrink-0',
                             isSelected ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-600'
                           )}>
                             {c.name.substring(0, 2).toUpperCase()}
@@ -324,16 +346,17 @@ export default function CreateOrderView() {
                     )}
                   </div>
                 </div>
+                </div>
 
                 {/* RIGHT: Order Summary sidebar */}
-                <div className="w-full lg:w-[280px] shrink-0 space-y-3">
+                <div className="w-full lg:w-[280px] shrink-0 space-y-3 h-full overflow-y-auto pb-5">
                   <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400 px-1">Order Summary</p>
 
                   {/* Customer card */}
-                  <div className={clsx('bg-white rounded-xl border border-ink-200/60 shadow-sm p-3', customer ? 'flex items-center gap-3' : 'flex items-center justify-center py-4')}>
+                  <div className={clsx('bg-white rounded-md border border-ink-200/60 shadow-sm p-3', customer ? 'flex items-center gap-3' : 'flex items-center justify-center py-4')}>
                     {customer ? (
                       <>
-                        <div className="w-9 h-9 rounded-lg bg-brand-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+                        <div className="w-9 h-9 rounded-md bg-brand-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
                           {customer.name.substring(0, 2).toUpperCase()}
                         </div>
                         <div>
@@ -347,16 +370,16 @@ export default function CreateOrderView() {
                   </div>
 
                   {/* Due date */}
-                  <div className="bg-white rounded-xl border border-ink-200/60 shadow-sm p-4 space-y-3">
+                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <label className="flex items-center gap-1.5 text-xs font-bold text-ink-700">
                         <Calendar size={13} className="text-ink-400" /> Due date *
                       </label>
                       {dueDate && <span className="text-xs font-bold text-brand-600">{formatDueLabel(dueDate)}</span>}
                     </div>
-                    <input
+                    <Input
                       type="date"
-                      className="input !h-10 !text-sm bg-white w-full"
+                      className="!text-sm"
                       value={dueDate}
                       onChange={e => setDueDate(e.target.value)}
                     />
@@ -380,7 +403,7 @@ export default function CreateOrderView() {
                   </div>
 
                   {/* Priority */}
-                  <div className="bg-white rounded-xl border border-ink-200/60 shadow-sm p-4">
+                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm p-4">
                     <label className="flex items-center gap-1.5 text-xs font-bold text-ink-700 mb-3">
                       <Flag size={13} className="text-ink-400" /> Priority *
                     </label>
@@ -390,7 +413,7 @@ export default function CreateOrderView() {
                           key={p}
                           onClick={() => setPriority(p)}
                           className={clsx(
-                            'flex-1 py-1.5 rounded-lg text-xs font-bold border transition-colors',
+                            'flex-1 py-1.5 rounded-md text-xs font-bold border transition-colors',
                             p === 'Low' ? (priority === 'Low' ? 'bg-success-100 text-success-800 border-success-200' : 'bg-success-50/50 text-success-700 border-transparent hover:bg-success-100') :
                             p === 'Medium' ? (priority === 'Medium' ? 'bg-warning-100 text-warning-800 border-warning-200' : 'bg-warning-50/50 text-warning-700 border-transparent hover:bg-warning-100') :
                             (priority === 'High' ? 'bg-danger-100 text-danger-800 border-danger-200' : 'bg-danger-50/50 text-danger-700 border-transparent hover:bg-danger-100')
@@ -403,10 +426,10 @@ export default function CreateOrderView() {
                   </div>
 
                   {/* Planner notes */}
-                  <div className="bg-white rounded-xl border border-ink-200/60 shadow-sm p-4">
+                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm p-4">
                     <label className="text-xs font-bold text-ink-700 block mb-2">Planner notes <span className="text-ink-400 font-normal">(optional)</span></label>
                     <textarea
-                      className="w-full text-sm text-ink-900 bg-ink-50/40 border border-ink-200/60 rounded-lg p-3 resize-none h-[88px] placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
+                      className="w-full text-sm text-ink-900 bg-ink-50/40 border border-ink-200/60 rounded-md p-3 resize-none h-[88px] placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-brand-500/30"
                       placeholder="Delivery instructions, shift preferences, material constraints..."
                       value={plannerNotes}
                       onChange={e => setPlannerNotes(e.target.value)}
@@ -418,43 +441,46 @@ export default function CreateOrderView() {
 
             {/* ─── STEP 2: MODELS ─── */}
             {stepIndex === 1 && (
-              <div className="flex flex-col lg:flex-row gap-5">
+              <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
                 {/* LEFT */}
-                <div className="flex-1 min-w-0 bg-white rounded-xl border border-ink-200/60 shadow-sm flex flex-col overflow-hidden" style={{ maxHeight: 'calc(100vh - 200px)' }}>
+                <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
+                  <div className="flex-1 bg-white rounded-md border border-ink-200/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
                   <div className="px-5 pt-5 pb-3 shrink-0">
                     <h2 className="text-base font-bold text-ink-900">Select models</h2>
                   </div>
 
                   {/* Shortcuts */}
-                  <div className="px-5 pb-2 flex flex-wrap gap-2.5 shrink-0">
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">←</span> Catalog</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">→</span> Selected</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">S</span> Search</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">↑↓</span> Lines</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">+</span><span className="wizard-kbd">-</span> Qty</span>
-                    <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">X</span> Remove</span>
+                  <div className="px-5 pb-3 flex flex-wrap gap-4 shrink-0">
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">←</span> Catalog</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">→</span> Selected</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">S</span> Search</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↑↓</span> Lines</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">+</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">-</span> Qty</span>
+                    <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">X</span> Remove</span>
                   </div>
 
                   {/* Search + Category */}
                   <div className="px-5 pb-3 flex items-center gap-3 shrink-0">
-                    <div className="wizard-search-field flex-1">
-                      <Search className="wizard-search-icon" />
-                      <input
+                    <div className="flex-1">
+                      <Input
                         ref={modelSearchRef}
                         type="text"
-                        className="wizard-search-input !h-10 !pl-10 !text-sm !rounded-lg"
+                        startIcon={Search}
+                        className="!text-sm"
                         placeholder="Search model name or code..."
                         value={modelQuery}
                         onChange={e => setModelQuery(e.target.value)}
                       />
                     </div>
-                    <select
-                      className="input !h-10 !text-sm bg-white !w-44 !rounded-lg"
-                      value={modelCategory}
-                      onChange={e => setModelCategory(e.target.value)}
-                    >
-                      {categories.map(c => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <div className="w-44 shrink-0">
+                      <Input
+                        type="select"
+                        className="!text-sm"
+                        value={modelCategory}
+                        onChange={e => setModelCategory(e.target.value)}
+                        options={categories.map(c => ({ label: c, value: c }))}
+                      />
+                    </div>
                   </div>
 
                   {/* Model List */}
@@ -469,11 +495,11 @@ export default function CreateOrderView() {
                           onMouseEnter={() => setFocusedModelIndex(idx)}
                           className={clsx(
                             'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-ink-100/50 transition-colors',
-                            isSelected ? 'bg-brand-50' : isFocused ? 'bg-ink-50/60' : 'hover:bg-ink-50/40'
+                            isSelected ? 'bg-brand-50' : isFocused ? 'bg-ink-100 ring-1 ring-inset ring-ink-300 z-10 relative' : 'hover:bg-ink-50/40'
                           )}
                         >
                           <div className={clsx(
-                            'w-9 h-9 rounded-lg flex items-center justify-center text-xs font-bold shrink-0',
+                            'w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold shrink-0',
                             isSelected ? 'bg-brand-600 text-white' : 'bg-ink-100 text-ink-600'
                           )}>
                             {m.code.substring(0, 2)}
@@ -490,10 +516,11 @@ export default function CreateOrderView() {
                     })}
                   </div>
                 </div>
-
+                </div>
+                
                 {/* RIGHT: Selected */}
-                <div className="w-full lg:w-[280px] shrink-0">
-                  <div className="bg-white rounded-xl border border-ink-200/60 shadow-sm overflow-hidden">
+                <div className="w-full lg:w-[280px] shrink-0 h-full overflow-y-auto pb-5">
+                  <div className="bg-white rounded-md border border-ink-200/60 shadow-sm overflow-hidden">
                     <div className="flex items-center justify-between px-4 py-3 border-b border-ink-100">
                       <span className="text-[10px] font-bold uppercase tracking-wide text-ink-400">Selected</span>
                       {lines.length > 0 && (
@@ -532,7 +559,7 @@ export default function CreateOrderView() {
                                 <X size={14} />
                               </button>
                             </div>
-                            <div className="mt-2 flex items-center bg-ink-50 rounded-lg overflow-hidden border border-ink-200/60">
+                            <div className="mt-2 flex items-center bg-ink-50 rounded-md overflow-hidden border border-ink-200/60">
                               <button className="w-9 h-9 flex items-center justify-center text-ink-500 hover:bg-ink-100 font-bold text-base" onClick={() => handleUpdateLineQty(idx, -1)}>-</button>
                               <div className="flex-1 text-center font-bold text-sm text-ink-900">{line.quantity}</div>
                               <button className="w-9 h-9 flex items-center justify-center text-ink-500 hover:bg-ink-100 font-bold text-base" onClick={() => handleUpdateLineQty(idx, 1)}>+</button>
@@ -548,7 +575,7 @@ export default function CreateOrderView() {
 
             {/* ─── STEP 3: SPECS ─── */}
             {stepIndex === 2 && (
-              <div className="bg-white rounded-xl border border-ink-200/60 shadow-sm overflow-hidden flex flex-col lg:flex-row" style={{ minHeight: 'calc(100vh - 200px)' }}>
+              <div className="bg-white rounded-md border border-ink-200/60 shadow-sm overflow-hidden flex flex-col lg:flex-row h-full">
 
                 {/* LEFT SIDEBAR */}
                 <div className="w-full lg:w-[200px] shrink-0 border-b lg:border-b-0 lg:border-r border-ink-100 flex flex-col">
@@ -564,7 +591,7 @@ export default function CreateOrderView() {
                           key={line.model.code}
                           onClick={() => setActiveSpecLineIndex(idx)}
                           className={clsx(
-                            'flex items-center gap-2 mx-2 px-2 py-2 rounded-lg cursor-pointer transition-colors mb-1',
+                            'flex items-center gap-2 mx-2 px-2 py-2 rounded-md cursor-pointer transition-colors mb-1',
                             isActive ? 'bg-brand-50 border border-brand-200/50' : 'hover:bg-ink-50'
                           )}
                         >
@@ -601,11 +628,11 @@ export default function CreateOrderView() {
                   {/* Header */}
                   <div className="px-5 py-4 border-b border-ink-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shrink-0">
                     <h2 className="text-base font-bold text-ink-900">Technical specifications</h2>
-                    <div className="flex flex-wrap gap-2">
-                      <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">↓</span> Next model</span>
-                      <span className="wizard-specs-shortcut"><span className="wizard-kbd">ALT</span><span className="wizard-kbd">↑</span> Previous</span>
-                      <span className="wizard-specs-shortcut"><span className="wizard-kbd">1-9</span> Jump</span>
-                      <span className="wizard-specs-shortcut"><span className="wizard-kbd">TAB</span> Fields</span>
+                    <div className="flex flex-wrap gap-4">
+                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↓</span> Next model</span>
+                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">↑</span> Previous</span>
+                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">1-9</span> Jump</span>
+                      <span className="flex items-center gap-1.5 text-xs text-ink-500"><span className="px-1.5 py-0.5 border border-ink-200 rounded text-[10px] font-bold bg-white text-ink-700 shadow-sm">TAB</span> Fields</span>
                     </div>
                   </div>
 
@@ -615,7 +642,7 @@ export default function CreateOrderView() {
                     <div className="flex-1 overflow-y-auto p-5 space-y-6">
                       {/* Active model header */}
                       <div className="flex items-center gap-3">
-                        <div className="w-11 h-11 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                        <div className="w-11 h-11 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
                           {activeLine?.model?.code?.substring(0, 2)}
                         </div>
                         <div className="flex-1">
@@ -624,7 +651,7 @@ export default function CreateOrderView() {
                         </div>
                         <div className="flex flex-col items-end gap-1">
                           <span className="text-[10px] font-bold text-ink-400 uppercase tracking-wide">QTY</span>
-                          <div className="h-9 w-12 border border-ink-200 rounded-lg flex items-center justify-center font-bold text-sm text-ink-900 bg-ink-50">
+                          <div className="h-9 w-12 border border-ink-200 rounded-md flex items-center justify-center font-bold text-sm text-ink-900 bg-ink-50">
                             {activeLine?.quantity}
                           </div>
                         </div>
@@ -637,14 +664,15 @@ export default function CreateOrderView() {
                         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
                           {(CUSTOMISATION_SPECS || []).slice(0, 4).map(spec => (
                             <div key={spec.key}>
-                              <label className="label text-xs !mb-1.5">{spec.label} *</label>
-                              <select
-                                className="input !h-10 bg-white !text-sm w-full"
+                              <Input
+                                type="select"
+                                label={spec.label}
+                                required
+                                className="!text-sm"
                                 value={activeLine?.specs?.[spec.key] || ''}
                                 onChange={e => handleUpdateSpec(activeSpecLineIndex, spec.key, e.target.value)}
-                              >
-                                {spec.options?.map(o => <option key={o} value={o}>{o}</option>)}
-                              </select>
+                                options={(spec.options || []).map(o => ({ label: o, value: o }))}
+                              />
                             </div>
                           ))}
                         </div>
@@ -657,7 +685,7 @@ export default function CreateOrderView() {
                           {(CUSTOMISATION_SPECS || []).slice(4, 6).map(spec => (
                             <div key={spec.key}>
                               <label className="label text-xs !mb-2">{spec.label} *</label>
-                              <div className="flex bg-ink-50 rounded-lg p-0.5 border border-ink-200/60">
+                              <div className="flex bg-ink-50 rounded-md p-0.5 border border-ink-200/60">
                                 {['Regular', 'Customise'].map(opt => (
                                   <button
                                     key={opt}
@@ -672,17 +700,18 @@ export default function CreateOrderView() {
                                 ))}
                               </div>
                               {activeLine?.specs?.[spec.key] === 'Customise' && (
-                                <div className="mt-2 border border-ink-200/60 rounded-lg bg-white overflow-hidden">
-                                  <div className="border-b border-ink-100 bg-ink-50/50 p-1.5 flex gap-1">
-                                    <button className="w-6 h-6 flex items-center justify-center rounded text-ink-500 hover:bg-ink-200/50 font-bold text-xs">B</button>
-                                    <button className="w-6 h-6 flex items-center justify-center rounded text-ink-500 hover:bg-ink-200/50 italic text-xs">I</button>
-                                    <button className="w-6 h-6 flex items-center justify-center rounded text-ink-500 hover:bg-ink-200/50 font-bold text-xs">≡</button>
-                                  </div>
-                                  <textarea
-                                    className="w-full p-3 text-sm text-ink-900 resize-none h-20 outline-none"
-                                    placeholder={`Describe ${spec.label.toLowerCase()} customisation...`}
+                                <div className="mt-2 rounded-md bg-white overflow-hidden [&_.ql-toolbar]:bg-ink-50/50 [&_.ql-toolbar]:border-ink-200/60 [&_.ql-toolbar]:rounded-t-md [&_.ql-container]:border-ink-200/60 [&_.ql-container]:rounded-b-md [&_.ql-editor]:min-h-[80px] [&_.ql-editor]:text-sm">
+                                  <ReactQuill
+                                    theme="snow"
                                     value={activeLine?.specs?.[spec.key + '_note'] || ''}
-                                    onChange={e => handleUpdateSpec(activeSpecLineIndex, spec.key + '_note', e.target.value)}
+                                    onChange={value => handleUpdateSpec(activeSpecLineIndex, spec.key + '_note', value)}
+                                    placeholder={`Describe ${spec.label.toLowerCase()} customisation...`}
+                                    modules={{
+                                      toolbar: [
+                                        ['bold', 'italic'],
+                                        [{ 'list': 'bullet' }]
+                                      ],
+                                    }}
                                   />
                                 </div>
                               )}
@@ -698,17 +727,17 @@ export default function CreateOrderView() {
 
             {/* ─── STEP 4: REVIEW ─── */}
             {stepIndex === 3 && (
-              <div className="bg-white rounded-xl border border-ink-200/60 shadow-sm overflow-hidden">
+              <div className="bg-white rounded-md border border-ink-200/60 shadow-sm overflow-hidden h-full flex flex-col">
                 {/* Header */}
-                <div className="px-5 py-4 border-b border-ink-100">
+                <div className="px-5 py-4 border-b border-ink-100 shrink-0">
                   <h2 className="text-base font-bold text-ink-900">Review order</h2>
                 </div>
+                <div className="flex-1 overflow-y-auto p-5 space-y-6">
 
-                <div className="p-5 space-y-5">
                   {/* Customer hero row */}
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <div className="w-11 h-11 rounded-xl bg-brand-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
+                      <div className="w-11 h-11 rounded-md bg-brand-600 text-white flex items-center justify-center font-bold text-sm shrink-0">
                         {customer?.name?.substring(0, 2).toUpperCase() || 'NA'}
                       </div>
                       <div>
@@ -732,7 +761,7 @@ export default function CreateOrderView() {
                   </div>
 
                   {/* Ready to create */}
-                  <div className="bg-ink-50/60 border border-ink-100 rounded-xl px-4 py-3">
+                  <div className="bg-ink-50/60 border border-ink-100 rounded-md px-4 py-3">
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-[10px] font-bold uppercase tracking-wide text-ink-400">Ready to create</p>
                       <span className="text-[10px] font-bold text-brand-700 bg-brand-100 px-2 py-0.5 rounded-full">4/4</span>
@@ -754,11 +783,11 @@ export default function CreateOrderView() {
                     </div>
                     <div className="space-y-3">
                       {lines.map((line, idx) => (
-                        <div key={idx} className="border border-ink-200/60 rounded-xl overflow-hidden">
+                        <div key={idx} className="border border-ink-200/60 rounded-md overflow-hidden">
                           {/* Row header */}
                           <div className="flex items-center gap-3 px-4 py-3 bg-ink-50/40 border-b border-ink-100">
                             <span className="text-xs font-bold text-ink-500 w-4">{idx + 1}</span>
-                            <div className="w-8 h-8 rounded-lg bg-brand-100 text-brand-700 font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
+                            <div className="w-8 h-8 rounded-md bg-brand-100 text-brand-700 font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
                             <div className="flex-1">
                               <p className="font-bold text-sm text-ink-900">{line.model.name}</p>
                               <p className="text-[11px] text-ink-400 font-mono">{line.model.code}</p>
@@ -811,7 +840,7 @@ export default function CreateOrderView() {
 
         {/* FOOTER */}
         <div className="bg-white border-t border-ink-200/60 shrink-0">
-          <div className="max-w-6xl mx-auto px-4 sm:px-6 py-3 flex items-center justify-end gap-3">
+          <div className="w-full mx-auto px-6 lg:px-8 py-4 flex items-center justify-end gap-3 rounded-md">
             <Button
               variant="secondary"
               text={stepIndex === 0 ? 'Cancel' : 'Back'}
