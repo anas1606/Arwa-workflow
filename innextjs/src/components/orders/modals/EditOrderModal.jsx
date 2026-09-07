@@ -74,9 +74,9 @@ export default function EditOrderModal({
       >
         
         {/* Header - Fixed */}
-        <div className="flex-none flex items-center justify-between p-5 border-b border-ink-100 bg-white/50">
-          <h2 className="text-lg font-bold text-ink-900">Edit {selectedOrder.orderNumber}</h2>
-          <button onClick={onClose} className="text-ink-500 hover:text-ink-700 transition-colors">
+        <div className="flex-none flex items-center justify-between p-5 border-b border-grey-surface bg-white/50">
+          <h2 className="text-lg font-bold text-grey-text-strong">Edit {selectedOrder.orderNumber}</h2>
+          <button onClick={onClose} className="text-grey-muted hover:text-grey-text transition-colors">
             <X size={20} />
           </button>
         </div>
@@ -84,27 +84,27 @@ export default function EditOrderModal({
         {/* Body - Scrollable */}
         <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
           <div>
-            <label className="block text-xs font-bold text-ink-600 mb-1">Customer</label>
-            <Input type="text" defaultValue={selectedOrder.customerName} className="w-full bg-white border-ink-200 rounded-md shadow-sm" />
+            <label className="block text-xs font-bold text-grey-text-light mb-1">Customer</label>
+            <Input type="text" defaultValue={selectedOrder.customerName} className="w-full bg-white border-grey-border rounded-md shadow-sm" />
           </div>
           <div>
-            <label className="block text-xs font-bold text-ink-600 mb-1">Products (comma-separated)</label>
-            <Input type="text" defaultValue={selectedOrder.products?.map(p=>p.name).join(', ')} className="w-full bg-white border-ink-200 rounded-md shadow-sm" />
+            <label className="block text-xs font-bold text-grey-text-light mb-1">Products (comma-separated)</label>
+            <Input type="text" defaultValue={selectedOrder.products?.map(p=>p.name).join(', ')} className="w-full bg-white border-grey-border rounded-md shadow-sm" />
           </div>
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-bold text-ink-600 mb-1">Primary qty</label>
-              <Input type="number" defaultValue={orderTotalQty(selectedOrder)} className="w-full bg-white border-ink-200 rounded-md shadow-sm" />
+              <label className="block text-xs font-bold text-grey-text-light mb-1">Primary qty</label>
+              <Input type="number" defaultValue={orderTotalQty(selectedOrder)} className="w-full bg-white border-grey-border rounded-md shadow-sm" />
             </div>
             <div>
-              <label className="block text-xs font-bold text-ink-600 mb-1">Due date</label>
-              <Input type="date" defaultValue={selectedOrder.dueDate} className="w-full bg-white border-ink-200 rounded-md shadow-sm" />
+              <label className="block text-xs font-bold text-grey-text-light mb-1">Due date</label>
+              <Input type="date" defaultValue={selectedOrder.dueDate} className="w-full bg-white border-grey-border rounded-md shadow-sm" />
             </div>
           </div>
         </div>
         
         {/* Footer - Fixed */}
-        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-ink-50/50 border-t border-ink-100">
+        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-grey-bg/50 border-t border-grey-surface">
           <Button variant="secondary" text="Cancel" onClick={onClose} className="bg-white rounded-md shadow-sm" />
           <Button variant="primary" text="Save changes" onClick={onSave} className="rounded-md shadow-sm" />
         </div>

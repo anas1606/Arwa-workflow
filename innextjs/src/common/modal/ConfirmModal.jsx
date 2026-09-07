@@ -63,13 +63,13 @@ export default function ConfirmModal({ open, title, onClose, onConfirm, children
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-ink-200 ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-ink-200 px-4 py-3">
-          <h2 id={titleId} className="text-base font-bold text-ink-900">{title}</h2>
+        <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
+          <h2 id={titleId} className="text-base font-bold text-grey-text-strong">{title}</h2>
           <button
             type="button"
-            className="btn-ghost h-9 w-9 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-ink-50 text-ink-500 hover:text-ink-900"
+            className="btn-ghost h-9 w-9 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-grey-bg text-grey-muted hover:text-grey-text-strong"
             onClick={onClose}
             aria-label="Close"
           >
@@ -77,7 +77,7 @@ export default function ConfirmModal({ open, title, onClose, onConfirm, children
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <div className="text-sm text-ink-700 mb-4">
+          <div className="text-sm text-grey-text mb-4">
             {children}
           </div>
           <div className="flex gap-2">

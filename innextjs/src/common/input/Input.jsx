@@ -50,10 +50,10 @@ const Input = forwardRef(({
                     onClick={() => fileRef.current?.click()}
                     className={clsx(
                         "flex flex-col items-center justify-center cursor-pointer rounded-md border-2 border-dashed p-8 transition-all",
-                        isDragging ? 'border-primary bg-brand-50/50' : (error ? 'border-red bg-danger-50/30' : 'border-black hover:border-black bg-white/30 backdrop-blur-md')
+                        isDragging ? 'border-primary bg-primary-bg/50' : (error ? 'border-danger-main bg-danger-bg/30' : 'border-black hover:border-black bg-white/30 backdrop-blur-md')
                     )}
                 >
-                    <Upload size={32} className={`mb-2 ${isDragging ? 'text-primary' : (error ? 'text-red' : 'text-black')}`} />
+                    <Upload size={32} className={`mb-2 ${isDragging ? 'text-primary' : (error ? 'text-danger-main' : 'text-black')}`} />
                     <p className="text-sm font-medium text-black">
                         {isDragging ? 'Drop files here...' : 'Upload your evidence (Photos, Videos, PDF)'}
                     </p>
@@ -67,7 +67,7 @@ const Input = forwardRef(({
                         {...props}
                     />
                 </div>
-                {error && <span className="mt-1 block text-xs font-semibold text-red">{error}</span>}
+                {error && <span className="mt-1 block text-xs font-semibold text-danger-main">{error}</span>}
             </div>
         );
     }
@@ -76,13 +76,13 @@ const Input = forwardRef(({
         return (
             <div className={`w-full ${className}`}>
                 {label && (
-                    <label htmlFor={id} className="mb-1 block text-sm font-semibold text-ink-900">
-                        {label} {required && <span className="text-danger-500">*</span>}
+                    <label htmlFor={id} className="mb-1 block text-sm font-semibold text-grey-text-strong">
+                        {label} {required && <span className="text-danger-muted">*</span>}
                     </label>
                 )}
                 <div className="relative">
                     {StartIcon && (
-                        <span className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 text-ink-400">
+                        <span className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 text-grey-icon">
                             <StartIcon size={18} />
                         </span>
                     )}
@@ -91,9 +91,9 @@ const Input = forwardRef(({
                         ref={ref}
                         className={clsx(
                             "h-11 w-full appearance-none rounded-md border px-3 text-sm outline-none transition-all",
-                            "border-ink-200 bg-white/60 text-ink-900 placeholder:text-ink-400 backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
-                            "focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10",
-                            error ? "border-danger-500" : "",
+                            "border-grey-border bg-white/60 text-grey-text-strong placeholder:text-grey-icon backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
+                            "focus:border-primary-muted focus:bg-white focus:ring-4 focus:ring-primary-muted/10",
+                            error ? "border-danger-muted" : "",
                             StartIcon && "pl-10",
                             "pr-10" // Always reserve space for the arrow/EndIcon
                         )}
@@ -101,27 +101,27 @@ const Input = forwardRef(({
                         {...props}
                     >
                         {!hidePlaceholder && (
-                            <option value="" disabled className="text-ink-900">
+                            <option value="" disabled className="text-grey-text-strong">
                                 {placeholder}
                             </option>
                         )}
                         {options.map((opt, idx) => (
-                            <option key={idx} value={opt.value} className="text-ink-900">
+                            <option key={idx} value={opt.value} className="text-grey-text-strong">
                                 {opt.label}
                             </option>
                         ))}
                     </select>
                     {EndIcon ? (
-                        <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-ink-400">
+                        <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-grey-icon">
                             <EndIcon size={18} />
                         </span>
                     ) : (
-                        <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-ink-400">
+                        <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-grey-icon">
                             <ChevronDown size={18} />
                         </span>
                     )}
                 </div>
-                {error && <span className="mt-1 block text-xs font-semibold text-danger-600">{error}</span>}
+                {error && <span className="mt-1 block text-xs font-semibold text-danger-main">{error}</span>}
             </div>
         );
     }
@@ -130,13 +130,13 @@ const Input = forwardRef(({
     return (
         <div className={`w-full ${className}`}>
             {label && (
-                <label htmlFor={id} className="mb-1 block text-sm font-semibold text-ink-900">
-                    {label} {required && <span className="text-danger-500">*</span>}
+                <label htmlFor={id} className="mb-1 block text-sm font-semibold text-grey-text-strong">
+                    {label} {required && <span className="text-danger-muted">*</span>}
                 </label>
             )}
             <div className="relative">
                 {StartIcon && (
-                    <span className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 text-ink-400">
+                    <span className="pointer-events-none absolute z-10 left-3 top-1/2 -translate-y-1/2 text-grey-icon">
                         <StartIcon size={18} />
                     </span>
                 )}
@@ -147,9 +147,9 @@ const Input = forwardRef(({
                     placeholder={placeholder}
                     className={clsx(
                         "h-11 w-full rounded-md border px-3 text-sm outline-none transition-all",
-                        "border-ink-200 bg-white/60 text-ink-900 placeholder:text-ink-400 backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
-                        "focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-500/10",
-                        error ? "border-danger-500" : "",
+                        "border-grey-border bg-white/60 text-grey-text-strong placeholder:text-grey-icon backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
+                        "focus:border-primary-muted focus:bg-white focus:ring-4 focus:ring-primary-muted/10",
+                        error ? "border-danger-muted" : "",
                         StartIcon && "pl-10",
                         EndIcon && "pr-10"
                     )}
@@ -157,12 +157,12 @@ const Input = forwardRef(({
                     {...props}
                 />
                 {EndIcon && (
-                    <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-ink-400">
+                    <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-grey-icon">
                         <EndIcon size={18} />
                     </span>
                 )}
             </div>
-            {error && <span className="mt-1 block text-xs font-semibold text-danger-600">{error}</span>}
+            {error && <span className="mt-1 block text-xs font-semibold text-danger-main">{error}</span>}
         </div>
     );
 });

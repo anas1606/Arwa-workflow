@@ -159,15 +159,15 @@ export default function EditCustomer({ open, onClose, onEdit, customer }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-ink-200 ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
-        <div className="flex shrink-0 items-center justify-between border-b border-ink-200 px-4 py-3">
-          <h2 id={titleId} className="text-base font-bold text-ink-900">
+        <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
+          <h2 id={titleId} className="text-base font-bold text-grey-text-strong">
             Edit customer
           </h2>
           <button
             type="button"
-            className="btn-ghost h-9 w-9 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-ink-50 text-ink-500 hover:text-ink-900"
+            className="btn-ghost h-9 w-9 min-h-0 rounded-md p-0 flex items-center justify-center transition-colors hover:bg-grey-bg text-grey-muted hover:text-grey-text-strong"
             onClick={handleClose}
             aria-label="Close"
           >
@@ -179,8 +179,8 @@ export default function EditCustomer({ open, onClose, onEdit, customer }) {
             <div className="flex flex-col gap-4">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="flex flex-col gap-1.5">
-                  <div className="h-4 w-24 bg-ink-200 rounded animate-pulse opacity-50"></div>
-                  <div className="h-10 w-full bg-ink-200 rounded-md animate-pulse opacity-50"></div>
+                  <div className="h-4 w-24 bg-grey-border rounded animate-pulse opacity-50"></div>
+                  <div className="h-10 w-full bg-grey-border rounded-md animate-pulse opacity-50"></div>
                 </div>
               ))}
             </div>
@@ -242,14 +242,14 @@ export default function EditCustomer({ open, onClose, onEdit, customer }) {
               placeholder="e.g. Midwest"
             />
             {error ? (
-              <p className="text-sm font-medium text-danger-700" role="alert">
+              <p className="text-sm font-medium text-danger-dark" role="alert">
                 {error}
               </p>
             ) : null}
           </form>
           )}
         </div>
-        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-ink-200 px-4 py-3 sm:flex-row sm:justify-end">
+        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-grey-border px-4 py-3 sm:flex-row sm:justify-end">
           <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" />
           <Button variant="primary" type="submit" form="customers-edit-form" className="flex-1" text={isSubmitting ? "Saving..." : "Save changes"} disabled={isSubmitting} />
         </div>

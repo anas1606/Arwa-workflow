@@ -49,23 +49,23 @@ export default function OrderConfigView() {
       label: 'Model Code',
       render: (row) => (
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 rounded-md bg-brand-100 text-brand-700 flex items-center justify-center font-bold text-xs">
+          <div className="w-8 h-8 rounded-md bg-primary-subtle text-primary-dark flex items-center justify-center font-bold text-xs">
             {row.code.substring(0, 3)}
           </div>
-          <span className="font-mono text-sm font-semibold text-ink-900">{row.code}</span>
+          <span className="font-mono text-sm font-semibold text-grey-text-strong">{row.code}</span>
         </div>
       ),
     },
     {
       key: 'name',
       label: 'Name',
-      render: (row) => <span className="text-sm font-medium text-ink-700">{row.name}</span>,
+      render: (row) => <span className="text-sm font-medium text-grey-text">{row.name}</span>,
     },
     {
       key: 'category',
       label: 'Category',
       render: (row) => (
-        <span className="badge border border-ink-200 text-ink-700 bg-ink-50">
+        <span className="badge border border-grey-border text-grey-text bg-grey-bg">
           {row.category}
         </span>
       ),
@@ -76,7 +76,7 @@ export default function OrderConfigView() {
       render: (row) => (
         <div className="flex items-center gap-1 flex-wrap">
           {row.specs.map((s, i) => (
-             <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-ink-200 text-2xs text-ink-600 font-medium whitespace-nowrap">
+             <span key={i} className="px-2 py-0.5 rounded-md bg-white border border-grey-border text-2xs text-grey-text-light font-medium whitespace-nowrap">
                {s}
              </span>
           ))}
@@ -88,7 +88,7 @@ export default function OrderConfigView() {
       label: 'Configure',
       align: 'right',
       render: (row) => (
-        <button className="text-brand-600 hover:text-brand-800 p-1.5 rounded-md hover:bg-brand-50 transition flex items-center gap-1 font-semibold text-xs border border-transparent hover:border-brand-200">
+        <button className="text-primary hover:text-primary-dark p-1.5 rounded-md hover:bg-primary-bg transition flex items-center gap-1 font-semibold text-xs border border-transparent hover:border-primary-subtle">
            <Settings2 size={16}/> Config
         </button>
       ),
@@ -105,10 +105,10 @@ export default function OrderConfigView() {
         {/* Page Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-ink-900">
+            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
               Product Customisation
             </h1>
-            <p className="mt-1 text-sm leading-snug text-ink-500">
+            <p className="mt-1 text-sm leading-snug text-grey-muted">
               Manage customization options and specifications for product models.
             </p>
           </div>
@@ -117,19 +117,19 @@ export default function OrderConfigView() {
         {/* KPIs */}
         <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-3">
             <article className="card-panel relative overflow-hidden !p-3 border-none">
-              <div className="absolute inset-y-0 left-0 w-1 bg-brand-600" aria-hidden />
-              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">Total Models</p>
-              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">{models.length}</p>
+              <div className="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden />
+              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">Total Models</p>
+              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">{models.length}</p>
             </article>
             <article className="card-panel relative overflow-hidden !p-3 border-none">
-              <div className="absolute inset-y-0 left-0 w-1 bg-brand-600" aria-hidden />
-              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">Configured</p>
-              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">{models.length}</p>
+              <div className="absolute inset-y-0 left-0 w-1 bg-primary" aria-hidden />
+              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">Configured</p>
+              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">{models.length}</p>
             </article>
             <article className="card-panel relative overflow-hidden !p-3 border-none">
-              <div className="absolute inset-y-0 left-0 w-1 bg-warning-600" aria-hidden />
-              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-ink-500">Missing Specs</p>
-              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">0</p>
+              <div className="absolute inset-y-0 left-0 w-1 bg-warning-main" aria-hidden />
+              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">Missing Specs</p>
+              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">0</p>
             </article>
         </section>
 

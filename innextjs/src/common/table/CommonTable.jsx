@@ -54,7 +54,7 @@ export default function CommonTable({
                             e.stopPropagation();
                             col.onClick && col.onClick(row, e);
                         }}
-                        className="p-1.5 hover:bg-white/20 rounded-full text-ink-400 cursor-pointer transition-colors"
+                        className="p-1.5 hover:bg-white/20 rounded-full text-grey-icon cursor-pointer transition-colors"
                     >
                         <MoreVertical size={18} />
                     </button>
@@ -62,7 +62,7 @@ export default function CommonTable({
             );
         }
 
-        return <span className="text-ink-700">{value ?? "-"}</span>;
+        return <span className="text-grey-text">{value ?? "-"}</span>;
     };
 
     return (
@@ -75,7 +75,7 @@ export default function CommonTable({
                             {columns.map((col) => (
                                 <th
                                     key={col.key}
-                                    className={`px-5 py-4 font-semibold text-xs tracking-wide text-ink-600 uppercase whitespace-nowrap 
+                                    className={`px-5 py-4 font-semibold text-xs tracking-wide text-grey-text-light uppercase whitespace-nowrap 
                                         ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"} ${col.headerClassName || ""}
                                         ${col.key === "actions" ? "sticky right-0 z-20 bg-white" : ""}`}
                                 >
@@ -92,14 +92,14 @@ export default function CommonTable({
                                 <tr key={`skeleton-${idx}`} className="animate-pulse">
                                     {columns.map((col) => (
                                         <td key={`sk-${col.key}`} className="px-5 py-4">
-                                            <div className="h-4 bg-ink-200 rounded w-3/4 opacity-50"></div>
+                                            <div className="h-4 bg-grey-border rounded w-3/4 opacity-50"></div>
                                         </td>
                                     ))}
                                 </tr>
                             ))
                         ) : data.length === 0 ? (
                             <tr>
-                                <td colSpan={columns.length} className="text-center py-10 text-ink-500">
+                                <td colSpan={columns.length} className="text-center py-10 text-grey-muted">
                                     <div className="flex flex-col items-center gap-2">
                                         <span className="text-sm font-medium">{emptyState}</span>
                                     </div>
@@ -130,26 +130,26 @@ export default function CommonTable({
 
             {/* ================= FOOTER / PAGINATION ================= */}
             <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-white/40 bg-white/60 backdrop-blur-md mt-auto shadow-sm">
-                <div className="text-sm text-ink-600 whitespace-nowrap">
-                    Showing <b className="text-ink-900">{data?.length || 0}</b> of <b className="text-ink-900">{totalItems}</b>
+                <div className="text-sm text-grey-text-light whitespace-nowrap">
+                    Showing <b className="text-grey-text-strong">{data?.length || 0}</b> of <b className="text-grey-text-strong">{totalItems}</b>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
-                        <span className="text-sm text-ink-600 whitespace-nowrap">Per page</span>
+                        <span className="text-sm text-grey-text-light whitespace-nowrap">Per page</span>
                         <div className="relative inline-block">
                             <select
                                 disabled={isEmpty}
                                 value={pageSize}
                                 onChange={(e) => onPageSizeChange && onPageSizeChange(Number(e.target.value))}
-                                className="appearance-none bg-white border border-ink-200 text-ink-900 rounded-md px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-brand-500 disabled:opacity-50 cursor-pointer shadow-sm transition-all hover:bg-white"
+                                className="appearance-none bg-white border border-grey-border text-grey-text-strong rounded-md px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-muted disabled:opacity-50 cursor-pointer shadow-sm transition-all hover:bg-white"
                             >
                                 <option value={2}>2</option>
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>
                                 <option value={20}>20</option>
                             </select>
-                            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-ink-500">
+                            <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-grey-muted">
                                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                                 </svg>
@@ -161,7 +161,7 @@ export default function CommonTable({
                         <button
                             onClick={() => onPageChange && onPageChange(pageNo - 1)}
                             disabled={pageNo <= 1 || isEmpty}
-                            className={`w-8 h-8 flex justify-center items-center rounded-md transition-all border ${(pageNo <= 1 || isEmpty) ? "border-transparent text-ink-300 cursor-not-allowed opacity-50" : "bg-white border-ink-200 text-ink-700 hover:bg-ink-50 hover:text-ink-900 cursor-pointer shadow-sm"}`}
+                            className={`w-8 h-8 flex justify-center items-center rounded-md transition-all border ${(pageNo <= 1 || isEmpty) ? "border-transparent text-grey-border-strong cursor-not-allowed opacity-50" : "bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm"}`}
                         >
                             <ChevronLeft size={16} />
                         </button>
@@ -173,8 +173,8 @@ export default function CommonTable({
                                     onClick={() => onPageChange && onPageChange(p)}
                                     disabled={isEmpty}
                                     className={`w-8 h-8 rounded-md text-sm font-medium transition-all flex items-center justify-center border ${p === pageNo && !isEmpty
-                                        ? 'bg-brand-600 text-white border-brand-600 shadow-sm'
-                                        : 'bg-white border-ink-200 text-ink-700 hover:bg-ink-50 hover:text-ink-900 cursor-pointer disabled:cursor-not-allowed shadow-sm'
+                                        ? 'bg-primary text-white border-primary shadow-sm'
+                                        : 'bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer disabled:cursor-not-allowed shadow-sm'
                                         }`}
                                 >
                                     {p}
@@ -185,7 +185,7 @@ export default function CommonTable({
                         <button
                             onClick={() => onPageChange && onPageChange(pageNo + 1)}
                             disabled={pageNo >= totalPages || isEmpty}
-                            className={`w-8 h-8 flex justify-center items-center rounded-md transition-all border ${(pageNo >= totalPages || isEmpty) ? "border-transparent text-ink-300 cursor-not-allowed opacity-50" : "bg-white border-ink-200 text-ink-700 hover:bg-ink-50 hover:text-ink-900 cursor-pointer shadow-sm"}`}
+                            className={`w-8 h-8 flex justify-center items-center rounded-md transition-all border ${(pageNo >= totalPages || isEmpty) ? "border-transparent text-grey-border-strong cursor-not-allowed opacity-50" : "bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm"}`}
                         >
                             <ChevronRight size={16} />
                         </button>

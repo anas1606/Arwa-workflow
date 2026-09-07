@@ -11,39 +11,39 @@ import clsx from 'clsx';
 
 const machineStatusMeta = {
   RUNNING: {
-    className: 'bg-success-50 text-success-700',
-    dot: 'bg-success-700',
+    className: 'bg-success-bg text-success-dark',
+    dot: 'bg-success-dark',
     label: 'Running',
   },
   IDLE: {
-    className: 'bg-ink-100 text-ink-700',
-    dot: 'bg-ink-700',
+    className: 'bg-grey-surface text-grey-text',
+    dot: 'bg-grey-text',
     label: 'Idle',
   },
   WARNING: {
-    className: 'bg-warning-50 text-warning-700',
-    dot: 'bg-warning-700',
+    className: 'bg-warning-bg text-warning-dark',
+    dot: 'bg-warning-dark',
     label: 'Warning',
   },
   STOPPED: {
-    className: 'bg-danger-50 text-danger-700',
-    dot: 'bg-danger-700',
+    className: 'bg-danger-bg text-danger-dark',
+    dot: 'bg-danger-dark',
     label: 'Stopped',
   },
 };
 
 const alertStyles = {
-  critical: 'border-danger-700/20 bg-danger-50/60 backdrop-blur-md',
-  warning: 'border-warning-700/20 bg-warning-50/60 backdrop-blur-md',
-  info: 'border-info-700/20 bg-info-50/60 backdrop-blur-md',
+  critical: 'border-danger-dark/20 bg-danger-bg/60 backdrop-blur-md',
+  warning: 'border-warning-dark/20 bg-warning-bg/60 backdrop-blur-md',
+  info: 'border-primary-dark/20 bg-primary-bg/60 backdrop-blur-md',
 };
 
 const toneBorder = {
-  neutral: 'border-l-brand-600',
-  success: 'border-l-success-700',
-  warning: 'border-l-warning-700',
-  danger: 'border-l-danger-700',
-  info: 'border-l-info-700',
+  neutral: 'border-l-primary',
+  success: 'border-l-success-dark',
+  warning: 'border-l-warning-dark',
+  danger: 'border-l-danger-dark',
+  info: 'border-l-primary-dark',
 };
 
 export default function Dashboard() {
@@ -52,10 +52,10 @@ export default function Dashboard() {
       {/* Page Header */}
       <div className="mb-3 flex flex-col gap-3 sm:mb-5 sm:flex-row sm:items-end sm:justify-between">
         <div className="min-w-0">
-          <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-ink-900">
+          <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
             Factory dashboard
           </h1>
-          <p className="mt-1 text-sm leading-snug text-ink-500">
+          <p className="mt-1 text-sm leading-snug text-grey-muted">
             Operational status — problems and delays first.
           </p>
         </div>
@@ -88,18 +88,18 @@ export default function Dashboard() {
               <Icon
                 className={clsx(
                   'mt-0.5 h-4 w-4 shrink-0',
-                  alert.severity === 'critical' && 'text-danger-700',
-                  alert.severity === 'warning' && 'text-warning-700',
-                  alert.severity === 'info' && 'text-info-700'
+                  alert.severity === 'critical' && 'text-danger-dark',
+                  alert.severity === 'warning' && 'text-warning-dark',
+                  alert.severity === 'info' && 'text-primary-dark'
                 )}
                 aria-hidden
               />
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-baseline justify-between gap-2">
-                  <p className="text-sm font-semibold text-ink-900">{alert.title}</p>
-                  <time className="text-2xs font-medium text-ink-500">{alert.time}</time>
+                  <p className="text-sm font-semibold text-grey-text-strong">{alert.title}</p>
+                  <time className="text-2xs font-medium text-grey-muted">{alert.time}</time>
                 </div>
-                <p className="mt-0.5 text-xs text-ink-600">{alert.detail}</p>
+                <p className="mt-0.5 text-xs text-grey-text-light">{alert.detail}</p>
               </div>
             </div>
           );
@@ -119,13 +119,13 @@ export default function Dashboard() {
               toneBorder[kpi.tone || 'neutral']
             )}
           >
-            <p className="text-2xs font-semibold uppercase tracking-wide text-ink-500">
+            <p className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">
               {kpi.label}
             </p>
-            <p className="mt-1 font-mono text-xl font-semibold tabular-nums text-ink-900 sm:text-2xl">
+            <p className="mt-1 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">
               {kpi.value}
             </p>
-            {kpi.hint ? <p className="mt-1 text-xs text-ink-500">{kpi.hint}</p> : null}
+            {kpi.hint ? <p className="mt-1 text-xs text-grey-muted">{kpi.hint}</p> : null}
           </div>
         ))}
       </section>
@@ -134,12 +134,12 @@ export default function Dashboard() {
         {/* Machines */}
         <section className="card-panel lg:col-span-8" aria-label="Machines">
           <div className="mb-3 flex items-center justify-between gap-2">
-            <h2 className="text-sm font-bold text-ink-900">
+            <h2 className="text-sm font-bold text-grey-text-strong">
               Machines / workstations
             </h2>
             <Link
               href="/production"
-              className="cursor-pointer text-xs font-semibold text-brand-700 hover:underline"
+              className="cursor-pointer text-xs font-semibold text-primary-dark hover:underline"
             >
               Production view
             </Link>
@@ -154,10 +154,10 @@ export default function Dashboard() {
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <p className="text-sm font-semibold text-ink-900">
+                      <p className="text-sm font-semibold text-grey-text-strong">
                         {m.name}
                       </p>
-                      <p className="font-mono text-2xs text-ink-500">
+                      <p className="font-mono text-2xs text-grey-muted">
                         {m.station}
                       </p>
                     </div>
@@ -167,8 +167,8 @@ export default function Dashboard() {
                       {meta.label}
                     </span>
                   </div>
-                  <p className="mt-2 truncate text-xs text-ink-600">{m.job}</p>
-                  <p className="mt-2 font-mono text-xs font-semibold text-ink-800">
+                  <p className="mt-2 truncate text-xs text-grey-text-light">{m.job}</p>
+                  <p className="mt-2 font-mono text-xs font-semibold text-grey-text-dark">
                     OEE {m.oee}%
                   </p>
                 </article>
@@ -179,15 +179,15 @@ export default function Dashboard() {
 
         {/* Activity */}
         <section className="card-panel lg:col-span-4" aria-label="Activity">
-          <h2 className="mb-3 text-sm font-bold text-ink-900">Activity</h2>
+          <h2 className="mb-3 text-sm font-bold text-grey-text-strong">Activity</h2>
           <ul className="space-y-3">
             {ACTIVITY.map((item) => (
               <li
                 key={item.id}
-                className="border-b border-ink-100 pb-3 last:border-0 last:pb-0"
+                className="border-b border-grey-surface pb-3 last:border-0 last:pb-0"
               >
-                <p className="text-sm text-ink-800">{item.text}</p>
-                <p className="mt-1 text-2xs font-medium text-ink-500">
+                <p className="text-sm text-grey-text-dark">{item.text}</p>
+                <p className="mt-1 text-2xs font-medium text-grey-muted">
                   {item.time} ago
                 </p>
               </li>
