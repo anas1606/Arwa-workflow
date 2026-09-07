@@ -4,7 +4,7 @@ import clsx from 'clsx';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import CommonTable from '@/common/table/CommonTable';
-import DeleteModal from '@/common/modal/DeleteModal';
+import ConfirmModal from '@/common/modal/ConfirmModal';
 import { CUSTOMERS } from '@/common/dummy';
 import { PRODUCT_MODELS, CUSTOMISATION_SPECS, MODEL_OPTION_KEYS, MODEL_CATEGORIES } from '@/common/dummy';
 import AddCustomisation from './modal/AddCustomisation';
@@ -580,16 +580,18 @@ export default function Customisation() {
       {/* ─── Modals ─── */}
       <AddCustomer open={addCustomerOpen} onClose={() => setAddCustomerOpen(false)} onAdd={handleAddCustomer} />
       <AddBrandModal open={addBrandOpen} customers={customers} initialCustomerId={customer?.id ?? ''} onClose={() => setAddBrandOpen(false)} onAdd={handleAddBrand} />
-      <DeleteModal open={!!brandToDelete} title="Delete brand" onClose={() => setBrandToDelete(null)} onConfirm={confirmDeleteBrand}>
-        Remove <span className="font-semibold text-ink-900">{brandToDelete?.name}</span> from{' '}
-        <span className="font-semibold text-ink-900">{customer?.name ?? 'this customer'}</span>? Panel sticker options for this brand will be deleted too.
-      </DeleteModal>
+      <ConfirmModal open={!!brandToDelete} title="Delete brand" onClose={() => setBrandToDelete(null)} onConfirm={confirmDeleteBrand}>
+        <p className="text-sm text-ink-700">
+          Are you sure you want to delete <strong className="font-semibold text-ink-900">{brandToDelete?.name}</strong>? This action cannot be undone.
+        </p>
+      </ConfirmModal>
       <AddCustomisation open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
       <EditCustomisation open={!!editingModel} model={editingModel} onClose={() => setEditingModel(null)} onSave={handleEditModel} />
-      <DeleteModal open={!!modelToDelete} title="Delete model" onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}>
-        Delete <span className="font-semibold text-ink-900">{modelToDelete?.name}</span> (<span className="font-mono text-ink-600">{modelToDelete?.code}</span>)?
-        All configuration options for this model will be removed.
-      </DeleteModal>
+      <ConfirmModal open={!!modelToDelete} title="Delete model" onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}>
+        <p className="text-sm text-ink-700">
+          Are you sure you want to delete <strong className="font-semibold text-ink-900">{modelToDelete?.name}</strong>? This action cannot be undone.
+        </p>
+      </ConfirmModal>
     </div>
   );
 }

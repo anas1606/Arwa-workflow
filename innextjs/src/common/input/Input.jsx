@@ -1,8 +1,8 @@
-import React, { useState, useRef, useId } from "react";
+import React, { useState, useRef, useId, forwardRef } from "react";
 import { Upload, ChevronDown } from "lucide-react";
 import clsx from "clsx";
 
-const Input = ({
+const Input = forwardRef(({
     type = "text",
     id: providedId,
     label,
@@ -17,8 +17,9 @@ const Input = ({
     accept = "image/*,.pdf,video/*",
     maxFiles = 12,
     error,
+    hidePlaceholder = false,
     ...props
-}) => {
+}, ref) => {
     const generatedId = useId();
     const id = providedId || generatedId;
 
@@ -87,6 +88,7 @@ const Input = ({
                     )}
                     <select
                         id={id}
+                        ref={ref}
                         className={clsx(
                             "h-11 w-full appearance-none rounded-md border px-3 text-sm outline-none transition-all",
                             "border-ink-200 bg-white/60 text-ink-900 placeholder:text-ink-400 backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
@@ -98,9 +100,11 @@ const Input = ({
                         required={required}
                         {...props}
                     >
-                        <option value="" disabled className="text-ink-900">
-                            {placeholder}
-                        </option>
+                        {!hidePlaceholder && (
+                            <option value="" disabled className="text-ink-900">
+                                {placeholder}
+                            </option>
+                        )}
                         {options.map((opt, idx) => (
                             <option key={idx} value={opt.value} className="text-ink-900">
                                 {opt.label}
@@ -139,6 +143,7 @@ const Input = ({
                 <input
                     type={type}
                     id={id}
+                    ref={ref}
                     placeholder={placeholder}
                     className={clsx(
                         "h-11 w-full rounded-md border px-3 text-sm outline-none transition-all",
@@ -160,6 +165,8 @@ const Input = ({
             {error && <span className="mt-1 block text-xs font-semibold text-danger-600">{error}</span>}
         </div>
     );
-};
+});
+
+Input.displayName = "Input";
 
 export default Input;

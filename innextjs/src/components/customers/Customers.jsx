@@ -1,12 +1,15 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Head from 'next/head';
-import { Building2, MapPin, Search, Plus } from 'lucide-react';
+import { Building2, MapPin, Search, Plus, ArrowLeft, ArrowRight } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
 import { CUSTOMERS, DUMMY_ORDERS } from '@/common/dummy';
 import AddCustomer from './modal/AddCustomer';
+import EditCustomer from './modal/EditCustomer';
+import DeleteModal from '@/common/modal/DeleteModal';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import clsx from 'clsx';
+import { toast } from 'sonner';
 
 function customerInitials(name) {
   return name
@@ -17,44 +20,95 @@ function customerInitials(name) {
     .toUpperCase();
 }
 
+import { getCustomersApi, deleteCustomerApi } from '@/lib/fetcher';
+
 export default function Customers() {
-  const [customersData, setCustomersData] = useState(CUSTOMERS);
+  const [customersData, setCustomersData] = useState([]);
+  const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
   const [regionFilter, setRegionFilter] = useState('ALL');
+  const [globalRegions, setGlobalRegions] = useState([]);
+  const searchInputRef = useRef(null);
+  const regionSelectRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQuery(inputValue);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      } else if (e.altKey && (e.key === 'ArrowRight' || e.code === 'ArrowRight')) {
+        e.preventDefault();
+        regionSelectRef.current?.focus();
+      } else if (e.altKey && (e.key === 'ArrowLeft' || e.code === 'ArrowLeft')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  
   const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
+  
+  const [dropdownState, setDropdownState] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const regions = useMemo(
-    () => [...new Set(customersData.map((c) => c.region))].sort(),
-    [customersData]
-  );
+  useEffect(() => {
+    const closeDropdown = () => setDropdownState(null);
+    if (dropdownState) {
+      window.addEventListener('click', closeDropdown);
+    }
+    return () => window.removeEventListener('click', closeDropdown);
+  }, [dropdownState]);
 
-  const filteredData = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return customersData.filter((c) => {
-      const matchRegion = regionFilter === 'ALL' || c.region === regionFilter;
-      const matchQ =
-        !q ||
-        c.name.toLowerCase().includes(q) ||
-        c.code.toLowerCase().includes(q) ||
-        c.region.toLowerCase().includes(q);
-      return matchRegion && matchQ;
-    });
-  }, [customersData, query, regionFilter]);
+  // Fetch customers from API
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setIsLoading(true);
+      try {
+        const response = await getCustomersApi(pageNo, pageSize, query, regionFilter);
+        if (response.data && response.data.success) {
+          setCustomersData(response.data.data.data || []);
+          setTotalItems(response.data.data.total || 0);
+          if (response.data.data.regions) {
+            setGlobalRegions(response.data.data.regions);
+          }
+        } else {
+          setCustomersData([]);
+          setTotalItems(0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch customers:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // Reset page when filter changes
-  React.useEffect(() => {
-    setPageNo(1);
-  }, [query, regionFilter]);
+    fetchCustomers();
+  }, [pageNo, pageSize, query, regionFilter]);
 
-  const totalItems = filteredData.length;
+  const paginatedData = customersData;
+
   const totalPages = Math.ceil(totalItems / pageSize);
 
-  const paginatedData = useMemo(() => {
-    const start = (pageNo - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, pageNo, pageSize]);
+  // Reset page when filter changes
+  useEffect(() => {
+    setPageNo(1);
+  }, [query, regionFilter]);
 
   // Calculate KPIs
   const orderCountByCustomer = useMemo(() => {
@@ -74,25 +128,25 @@ export default function Customers() {
   const kpis = [
     {
       label: 'Total customers',
-      value: String(customersData.length),
+      value: isLoading ? '...' : String(customersData.length),
       hint: 'Accounts in master data',
       tone: 'neutral',
     },
     {
       label: 'Regions',
-      value: String(regions.length),
+      value: isLoading ? '...' : String(globalRegions.length),
       hint: 'Geographic coverage',
       tone: 'info',
     },
     {
       label: 'Brands',
-      value: String(totalBrands),
+      value: isLoading ? '...' : String(totalBrands),
       hint: 'Linked brand names',
       tone: 'neutral',
     },
     {
       label: 'With orders',
-      value: String(withOrders),
+      value: isLoading ? '...' : String(withOrders),
       hint: 'Linked to production orders',
       tone: 'warning',
     },
@@ -101,6 +155,26 @@ export default function Customers() {
   const handleAdd = (customer) => {
     setCustomersData((list) => [...list, customer]);
     setAddOpen(false);
+  };
+
+  const handleEdit = (updatedCustomer) => {
+    setCustomersData((list) => list.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+    setEditOpen(false);
+  };
+
+  const handleDelete = async (deletedCustomer) => {
+    try {
+      const res = await deleteCustomerApi(deletedCustomer.id);
+      if (res.error || (res.data && !res.data.success)) {
+        throw new Error(res.error?.message || res.data?.message || 'Failed to delete customer');
+      }
+      setCustomersData((list) => list.filter(c => c.id !== deletedCustomer.id));
+      setDeleteOpen(false);
+      toast.success('Customer deleted successfully');
+    } catch (err) {
+      toast.error(err.message || 'An unexpected error occurred.');
+      throw err; // Re-throw to let DeleteModal handle its internal state if needed
+    }
   };
 
   const columns = [
@@ -112,22 +186,22 @@ export default function Customers() {
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-brand-600/10 text-xs font-bold text-brand-800">
             {customerInitials(row.name)}
           </span>
-          <span className="font-semibold text-ink-900">{row.name}</span>
+          <span className="font-semibold text-ink-900 truncate max-w-[180px] sm:max-w-[250px]" title={row.name}>{row.name}</span>
         </div>
       ),
     },
     {
       key: 'code',
       label: 'Code',
-      render: (row) => <span className="font-mono text-sm text-ink-700">{row.code}</span>,
+      render: (row) => <span className="font-mono text-sm text-ink-700 block truncate max-w-[120px]" title={row.code}>{row.code || '-'}</span>,
     },
     {
       key: 'region',
       label: 'Region',
       render: (row) => (
-        <span className="inline-flex items-center gap-1 text-sm text-ink-700">
-          <MapPin className="h-3.5 w-3.5 text-ink-400" aria-hidden />
-          {row.region}
+        <span className="inline-flex items-center gap-1 text-sm text-ink-700 max-w-[150px]" title={row.region}>
+          <MapPin className="h-3.5 w-3.5 shrink-0 text-ink-400" aria-hidden />
+          <span className="truncate">{row.region || '-'}</span>
         </span>
       ),
     },
@@ -158,7 +232,14 @@ export default function Customers() {
       key: 'actions',
       label: '',
       type: 'action',
-      onClick: (row) => console.log('Action on', row),
+      onClick: (row, e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        setDropdownState({
+          row,
+          x: rect.right - 120, // rough width of dropdown
+          y: rect.bottom + window.scrollY,
+        });
+      },
     },
   ];
 
@@ -222,20 +303,42 @@ export default function Customers() {
               type="text"
               startIcon={Search}
               placeholder="Search name, code, or region…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
               className="flex-1 min-w-0"
+              ref={searchInputRef}
             />
             <Input
               type="select"
               value={regionFilter}
               onChange={(e) => setRegionFilter(e.target.value)}
               className="shrink-0 sm:w-44"
+              hidePlaceholder={true}
+              ref={regionSelectRef}
               options={[
                 { label: 'All regions', value: 'ALL' },
-                ...regions.map((r) => ({ label: r, value: r })),
+                ...globalRegions.map((r) => ({ label: r, value: r })),
               ]}
             />
+          </div>
+          <div className="flex items-center gap-4 px-1 text-xs text-ink-500 font-medium">
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 font-sans shadow-sm">Alt</kbd>
+                <span className="text-ink-400">+</span>
+                <kbd className="px-1.5 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 font-sans shadow-sm">S</kbd>
+              </span>
+              Focus search
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
+                <span className="text-ink-400">+</span>
+                <kbd className="px-1 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
+                <kbd className="px-1 py-0.5 border border-ink-200 bg-ink-50 rounded text-ink-700 shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
+              </span>
+              Switch focus
+            </span>
           </div>
         </div>
 
@@ -243,6 +346,7 @@ export default function Customers() {
         <CommonTable
           columns={columns}
           data={paginatedData}
+          isLoading={isLoading}
           emptyState="No customers match your search or filter."
           pagination={{
             totalItems,
@@ -258,10 +362,53 @@ export default function Customers() {
         />
       </div>
 
+      {dropdownState && (
+        <div
+          className="absolute z-50 bg-white border border-ink-200 shadow-lg rounded-md py-1 w-32 flex flex-col"
+          style={{ top: dropdownState.y, left: dropdownState.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="text-left px-4 py-2 text-sm text-ink-700 hover:bg-ink-50 hover:text-ink-900 transition-colors"
+            onClick={() => {
+              setSelectedCustomer(dropdownState.row);
+              setEditOpen(true);
+              setDropdownState(null);
+            }}
+          >
+            Edit
+          </button>
+          <button
+            className="text-left px-4 py-2 text-sm text-danger-600 hover:bg-danger-50 transition-colors"
+            onClick={() => {
+              setSelectedCustomer(dropdownState.row);
+              setDeleteOpen(true);
+              setDropdownState(null);
+            }}
+          >
+            Delete
+          </button>
+        </div>
+      )}
+
       <AddCustomer
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onAdd={handleAdd}
+      />
+      <EditCustomer
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        onEdit={handleEdit}
+        customer={selectedCustomer}
+      />
+      <DeleteModal
+        open={deleteOpen}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={handleDelete}
+        item={selectedCustomer}
+        itemNameKey="name"
+        title="Delete customer"
       />
     </>
   );

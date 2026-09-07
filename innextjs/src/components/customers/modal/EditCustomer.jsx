@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
-import { createCustomerApi } from '@/lib/fetcher';
+import { updateCustomerApi, getCustomerByIdApi } from '@/lib/fetcher';
 import { toast } from 'sonner';
 
 function getModalRoot() {
@@ -17,7 +17,7 @@ function getModalRoot() {
   return root;
 }
 
-export default function AddCustomer({ open, onClose, onAdd }) {
+export default function EditCustomer({ open, onClose, onEdit, customer }) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
@@ -30,12 +30,37 @@ export default function AddCustomer({ open, onClose, onAdd }) {
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let timer;
-    if (open) {
+    if (open && customer?.id) {
       setShouldRender(true);
       setIsAnimatingOut(false);
+      
+      const fetchCustomer = async () => {
+        setIsLoading(true);
+        try {
+          const res = await getCustomerByIdApi(customer.id);
+          if (res.data && res.data.success) {
+            const fetchedCustomer = res.data.data;
+            setName(fetchedCustomer.name || '');
+            setEmail(fetchedCustomer.email || '');
+            setPhone(fetchedCustomer.phone || '');
+            setBalance(fetchedCustomer.balance || '');
+            setCode(fetchedCustomer.code || '');
+            setRegion(fetchedCustomer.region || '');
+          } else {
+            toast.error('Failed to load customer details');
+          }
+        } catch (err) {
+          toast.error('Error fetching customer details');
+        } finally {
+          setIsLoading(false);
+        }
+      };
+      
+      fetchCustomer();
     } else if (shouldRender) {
       setIsAnimatingOut(true);
       timer = setTimeout(() => {
@@ -45,15 +70,9 @@ export default function AddCustomer({ open, onClose, onAdd }) {
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [open, shouldRender]);
+  }, [open, shouldRender, customer]);
 
   const reset = () => {
-    setName('');
-    setEmail('');
-    setPhone('');
-    setBalance('');
-    setCode('');
-    setRegion('');
     setError(null);
   };
 
@@ -98,7 +117,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const res = await createCustomerApi({
+      const res = await updateCustomerApi(customer.id, {
         name: trimmedName,
         email: email.trim() || undefined,
         phone: phone.trim() || undefined,
@@ -108,12 +127,12 @@ export default function AddCustomer({ open, onClose, onAdd }) {
       });
       
       if (res.error || (res.data && !res.data.success)) {
-        const errorMsg = res.error?.message || res.data?.message || 'Failed to create customer';
+        const errorMsg = res.error?.message || res.data?.message || 'Failed to update customer';
         setError(errorMsg);
         toast.error(errorMsg);
       } else {
-        onAdd(res.data.data); // pass the newly created customer object
-        toast.success('Customer created successfully');
+        onEdit(res.data.data); // pass the updated customer object
+        toast.success('Customer updated successfully');
         reset();
       }
     } catch (err) {
@@ -124,7 +143,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
     }
   };
 
-  if (!shouldRender) return null;
+  if (!shouldRender || !customer) return null;
   const root = getModalRoot();
   if (!root) return null;
 
@@ -144,7 +163,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
       >
         <div className="flex shrink-0 items-center justify-between border-b border-ink-200 px-4 py-3">
           <h2 id={titleId} className="text-base font-bold text-ink-900">
-            Add customer
+            Edit customer
           </h2>
           <button
             type="button"
@@ -156,10 +175,20 @@ export default function AddCustomer({ open, onClose, onAdd }) {
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <form id="customers-add-form" className="flex flex-col gap-4" onSubmit={submit}>
+          {isLoading ? (
+            <div className="flex flex-col gap-4">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <div key={i} className="flex flex-col gap-1.5">
+                  <div className="h-4 w-24 bg-ink-200 rounded animate-pulse opacity-50"></div>
+                  <div className="h-10 w-full bg-ink-200 rounded-md animate-pulse opacity-50"></div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <form id="customers-edit-form" className="flex flex-col gap-4" onSubmit={submit}>
             <Input
               type="text"
-              id="customers-name"
+              id="customers-edit-name"
               label="Customer name"
               required
               value={name}
@@ -169,7 +198,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
             />
             <Input
               type="email"
-              id="customers-email"
+              id="customers-edit-email"
               label="Email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -177,7 +206,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
             />
             <Input
               type="tel"
-              id="customers-phone"
+              id="customers-edit-phone"
               label="Phone number"
               value={phone}
               onChange={(e) => setPhone(e.target.value.replace(/[^0-9+\-\s()]/g, ''))}
@@ -186,7 +215,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
             />
             <Input
               type="number"
-              id="customers-balance"
+              id="customers-edit-balance"
               label="Opening Balance"
               value={balance}
               onChange={(e) => setBalance(e.target.value)}
@@ -196,7 +225,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
             />
             <Input
               type="text"
-              id="customers-code"
+              id="customers-edit-code"
               label="Code"
               value={code}
               onChange={(e) => setCode(e.target.value)}
@@ -206,7 +235,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
             />
             <Input
               type="text"
-              id="customers-region"
+              id="customers-edit-region"
               label="Region"
               value={region}
               onChange={(e) => setRegion(e.target.value)}
@@ -218,10 +247,11 @@ export default function AddCustomer({ open, onClose, onAdd }) {
               </p>
             ) : null}
           </form>
+          )}
         </div>
         <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-ink-200 px-4 py-3 sm:flex-row sm:justify-end">
           <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" />
-          <Button variant="primary" type="submit" form="customers-add-form" className="flex-1" text={isSubmitting ? "Adding..." : "Add customer"} disabled={isSubmitting} />
+          <Button variant="primary" type="submit" form="customers-edit-form" className="flex-1" text={isSubmitting ? "Saving..." : "Save changes"} disabled={isSubmitting} />
         </div>
       </div>
     </div>,
