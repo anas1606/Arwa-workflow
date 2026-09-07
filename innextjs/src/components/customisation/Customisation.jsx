@@ -11,6 +11,8 @@ import AddCustomisation from './modal/AddCustomisation';
 import EditCustomisation from './modal/EditCustomisation';
 import AddCustomer from '../customers/modal/AddCustomer';
 import AddBrandModal from './modal/AddBrandModal';
+import { getCustomersApi, deleteBrandApi } from '@/lib/fetcher';
+import { toast } from 'sonner';
 
 /* ════════════════════════════════════════════════════════════════════
    Constants
@@ -253,7 +255,8 @@ function StickerEditor({ brand, onChange }) {
 export default function Customisation() {
   // ── Data state ──
   const [models, setModels] = useState(() => cloneModels(PRODUCT_MODELS));
-  const [customers, setCustomers] = useState(() => cloneCustomers(CUSTOMERS));
+  const [customers, setCustomers] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
   // ── Customer brands state ──
   const [customerId, setCustomerId] = useState(customers[0]?.id ?? '');
@@ -277,33 +280,82 @@ export default function Customisation() {
   const totalBrands = useMemo(() => customers.reduce((sum, c) => sum + c.brands.length, 0), [customers]);
   const totalStickers = useMemo(() => customers.reduce((sum, c) => sum + c.brands.reduce((s, b) => s + b.panelStickers.length, 0), 0), [customers]);
   const kpis = [
-    { label: 'Total products', value: String(models.length), hint: 'Models in catalog', tone: 'neutral' },
-    { label: 'Configured products', value: String(configuredCount), hint: 'With design & color options', tone: 'info' },
-    { label: 'Customer brands', value: String(totalBrands), hint: `Across ${customers.length} customers`, tone: 'neutral' },
-    { label: 'Panel stickers', value: String(totalStickers), hint: 'Options linked to brands', tone: 'warning' },
+    { label: 'Total products', value: isLoading ? '...' : String(models.length), hint: 'Models in catalog', tone: 'neutral' },
+    { label: 'Configured products', value: isLoading ? '...' : String(configuredCount), hint: 'With design & color options', tone: 'info' },
+    { label: 'Customer brands', value: isLoading ? '...' : String(totalBrands), hint: `Across ${customers.length} customers`, tone: 'neutral' },
+    { label: 'Panel stickers', value: isLoading ? '...' : String(totalStickers), hint: 'Options linked to brands', tone: 'warning' },
   ];
 
   // ── Customer brands logic ──
+  useEffect(() => {
+    const fetchCustomers = async () => {
+      setIsLoading(true);
+      try {
+        const res = await getCustomersApi(1, 100);
+        if (res.data && res.data.success) {
+          const fetchedCustomers = res.data.data.data.map(c => ({
+            ...c,
+            brands: (c.brands || []).map(b => ({ ...b, name: b.brandname, panelStickers: [] }))
+          }));
+          setCustomers(fetchedCustomers);
+          if (fetchedCustomers.length > 0) {
+            setCustomerId('ALL');
+          }
+        }
+      } catch (error) {
+        toast.error('Failed to load customers');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchCustomers();
+  }, []);
+
   const customer = customers.find((c) => c.id === customerId) ?? customers[0];
+  const currentBrands = customerId === 'ALL' ? customers.flatMap(c => c.brands) : (customer?.brands || []);
 
   useEffect(() => {
-    if (!customer) { setActiveBrandId(null); return; }
-    if (!customer.brands.some((b) => b.id === activeBrandId)) setActiveBrandId(customer.brands[0]?.id ?? null);
-  }, [customer, activeBrandId]);
+    if (currentBrands.length === 0) { setActiveBrandId(null); return; }
+    if (!currentBrands.some((b) => b.id === activeBrandId)) setActiveBrandId(currentBrands[0]?.id ?? null);
+  }, [currentBrands, activeBrandId]);
 
-  const activeBrand = customer?.brands.find((b) => b.id === activeBrandId) ?? customer?.brands[0];
+  const activeBrand = currentBrands.find((b) => b.id === activeBrandId) ?? currentBrands[0];
+  const ownerCustomer = activeBrand ? customers.find(c => c.brands.some(b => b.id === activeBrand.id)) : null;
 
   const updateCustomerById = (id, updater) => {
     setCustomers(customers.map((c) => (c.id === id ? updater(c) : c)));
   };
   const removeBrand = (brandId) => {
-    if (!customer) return;
-    updateCustomerById(customer.id, (c) => ({ ...c, brands: c.brands.filter((b) => b.id !== brandId) }));
+    const owner = customers.find(c => c.brands.some(b => b.id === brandId));
+    if (!owner) return;
+    updateCustomerById(owner.id, (c) => ({ ...c, brands: c.brands.filter((b) => b.id !== brandId) }));
   };
-  const confirmDeleteBrand = () => { if (!brandToDelete) return; removeBrand(brandToDelete.id); setBrandToDelete(null); };
+  const confirmDeleteBrand = async () => { 
+    if (!brandToDelete) return; 
+    try {
+      // In case it's a locally added dummy brand without a real db id yet, though AddBrandModal returns real IDs now
+      if (brandToDelete.id.startsWith('b-')) {
+        removeBrand(brandToDelete.id);
+        setBrandToDelete(null);
+        return;
+      }
+
+      const res = await deleteBrandApi(brandToDelete.id);
+      if (res.error || (res.data && !res.data.success)) {
+        toast.error(res.error?.message || res.data?.message || 'Failed to delete brand');
+      } else {
+        removeBrand(brandToDelete.id);
+        toast.success('Brand deleted successfully');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    } finally {
+      setBrandToDelete(null);
+    }
+  };
   const setPanelStickers = (next) => {
-    if (!customer || !activeBrand) return;
-    updateCustomerById(customer.id, (c) => ({ ...c, brands: c.brands.map((b) => b.id === activeBrand.id ? { ...b, panelStickers: next } : b) }));
+    if (!ownerCustomer || !activeBrand) return;
+    updateCustomerById(ownerCustomer.id, (c) => ({ ...c, brands: c.brands.map((b) => b.id === activeBrand.id ? { ...b, panelStickers: next } : b) }));
   };
 
   const focusStickersInput = useCallback(() => {
@@ -313,21 +365,19 @@ export default function Customisation() {
   const focusBrandsPane = useCallback(() => {
     setFocusPane('brands');
     requestAnimationFrame(() => {
-      const brands = customer?.brands ?? [];
-      const idx = Math.max(0, brands.findIndex((b) => b.id === activeBrandId));
+      const idx = Math.max(0, currentBrands.findIndex((b) => b.id === activeBrandId));
       const buttons = brandsPaneRef.current?.querySelectorAll('[data-brand-select]');
       (buttons?.[idx] ?? buttons?.[0])?.focus() || brandsPaneRef.current?.focus();
     });
-  }, [customer?.brands, activeBrandId]);
+  }, [currentBrands, activeBrandId]);
   const moveBrandHighlight = useCallback((delta) => {
-    const brands = customer?.brands ?? [];
-    if (brands.length === 0) return;
-    const current = brands.findIndex((b) => b.id === activeBrandId);
-    const next = Math.max(0, Math.min(brands.length - 1, (current < 0 ? 0 : current) + delta));
-    setActiveBrandId(brands[next].id);
+    if (currentBrands.length === 0) return;
+    const current = currentBrands.findIndex((b) => b.id === activeBrandId);
+    const next = Math.max(0, Math.min(currentBrands.length - 1, (current < 0 ? 0 : current) + delta));
+    setActiveBrandId(currentBrands[next].id);
     setFocusPane('brands');
     requestAnimationFrame(() => { brandsPaneRef.current?.querySelectorAll('[data-brand-select]')?.[next]?.focus(); });
-  }, [customer?.brands, activeBrandId]);
+  }, [currentBrands, activeBrandId]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -345,11 +395,11 @@ export default function Customisation() {
       if (target?.closest('[data-remove-brand]')) return;
       if (e.code === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); moveBrandHighlight(1); return; }
       if (e.code === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); moveBrandHighlight(-1); return; }
-      if (e.code === 'Enter') { if (!activeBrandId && !customer?.brands.length) return; e.preventDefault(); e.stopPropagation(); focusStickersInput(); }
+      if (e.code === 'Enter') { if (!activeBrandId && !currentBrands.length) return; e.preventDefault(); e.stopPropagation(); focusStickersInput(); }
     };
     document.addEventListener('keydown', onKeyDown, true);
     return () => document.removeEventListener('keydown', onKeyDown, true);
-  }, [focusPane, focusBrandsPane, focusStickersInput, moveBrandHighlight, activeBrandId, customer?.brands.length]);
+  }, [focusPane, focusBrandsPane, focusStickersInput, moveBrandHighlight, activeBrandId, currentBrands.length]);
 
   const handleAddCustomer = (c) => { setCustomers([...customers, c]); setCustomerId(c.id); setActiveBrandId(null); setAddCustomerOpen(false); };
   const handleAddBrand = (targetId, brand) => {
@@ -462,57 +512,87 @@ export default function Customisation() {
           </div>
           <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-end">
             <Input type="select" label="Customer" className="w-full sm:w-56 [&_select]:!h-9"
-              value={customer?.id ?? ''} onChange={(e) => setCustomerId(e.target.value)}
-              options={customers.map((c) => ({ label: `${c.name} (${c.brands.length} brand${c.brands.length === 1 ? '' : 's'})`, value: c.id }))} />
+              value={customerId} onChange={(e) => setCustomerId(e.target.value)}
+              hidePlaceholder={true}
+              options={[{ label: `All customers (${totalBrands} brands)`, value: 'ALL' }, ...customers.map((c) => ({ label: `${c.name} (${c.brands.length} brand${c.brands.length === 1 ? '' : 's'})`, value: c.id }))]} />
             <Button variant="secondary" className="!min-h-9 shrink-0 !h-9" icon={Plus} text="Add customer" onClick={() => setAddCustomerOpen(true)} />
           </div>
         </div>
 
-        {customer && (
+        {(customers.length > 0 || isLoading) && (
           <div className="grid gap-2 lg:grid-cols-2">
             {/* Brands pane */}
             <div ref={brandsPaneRef} tabIndex={-1} data-pane="brands" aria-label="Brand names"
-              className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'brands' ? 'border-brand-600/35 bg-brand-600/5 ring-1 ring-brand-600/20' : 'border-ink-200/60 bg-ink-50/30')}
+              className={clsx('flex flex-col rounded-md border p-2 outline-none transition-colors', focusPane === 'brands' ? 'border-brand-600/35 bg-brand-600/5 ring-1 ring-brand-600/20' : 'border-ink-200/60 bg-ink-50/30')}
               onFocusCapture={() => setFocusPane('brands')}>
-              <div className="mb-1 flex items-baseline justify-between gap-2">
+              <div className="mb-1 flex items-baseline justify-between gap-2 shrink-0">
                 <p className="text-2xs font-semibold uppercase tracking-wide text-ink-500">Brand names</p>
-                <span className="text-2xs tabular-nums text-ink-400">{customer.brands.length}</span>
+                <span className="text-2xs tabular-nums text-ink-400">{customerId === 'ALL' ? totalBrands : customer?.brands?.length || 0}</span>
               </div>
-              {customer.brands.length === 0 ? (
-                <p className="mb-1.5 text-2xs text-ink-400">No brands yet for {customer.name}.</p>
-              ) : (
-                <ul className="mb-1.5 space-y-0.5" role="listbox" aria-activedescendant={activeBrand ? `brand-option-${activeBrand.id}` : undefined}>
-                  {customer.brands.map((brand) => {
-                    const active = brand.id === activeBrand?.id;
-                    return (
-                      <li key={brand.id} id={`brand-option-${brand.id}`} role="option" aria-selected={active}>
-                        <div className={clsx('flex items-center gap-1 rounded-md px-1.5 py-1', active ? 'border border-brand-600/30 bg-white' : 'border border-transparent hover:bg-white/80')}>
-                          <button type="button" data-brand-select className="min-w-0 flex-1 text-left cursor-pointer"
-                            onClick={() => { setActiveBrandId(brand.id); setFocusPane('brands'); }}
-                            onDoubleClick={() => { setActiveBrandId(brand.id); focusStickersInput(); }}>
-                            <span className="block truncate text-sm font-semibold text-ink-900">{brand.name}</span>
-                            <span className="block text-2xs text-ink-500">{brand.panelStickers.length} sticker{brand.panelStickers.length === 1 ? '' : 's'}</span>
-                          </button>
-                          <Button variant="ghost" size="square" data-remove-brand
-                            className="!h-7 !w-7 shrink-0 text-ink-400 hover:text-ink-800"
-                            aria-label={`Remove brand ${brand.name}`}
-                            onClick={() => setBrandToDelete(brand)}
-                            icon={() => <X className="h-3.5 w-3.5" />}
-                          />
+              <div className="flex-1 min-h-0 flex flex-col">
+                {isLoading ? (
+                  <ul className="mb-1.5 space-y-1.5 max-h-[148px] overflow-hidden pr-1">
+                    {[1, 2, 3].map((i) => (
+                      <li key={i} className="flex items-center gap-1 rounded-md px-1.5 py-1.5 border border-transparent">
+                        <div className="flex-1 space-y-1.5">
+                          <div className="h-3.5 w-1/2 animate-pulse rounded bg-ink-200/60"></div>
+                          <div className="h-2.5 w-1/3 animate-pulse rounded bg-ink-100/50"></div>
                         </div>
+                        <div className="h-6 w-6 animate-pulse rounded bg-ink-100/50"></div>
                       </li>
-                    );
-                  })}
-                </ul>
-              )}
-              <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} />
+                    ))}
+                  </ul>
+                ) : currentBrands.length === 0 ? (
+                  <p className="mb-1.5 text-2xs text-ink-400">No brands yet.</p>
+                ) : (
+                  <ul className="mb-1.5 space-y-0.5 max-h-[148px] overflow-y-auto pr-1 custom-scrollbar" role="listbox" aria-activedescendant={activeBrand ? `brand-option-${activeBrand.id}` : undefined}>
+                    {currentBrands.map((brand) => {
+                      const active = brand.id === activeBrand?.id;
+                      return (
+                        <li key={brand.id} id={`brand-option-${brand.id}`} role="option" aria-selected={active}>
+                          <div className={clsx('flex items-center gap-1 rounded-md px-1.5 py-1', active ? 'border border-brand-600/30 bg-white' : 'border border-transparent hover:bg-white/80')}>
+                            <button type="button" data-brand-select className="min-w-0 flex-1 text-left cursor-pointer"
+                              onClick={() => { setActiveBrandId(brand.id); setFocusPane('brands'); }}
+                              onDoubleClick={() => { setActiveBrandId(brand.id); focusStickersInput(); }}>
+                              <span className="block truncate text-sm font-semibold text-ink-900">{brand.name}</span>
+                              <span className="block text-2xs text-ink-500">{brand.panelStickers.length} sticker{brand.panelStickers.length === 1 ? '' : 's'}</span>
+                            </button>
+                            <Button variant="ghost" size="square" data-remove-brand
+                              className="!h-7 !w-7 shrink-0 text-ink-400 hover:text-ink-800"
+                              aria-label={`Remove brand ${brand.name}`}
+                              onClick={() => setBrandToDelete(brand)}
+                              icon={() => <X className="h-3.5 w-3.5" />}
+                            />
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading} />
+              </div>
             </div>
 
             {/* Stickers pane */}
             <div ref={stickersPaneRef} tabIndex={-1} data-pane="stickers" aria-label="Panel stickers"
               className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'stickers' ? 'border-brand-600/35 bg-brand-600/5 ring-1 ring-brand-600/20' : 'border-ink-200/60 bg-ink-50/30')}
               onFocusCapture={() => setFocusPane('stickers')}>
-              {activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} /> : (
+              {isLoading ? (
+                <div className="flex flex-col h-full">
+                  <div className="mb-1 flex items-baseline justify-between gap-2">
+                    <div className="h-3 w-1/3 animate-pulse rounded bg-ink-200/60"></div>
+                    <div className="h-3 w-10 animate-pulse rounded bg-ink-200/60"></div>
+                  </div>
+                  <div className="mt-1 flex flex-wrap gap-1 mb-1.5">
+                    <div className="h-6 w-20 animate-pulse rounded bg-ink-200/60"></div>
+                    <div className="h-6 w-16 animate-pulse rounded bg-ink-200/60"></div>
+                  </div>
+                  <div className="flex gap-1.5 mt-auto">
+                    <div className="h-8 flex-1 animate-pulse rounded bg-ink-100/50"></div>
+                    <div className="h-8 w-10 animate-pulse rounded bg-ink-200/60 shrink-0"></div>
+                  </div>
+                </div>
+              ) : activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} /> : (
                 <p className="px-1 py-4 text-center text-2xs text-ink-500">Select or add a brand to manage panel stickers.</p>
               )}
             </div>
@@ -537,6 +617,7 @@ export default function Customisation() {
       <CommonTable
         columns={tableColumns}
         data={filtered}
+        isLoading={isLoading}
         emptyState="No products match your search or filter."
         pagination={{ totalItems: filtered.length, pageSize: filtered.length, pageNo: 1, totalPages: 1 }}
       />
