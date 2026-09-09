@@ -10,6 +10,10 @@ import {
   LayoutList,
   Layers,
   Settings2,
+  Package,
+  Tags,
+  Box,
+  Ruler
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -26,9 +30,21 @@ const operationsNav = [
     ],
   },
   { to: '/production', label: 'Production', icon: Factory },
+  {
+    to: '/inventory',
+    label: 'Inventory',
+    icon: Package,
+    children: [
+      { to: '/inventory/category', label: 'Category', icon: Tags },
+      { to: '/inventory/product', label: 'Product', icon: Box },
+      { to: '/inventory/unit', label: 'Unit', icon: Ruler },
+    ],
+  },
 ];
 
-const masterNav = [{ to: '/bom', label: 'BOM', icon: Layers }];
+const masterNav = [
+  { to: '/bom', label: 'BOM', icon: Layers },
+];
 
 const allNav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
@@ -36,6 +52,7 @@ const allNav = [
   { to: '/orders', label: 'Orders', icon: ClipboardList },
   { to: '/production', label: 'Production', icon: Factory },
   { to: '/bom', label: 'BOM', icon: Layers },
+  { to: '/inventory/product', label: 'Inventory', icon: Package },
 ];
 
 function NavItemLink({ item }) {
