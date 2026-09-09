@@ -107,7 +107,13 @@ export const getStickersByBrandId = async (brandId) => {
                 createdAt: 'desc'
             }
         });
-        return { success: true, data: result };
+        
+        const filteredResult = result.map(sticker => {
+            const { createdBy, updatedBy, is_deleted, deletedAt, deletedBy, ...rest } = sticker;
+            return rest;
+        });
+        
+        return { success: true, data: filteredResult };
     } catch (error) {
         console.error('Error in getStickersByBrandId service:', error);
         return { success: false, message: error.message };

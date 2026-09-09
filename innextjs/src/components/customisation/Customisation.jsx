@@ -307,6 +307,7 @@ export default function Customisation() {
   const [customers, setCustomers] = useState([]);
   const [currentBrands, setCurrentBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [lastFetchedCustomerId, setLastFetchedCustomerId] = useState(null);
 
   // ── Customer brands state ──
   const [customerId, setCustomerId] = useState(customers[0]?.id ?? '');
@@ -317,6 +318,8 @@ export default function Customisation() {
   const [focusPane, setFocusPane] = useState('brands');
   const brandsPaneRef = useRef(null);
   const stickersPaneRef = useRef(null);
+
+  const isFetchingBrands = customerId !== lastFetchedCustomerId;
 
   // ── Product models state ──
   const [query, setQuery] = useState('');
@@ -359,10 +362,16 @@ export default function Customisation() {
   }, []);
 
   useEffect(() => {
-    if (!customerId) return;
+    if (!customerId) {
+      setLastFetchedCustomerId('');
+      return;
+    }
     
+    let cancelled = false;
+
     if (customerId === 'ALL') {
       getBrandsApi(1, 100).then(res => {
+        if (cancelled) return;
         if (res.data && res.data.success) {
           const fetchedBrands = res.data.data.data || [];
           setCurrentBrands(fetchedBrands.map(b => ({
@@ -373,9 +382,14 @@ export default function Customisation() {
             stickersFetched: Array.isArray(b.stickers)
           })));
         }
-      }).catch(err => console.error("Error fetching all brands", err));
+        setLastFetchedCustomerId(customerId);
+      }).catch(err => {
+        if (!cancelled) console.error("Error fetching all brands", err);
+        setLastFetchedCustomerId(customerId);
+      });
     } else {
       getBrandsByCustomerIdApi(customerId).then(res => {
+        if (cancelled) return;
         if (res.data && res.data.success) {
           setCurrentBrands(res.data.data.map(b => ({
             ...b,
@@ -385,8 +399,14 @@ export default function Customisation() {
             stickersFetched: Array.isArray(b.stickers)
           })));
         }
-      }).catch(err => console.error("Error fetching brands by customer", err));
+        setLastFetchedCustomerId(customerId);
+      }).catch(err => {
+        if (!cancelled) console.error("Error fetching brands by customer", err);
+        setLastFetchedCustomerId(customerId);
+      });
     }
+    
+    return () => { cancelled = true; };
   }, [customerId]);
 
   useEffect(() => {
@@ -621,7 +641,7 @@ export default function Customisation() {
                 <span className="text-2xs tabular-nums text-grey-icon">{customerId === 'ALL' ? totalBrands : customer?.brands?.length || 0}</span>
               </div>
               <div className="flex-1 min-h-0 flex flex-col">
-                {isLoading ? (
+                {isLoading || isFetchingBrands ? (
                   <ul className="mb-1.5 space-y-1.5 max-h-[148px] overflow-hidden pr-1">
                     {[1, 2, 3].map((i) => (
                       <li key={i} className="flex items-center gap-1 rounded-md px-1.5 py-1.5 border border-transparent">
@@ -660,7 +680,7 @@ export default function Customisation() {
                     })}
                   </ul>
                 )}
-                <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading} />
+                <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading || isFetchingBrands} />
               </div>
             </div>
 
@@ -668,7 +688,7 @@ export default function Customisation() {
             <div ref={stickersPaneRef} tabIndex={-1} data-pane="stickers" aria-label="Panel stickers"
               className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'stickers' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
               onFocusCapture={() => setFocusPane('stickers')}>
-              {isLoading ? (
+              {isLoading || isFetchingBrands ? (
                 <div className="flex flex-col h-full">
                   <div className="mb-1 flex items-baseline justify-between gap-2">
                     <div className="h-3 w-1/3 animate-pulse rounded bg-grey-border/60"></div>

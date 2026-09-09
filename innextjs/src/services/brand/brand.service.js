@@ -43,7 +43,7 @@ export const getAllBrands = async (page = 1, limit = 10, search = '', customerId
                     createdAt: 'desc'
                 },
                 include: {
-                    customer: true,
+                   
                     _count: {
                         select: {
                             stickers: { where: { is_deleted: false } }
@@ -55,7 +55,7 @@ export const getAllBrands = async (page = 1, limit = 10, search = '', customerId
         ]);
 
         const formattedData = data.map(brand => {
-            const { _count, ...rest } = brand;
+            const { _count, createdBy, updatedBy, is_deleted, deletedAt, deletedBy, ...rest } = brand;
             return {
                 ...rest,
                 stickers: _count?.stickers || 0
@@ -139,7 +139,7 @@ export const getBrandsByCustomerId = async (customerId) => {
         });
 
         const result = rawResult.map(brand => {
-            const { _count, ...rest } = brand;
+            const { _count, createdBy, updatedBy, is_deleted, deletedAt, deletedBy, ...rest } = brand;
             return {
                 ...rest,
                 stickers: _count?.stickers || 0
