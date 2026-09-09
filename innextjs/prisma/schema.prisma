@@ -9,51 +9,71 @@ datasource db {
 }
 
 model Customer {
-  id        String    @id @default(uuid())
-  name      String
-  email     String?   @unique
-  phone     String?
-  balance   Float     @default(0)
-  code      String?
-  region    String?
-  
+  id      String  @id @default(uuid())
+  name    String
+  email   String? @unique
+  phone   String?
+  balance Float   @default(0)
+  code    String?
+  region  String?
+
   // Audit fields
-  createdAt   DateTime  @default(now()) @map("created_at")
-  createdBy   String?   @map("created_by")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  updatedBy   String?   @map("updated_by")
-  is_deleted  Boolean   @default(false)
-  deletedAt   DateTime? @map("deleted_at")
-  deletedBy   String?   @map("deleted_by")
-  brands    Brand[]
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+  brands     Brand[]
 }
 
 model Brand {
-  id          String    @id @default(uuid())
+  id          String  @id @default(uuid())
   customer_id String
   brandname   String
   description String?
-  
-  customer    Customer  @relation(fields: [customer_id], references: [id])
-  
+
+  customer Customer @relation(fields: [customer_id], references: [id])
+
   // Audit fields
-  createdAt   DateTime  @default(now()) @map("created_at")
-  createdBy   String?   @map("created_by")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  updatedBy   String?   @map("updated_by")
-  is_deleted  Boolean   @default(false)
-  deletedAt   DateTime? @map("deleted_at")
-  deletedBy   String?   @map("deleted_by")
-  stickers    Sticker[]
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+  stickers   Sticker[]
 }
 
 model Sticker {
-  id          String    @id @default(uuid())
-  brand_id    String
+  id       String @id @default(uuid())
+  brand_id String
+  name     String
+
+  brand Brand @relation(fields: [brand_id], references: [id])
+
+  // Audit fields
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+}
+
+model Category {
+  id          String     @id @default(uuid())
   name        String
-  
-  brand       Brand     @relation(fields: [brand_id], references: [id])
-  
+  isActive    Boolean    @default(true) @map("is_active")
+
+  // Self-referential relationship
+  parentId    String?    @map("parent_id")
+  parent      Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
+  children    Category[] @relation("CategoryHierarchy")
+
   // Audit fields
   createdAt   DateTime  @default(now()) @map("created_at")
   createdBy   String?   @map("created_by")
@@ -63,3 +83,21 @@ model Sticker {
   deletedAt   DateTime? @map("deleted_at")
   deletedBy   String?   @map("deleted_by")
 }
+
+model Unit {
+  id           String  @id @default(uuid())
+  name         String
+  shortName    String? @map("short_name")
+  quantityUnit Int     @default(1) @map("quantity_unit")
+  productCount Int     @default(0) @map("product_count")
+  status       Boolean @default(true)
+
+  // Audit fields
+  createdAt    DateTime  @default(now()) @map("created_at")
+  createdBy    String?   @map("created_by")
+  updatedAt    DateTime  @updatedAt @map("updated_at")
+  updatedBy    String?   @map("updated_by")
+  is_deleted   Boolean   @default(false)
+  deletedAt    DateTime? @map("deleted_at")
+  deletedBy    String?   @map("deleted_by")
+}
