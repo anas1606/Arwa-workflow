@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import Head from 'next/head';
-import { Building2, MapPin, Search, Plus, ArrowLeft, ArrowRight } from 'lucide-react';
+import { Building2, MapPin, Search, Plus, ArrowLeft, ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
 import { CUSTOMERS, DUMMY_ORDERS } from '@/common/dummy';
 import AddCustomer from './modal/AddCustomer';
@@ -208,7 +208,7 @@ export default function Customers() {
     {
       key: 'brands',
       label: 'Brands',
-      align: 'right',
+      align: 'center',
       render: (row) => (
         <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
           {typeof row.brands === 'number' ? row.brands : (row.brands?.length || 0)}
@@ -218,7 +218,7 @@ export default function Customers() {
     {
       key: 'orders',
       label: 'Orders',
-      align: 'right',
+      align: 'center',
       render: (row) => {
         const orders = orderCountByCustomer.get(row.name) ?? 0;
         return (
@@ -230,14 +230,23 @@ export default function Customers() {
     },
     {
       key: 'actions',
-      label: '',
+      label: 'Action',
       type: 'action',
+      align: 'center',
       onClick: (row, e) => {
         const rect = e.currentTarget.getBoundingClientRect();
+        const dropdownHeight = 85; // Approximate height of 2 menu items
+        const spaceBelow = window.innerHeight - rect.bottom;
+        
+        let yPos = rect.bottom + window.scrollY;
+        if (spaceBelow < dropdownHeight) {
+          yPos = rect.top + window.scrollY - dropdownHeight;
+        }
+        
         setDropdownState({
           row,
-          x: rect.right - 120, // rough width of dropdown
-          y: rect.bottom + window.scrollY,
+          x: rect.right - 128, // exact width for w-32 (8rem/128px)
+          y: yPos,
         });
       },
     },
@@ -369,24 +378,24 @@ export default function Customers() {
           onClick={(e) => e.stopPropagation()}
         >
           <button
-            className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors"
+            className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
             onClick={() => {
               setSelectedCustomer(dropdownState.row);
               setEditOpen(true);
               setDropdownState(null);
             }}
           >
-            Edit
+            <Pencil size={14} /> Edit
           </button>
           <button
-            className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors"
+            className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
             onClick={() => {
               setSelectedCustomer(dropdownState.row);
               setDeleteOpen(true);
               setDropdownState(null);
             }}
           >
-            Delete
+            <Trash2 size={14} /> Delete
           </button>
         </div>
       )}

@@ -60,3 +60,46 @@ export const getStickerByIdApi = async (id) => {
 export const createStickerApi = (payload) => postData("sticker", payload);
 
 export const deleteStickerApi = (id, deletedBy = null) => deleteData(`sticker/${id}`, { data: { deletedBy } });
+
+// category
+export const getCategoriesApi = async (page = 1, limit = 10, search = '', status = 'ALL') => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (status && status !== 'ALL') params.status = status;
+  return await fetchDataWithParams('category', params);
+};
+
+export const getCategoryByIdApi = async (id) => {
+  return await fetchData(`category/${id}`);
+};
+
+export const createCategoryApi = (payload) => postData("category", payload);
+
+export const updateCategoryApi = async (id, payload) => {
+  return await putData(`category/${id}`, { id, ...payload });
+};
+
+export const deleteCategoryApi = (id, deletedBy = null) => deleteData(`category/${id}`, { data: { deletedBy } });
+
+export const getCategoryKpisApi = async () => {
+  return await fetchData('category/kpi');
+};
+
+
+// unit
+export const getUnitsApi = async (page = 1, limit = 10, search = '', status = 'ALL') => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (status && status !== 'ALL') params.status = status;
+  return await fetchDataWithParams('unit', params);
+};
+
+export const getUnitByIdApi = async (id) => {
+  return await fetchData(`unit/${id}`);
+};
+
+export const createUnitApi = (payload) => postData("unit", payload);
+export const updateUnitApi = async (id, payload) => {
+  return await putData(`unit/${id}`, { id, ...payload });
+};
+export const deleteUnitApi = (id, deletedBy = null) => deleteData(`unit/${id}`, { data: { deletedBy } });
