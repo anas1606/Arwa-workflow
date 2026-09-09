@@ -83,7 +83,7 @@ export default function Customers() {
         const response = await getCustomersApi(pageNo, pageSize, query, regionFilter);
         if (response.data && response.data.success) {
           setCustomersData(response.data.data.data || []);
-          setTotalItems(response.data.data.total || 0);
+          setTotalItems(response.data.data.pagination?.total || 0);
           if (response.data.data.regions) {
             setGlobalRegions(response.data.data.regions);
           }
@@ -119,7 +119,7 @@ export default function Customers() {
     return map;
   }, []);
 
-  const totalBrands = customersData.reduce((sum, c) => sum + (c.brands?.length || 0), 0);
+  const totalBrands = customersData.reduce((sum, c) => sum + (typeof c.brands === 'number' ? c.brands : (c.brands?.length || 0)), 0);
   
   const withOrders = customersData.filter(
     (c) => (orderCountByCustomer.get(c.name) ?? 0) > 0,
@@ -211,7 +211,7 @@ export default function Customers() {
       align: 'right',
       render: (row) => (
         <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
-          {row.brands?.length || 0}
+          {typeof row.brands === 'number' ? row.brands : (row.brands?.length || 0)}
         </span>
       ),
     },

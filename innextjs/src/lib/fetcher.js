@@ -3,7 +3,10 @@ import axios from "axios";
 
 // customer
 export const getCustomersApi = async (page = 1, limit = 10, search = '', region = '') => {
-  return await fetchDataWithParams('customer', { page, limit, search, region });
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (region && region !== 'ALL') params.region = region;
+  return await fetchDataWithParams('customer', params);
 };
 
 export const getCustomerByIdApi = async (id) => {
@@ -18,7 +21,15 @@ export const deleteCustomerApi = (id, deletedBy = null) => deleteData(`customer/
 
 // brand
 export const getBrandsApi = async (page = 1, limit = 10, search = '', customerId = '') => {
-  return await fetchDataWithParams('brand', { page, limit, search, customerId });
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (customerId) params.customerId = customerId;
+  return await fetchDataWithParams('brand', params);
+};
+
+
+export const getBrandsByCustomerIdApi = async (customerId) => {
+  return await fetchData(`brand/by-customer/${customerId}`);
 };
 
 export const getBrandByIdApi = async (id) => {
@@ -30,3 +41,22 @@ export const updateBrandApi = async (id, payload) => {
   return await putData(`brand/${id}`, { id, ...payload });
 };
 export const deleteBrandApi = (id, deletedBy = null) => deleteData(`brand/${id}`, { data: { deletedBy } });
+
+
+
+// sticker
+export const getStickersApi = async (page = 1, limit = 10, search = '', brandId = '') => {
+  return await fetchDataWithParams('sticker', { page, limit, search, brandId });
+};
+
+export const getStickersByBrandIdApi = async (brandId) => {
+  return await fetchData(`sticker/by-brand/${brandId}`);
+};
+
+export const getStickerByIdApi = async (id) => {
+  return await fetchData(`sticker/${id}`);
+};
+
+export const createStickerApi = (payload) => postData("sticker", payload);
+
+export const deleteStickerApi = (id, deletedBy = null) => deleteData(`sticker/${id}`, { data: { deletedBy } });

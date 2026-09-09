@@ -144,24 +144,24 @@ export default function OrdersView() {
       key: 'orderNumber',
       label: 'Order',
       render: (row) => (
-        <button
-          onClick={() => { setSelectedOrder(row); setIsDetailsModalOpen(true); }}
-          className="font-mono text-sm font-semibold text-primary hover:underline cursor-pointer"
-        >
-          {row.orderNumber}
-        </button>
+        <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => { setSelectedOrder(row); setIsDetailsModalOpen(true); }}>
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-2xs font-bold text-primary-dark">
+            {row.orderNumber.replace(/[^0-9]/g, '').slice(-3) || 'ORD'}
+          </span>
+          <p className="font-semibold text-grey-text-strong truncate hover:text-primary transition-colors">{row.orderNumber}</p>
+        </div>
       ),
     },
     {
       key: 'customerName',
       label: 'Customer',
-      render: (row) => <span className="text-sm font-semibold text-grey-text-strong">{row.customerName}</span>,
+      render: (row) => <span className="text-sm font-semibold text-grey-text-strong whitespace-nowrap">{row.customerName}</span>,
     },
     {
       key: 'orderType',
       label: 'Order Type',
       render: (row) => (
-        <span className="badge border border-primary-subtle text-primary-dark bg-primary-bg">
+        <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark whitespace-nowrap">
           {row.orderType}
         </span>
       ),
@@ -171,18 +171,15 @@ export default function OrdersView() {
       label: 'Due',
       render: (row) => {
         const due = dueDaysLabel(row.dueDate);
+        const toneBg = due.tone === 'danger' ? 'bg-danger-subtle text-danger-dark' :
+                       due.tone === 'warning' ? 'bg-warning-subtle text-warning-dark' :
+                       due.tone === 'info' ? 'bg-primary-subtle text-primary-dark' : 'bg-grey-surface text-grey-text-dark';
         return (
-          <div className="flex flex-col">
-            <span className={clsx(
-              "text-sm font-semibold",
-              due.tone === 'danger' && "text-danger-dark",
-              due.tone === 'warning' && "text-warning-dark",
-              due.tone === 'info' && "text-primary-dark",
-              due.tone === 'neutral' && "text-grey-text-dark"
-            )}>
+          <div className="max-w-[140px]">
+            <span className={clsx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-semibold whitespace-nowrap", toneBg)}>
               {due.text}
             </span>
-            <span className="text-2xs font-mono text-grey-icon">{row.dueDate}</span>
+            <p className="mt-0.5 text-2xs text-grey-icon truncate ">{row.dueDate}</p>
           </div>
         );
       },
@@ -191,19 +188,22 @@ export default function OrdersView() {
       key: 'products',
       label: 'Products',
       render: (row) => {
-        const firstTwo = row.products.slice(0, 2);
-        const extra = row.products.length - 2;
+        const options = row.products.map(p => p.name);
+        const MAX_VISIBLE = 1;
+        const overflow = options.length - MAX_VISIBLE;
+        const visible = options.slice(0, MAX_VISIBLE);
         return (
-          <div className="flex items-center gap-1 flex-wrap">
-            {firstTwo.map((p, i) => (
-              <span key={i} className="text-xs font-medium text-grey-text-dark flex items-center">
-                {i > 0 && <span className="text-grey-border-strong mx-1">·</span>}
-                {p.name}
-              </span>
+          <div className="flex items-center gap-1">
+            {visible.map((opt, idx) => (
+              <span key={idx} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark max-w-[120px] truncate">{opt}</span>
             ))}
-            {extra > 0 && (
-              <span className="ml-1 rounded bg-primary-bg px-1.5 py-0.5 text-2xs font-bold text-primary-dark">
-                +{extra}
+            {overflow > 0 && (
+              <span className="relative inline-block">
+                <span className="peer inline-flex rounded-md bg-grey-bg px-1.5 py-0.5 text-2xs font-semibold text-grey-text-light cursor-help whitespace-nowrap">+{overflow} more</span>
+                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-grey-text-strong px-2 py-1.5 text-xs text-white shadow-lg">
+                  {options.slice(MAX_VISIBLE).join(', ')}
+                  <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-grey-text-strong"></div>
+                </div>
               </span>
             )}
           </div>
@@ -224,10 +224,9 @@ export default function OrdersView() {
       key: 'priority',
       label: 'Priority',
       render: (row) => (
-        <span className={clsx(
-          "text-xs font-semibold",
-          row.priority === 'High' ? "text-danger-dark" :
-            row.priority === 'Medium' ? "text-warning-dark" : "text-success-dark"
+        <span className={clsx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-semibold whitespace-nowrap",
+          row.priority === 'High' ? "bg-danger-subtle text-danger-dark" :
+          row.priority === 'Medium' ? "bg-warning-subtle text-warning-dark" : "bg-success-subtle text-success-dark"
         )}>
           {row.priority}
         </span>
