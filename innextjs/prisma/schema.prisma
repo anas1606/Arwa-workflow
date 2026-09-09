@@ -18,13 +18,13 @@ model Customer {
   region    String?
   
   // Audit fields
-  createdAt DateTime  @default(now())
-  createdBy String?
-  updatedAt DateTime  @updatedAt
-  updatedBy String?
-  is_deleted Boolean  @default(false)
-  deletedAt DateTime?
-  deletedBy String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  createdBy   String?   @map("created_by")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  updatedBy   String?   @map("updated_by")
+  is_deleted  Boolean   @default(false)
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?   @map("deleted_by")
   brands    Brand[]
 }
 
@@ -37,11 +37,29 @@ model Brand {
   customer    Customer  @relation(fields: [customer_id], references: [id])
   
   // Audit fields
-  createdAt   DateTime  @default(now())
-  createdBy   String?
-  updatedAt   DateTime  @updatedAt
-  updatedBy   String?
+  createdAt   DateTime  @default(now()) @map("created_at")
+  createdBy   String?   @map("created_by")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  updatedBy   String?   @map("updated_by")
   is_deleted  Boolean   @default(false)
-  deletedAt   DateTime?
-  deletedBy   String?
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?   @map("deleted_by")
+  stickers    Sticker[]
+}
+
+model Sticker {
+  id          String    @id @default(uuid())
+  brand_id    String
+  name        String
+  
+  brand       Brand     @relation(fields: [brand_id], references: [id])
+  
+  // Audit fields
+  createdAt   DateTime  @default(now()) @map("created_at")
+  createdBy   String?   @map("created_by")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+  updatedBy   String?   @map("updated_by")
+  is_deleted  Boolean   @default(false)
+  deletedAt   DateTime? @map("deleted_at")
+  deletedBy   String?   @map("deleted_by")
 }
