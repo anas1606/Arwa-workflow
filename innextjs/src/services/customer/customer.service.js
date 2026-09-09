@@ -51,9 +51,17 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
                 orderBy: {
                     createdAt: 'desc'
                 },
-                include: {
-                    brands: {
-                        where: { is_deleted: false }
+                select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                    region: true,
+                    createdAt: true,
+                    updatedAt: true,
+                    _count: {
+                        select: {
+                            brands: { where: { is_deleted: false } }
+                        }
                     }
                 }
             }),
@@ -65,8 +73,32 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
         ]);
 
         const allRegions = regionsData.map(r => r.region).sort();
+        
+        const formattedData = data.map(customer => ({
+            id: customer.id,
+            name: customer.name,
+            code: customer.code,
+            region: customer.region,
+            createdAt: customer.createdAt,
+            updatedAt: customer.updatedAt,
+            brands: customer._count.brands
+        }));
 
-        return { success: true, data: { data, total, page: parseInt(page), limit: take, regions: allRegions } };
+        const totalPages = Math.ceil(total / take);
+
+        return { 
+            success: true, 
+            data: { 
+                data: formattedData, 
+                regions: allRegions,
+                pagination: {
+                    total,
+                    page: parseInt(page),
+                    limit: take,
+                    totalPages
+                }
+            } 
+        };
     } catch (error) {
         console.error('Error in getAllCustomers service:', error);
         return { success: false, message: error.message };

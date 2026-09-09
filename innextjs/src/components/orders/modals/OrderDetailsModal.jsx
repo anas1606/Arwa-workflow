@@ -41,17 +41,33 @@ export default function OrderDetailsModal({
 
   useEffect(() => {
     if (!shouldRender) return;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    
+    const hasLock = document.body.dataset.modalLock === 'true';
+    if (!hasLock) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.dataset.prevOverflow = document.body.style.overflow;
+      document.body.dataset.prevPadding = document.body.style.paddingRight;
+      document.body.dataset.modalLock = 'true';
+      
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
     const onKeyDown = (e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
     document.addEventListener('keydown', onKeyDown);
+    
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
       document.removeEventListener('keydown', onKeyDown);
+      setTimeout(() => {
+        const remainingModals = document.querySelectorAll('.app-modal-layer').length;
+        if (remainingModals === 0) {
+          document.body.style.overflow = document.body.dataset.prevOverflow || '';
+          document.body.style.paddingRight = document.body.dataset.prevPadding || '';
+          delete document.body.dataset.modalLock;
+          delete document.body.dataset.prevOverflow;
+          delete document.body.dataset.prevPadding;
+        }
+      }, 0);
     };
   }, [shouldRender, onClose]);
 

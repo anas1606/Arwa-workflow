@@ -55,17 +55,33 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
 
   useEffect(() => {
     if (!shouldRender) return;
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-    const prevOverflow = document.body.style.overflow;
-    const prevPaddingRight = document.body.style.paddingRight;
-    document.body.style.overflow = 'hidden';
-    document.body.style.paddingRight = `${scrollbarWidth}px`;
+    
+    const hasLock = document.body.dataset.modalLock === 'true';
+    if (!hasLock) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.body.dataset.prevOverflow = document.body.style.overflow;
+      document.body.dataset.prevPadding = document.body.style.paddingRight;
+      document.body.dataset.modalLock = 'true';
+      
+      document.body.style.overflow = 'hidden';
+      document.body.style.paddingRight = `${scrollbarWidth}px`;
+    }
+
     const onKeyDown = (e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
     document.addEventListener('keydown', onKeyDown);
+    
     return () => {
-      document.body.style.overflow = prevOverflow;
-      document.body.style.paddingRight = prevPaddingRight;
       document.removeEventListener('keydown', onKeyDown);
+      setTimeout(() => {
+        const remainingModals = document.querySelectorAll('.app-modal-layer').length;
+        if (remainingModals === 0) {
+          document.body.style.overflow = document.body.dataset.prevOverflow || '';
+          document.body.style.paddingRight = document.body.dataset.prevPadding || '';
+          delete document.body.dataset.modalLock;
+          delete document.body.dataset.prevOverflow;
+          delete document.body.dataset.prevPadding;
+        }
+      }, 0);
     };
   }, [shouldRender, onClose]);
 
@@ -166,7 +182,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-[#f8f9fc] shadow-2xl rounded-[20px] border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-[700px] w-full max-h-[85vh] overflow-hidden flex flex-col`}
+        className={`app-modal-panel bg-[#f8f9fc] shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-[700px] w-full max-h-[85vh] overflow-hidden flex flex-col`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 shrink-0">
@@ -179,9 +195,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
             >
               Clear all
             </button>
-            <button onClick={onClose} className="text-grey-muted hover:text-grey-text-strong transition-colors">
-              <X size={20} />
-            </button>
+            <Button variant="ghost" size="square" className="!w-8 !h-8 text-grey-muted hover:text-grey-text-strong" icon={() => <X size={20} />} onClick={onClose} />
           </div>
         </div>
 
@@ -198,7 +212,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
                   key={cat.id}
                   onClick={() => setActiveTab(cat.id)}
                   className={clsx(
-                    "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all text-left",
+                    "flex items-center justify-between px-4 py-3 rounded-md text-sm font-bold transition-all text-left",
                     isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-grey-text hover:bg-grey-surface"
                   )}
                 >
@@ -217,7 +231,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
           </div>
 
           {/* Right Content (Options) */}
-          <div className="flex-1 bg-white rounded-xl shadow-sm border border-grey-surface flex flex-col overflow-hidden mx-2 mb-2 relative">
+          <div className="flex-1 bg-white rounded-md shadow-sm border border-grey-surface flex flex-col overflow-hidden mx-2 mb-2 relative">
             <div className="px-6 py-4 border-b border-grey-bg shrink-0">
               <h3 className="font-bold text-grey-text-strong">{CATEGORIES.find(c => c.id === activeTab)?.label}</h3>
             </div>
@@ -270,7 +284,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
                     return (
                       <label 
                         key={i} 
-                        className="flex items-center justify-between p-3 rounded-lg hover:bg-grey-bg cursor-pointer transition-colors group"
+                        className="flex items-center justify-between p-3 rounded-md hover:bg-grey-bg cursor-pointer transition-colors group"
                       >
                         <input 
                           type="checkbox" 
@@ -280,7 +294,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
                         />
                         <div className="flex items-center gap-3">
                           <div className={clsx(
-                            "w-5 h-5 rounded border flex items-center justify-center transition-colors",
+                            "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
                             isSelected ? "bg-primary border-primary text-white" : "border-grey-border-strong bg-white group-hover:border-grey-icon"
                           )}>
                             {isSelected && <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
@@ -308,11 +322,11 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
         </div>
 
         {/* Footer */}
-        <div className="px-6 py-4 flex justify-end shrink-0 bg-white border-t border-grey-surface rounded-b-[20px]">
+        <div className="px-6 py-4 flex justify-end shrink-0 bg-white border-t border-grey-surface rounded-b-md">
           <Button 
             variant="primary" 
             text="Done" 
-            className="w-32 !rounded-xl !py-2.5 !h-auto text-base"
+            className="w-32 !py-2.5 !h-auto text-base"
             onClick={handleDone} 
           />
         </div>
