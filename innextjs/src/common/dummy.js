@@ -428,3 +428,14 @@ export {
   isLineSpecsComplete,
   stripHtml
 };
+
+export const DUMMY_CATEGORIES = [
+  { id: 'cat-1', name: 'Electronics', parentId: null, code: 'ELEC', itemCount: 150 },
+  { id: 'cat-2', name: 'Smartphones', parentId: 'cat-1', code: 'SMPH', itemCount: 45 },
+  { id: 'cat-3', name: 'iPhones', parentId: 'cat-2', code: 'IPHN', itemCount: 12 },
+  { id: 'cat-4', name: 'Android', parentId: 'cat-2', code: 'ANDR', itemCount: 33 },
+  { id: 'cat-5', name: 'Computers', parentId: 'cat-1', code: 'COMP', itemCount: 80 },
+  { id: 'cat-6', name: 'Laptops', parentId: 'cat-5', code: 'LAPT', itemCount: 50 },
+  { id: 'cat-7', name: 'Home Appliances', parentId: null, code: 'HAPP', itemCount: 200 },
+  { id: 'cat-8', name: 'Refrigerators', parentId: 'cat-7', code: 'REFR', itemCount: 30 },
+];
