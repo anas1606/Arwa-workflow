@@ -3,6 +3,8 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
+import { getCategoriesApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -16,7 +18,7 @@ function getModalRoot() {
 }
 
 export default function TransferCategory({ isOpen, onClose, onTransfer, category, categories }) {
-  const [targetParentId, setTargetParentId] = useState('');
+  const [parentOption, setParentOption] = useState({ label: 'None', value: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleId = useId();
@@ -28,7 +30,7 @@ export default function TransferCategory({ isOpen, onClose, onTransfer, category
     if (isOpen) {
       setShouldRender(true);
       setIsAnimatingOut(false);
-      setTargetParentId('');
+      setParentOption({ label: 'None', value: '' });
     } else if (shouldRender) {
       setIsAnimatingOut(true);
       timer = setTimeout(() => {
@@ -56,13 +58,30 @@ export default function TransferCategory({ isOpen, onClose, onTransfer, category
   const invalidParents = getDescendants(category.id, categories);
   invalidParents.add(category.id); // Cannot be its own parent
 
-  const availableParents = categories.filter(c => !invalidParents.has(c.id));
+  const loadParentOptions = async (inputValue) => {
+    try {
+      const response = await getCategoriesApi(1, 100, inputValue, 'ALL');
+      if (response?.data?.success) {
+        const rawCats = response.data.data.data || [];
+        const cats = rawCats.filter(c => !invalidParents.has(c.id));
+        const options = cats.map(c => ({ label: c.name, value: c.id }));
+        
+        if (!inputValue || 'none'.includes(inputValue.toLowerCase())) {
+          return [{ label: 'None', value: '' }, ...options];
+        }
+        return options;
+      }
+      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
+    } catch (error) {
+      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      await onTransfer(category.id, targetParentId || null);
+      await onTransfer(category.id, parentOption.value || null);
     } finally {
       setIsSubmitting(false);
     }
@@ -102,16 +121,13 @@ export default function TransferCategory({ isOpen, onClose, onTransfer, category
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <p className="text-sm text-grey-text mb-4">Move <strong className="text-grey-text-strong">{category.name}</strong> under a new parent category.</p>
           <form id="category-transfer-form" className="flex flex-col gap-4" onSubmit={submit}>
-            <Input
-              type="select"
+            <AsyncSelectInput
               id="transfer-parent"
               label="New Parent Category"
-              value={targetParentId}
-              onChange={(e) => setTargetParentId(e.target.value)}
-              options={[
-                { label: 'None (Make Root Category)', value: '' },
-                ...availableParents.map(c => ({ label: c.name, value: c.id }))
-              ]}
+              value={parentOption}
+              onChange={setParentOption}
+              loadOptions={loadParentOptions}
+              defaultOptions
             />
           </form>
         </div>

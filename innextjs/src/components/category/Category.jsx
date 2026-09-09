@@ -269,13 +269,23 @@ export default function Category() {
             },
         },
         {
-            key: 'status',
+            key: 'isActive',
             label: 'Status',
-            render: (row) => (
-                <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${row.isActive !== false ? 'bg-success-bg text-success-main' : 'bg-grey-bg text-grey-muted'}`}>
-                    {row.isActive !== false ? 'Active' : 'Inactive'}
-                </span>
-            ),
+            type: 'toggle',
+            onChange: async (row, newValue) => {
+                try {
+                    const response = await updateCategoryApi(row.id, { isActive: newValue });
+                    if (response.data && response.data.success) {
+                        fetchCategories();
+                        fetchKpis();
+                        toast.success('Category status updated');
+                    } else {
+                        toast.error(response.data?.message || 'Failed to update status');
+                    }
+                } catch (error) {
+                    toast.error('An unexpected error occurred.');
+                }
+            }
         },
         {
             key: 'itemCount',
