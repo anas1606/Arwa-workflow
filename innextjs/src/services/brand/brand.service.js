@@ -43,13 +43,26 @@ export const getAllBrands = async (page = 1, limit = 10, search = '', customerId
                     createdAt: 'desc'
                 },
                 include: {
-                    customer: true
+                    customer: true,
+                    _count: {
+                        select: {
+                            stickers: { where: { is_deleted: false } }
+                        }
+                    }
                 }
             }),
             prisma.brand.count({ where })
         ]);
 
-        return { success: true, data: { data, total, page: parseInt(page), limit: take } };
+        const formattedData = data.map(brand => {
+            const { _count, ...rest } = brand;
+            return {
+                ...rest,
+                stickers: _count?.stickers || 0
+            };
+        });
+
+        return { success: true, data: { data: formattedData, total, page: parseInt(page), limit: take } };
     } catch (error) {
         console.error('Error in getAllBrands service:', error);
         return { success: false, message: error.message };
@@ -100,6 +113,42 @@ export const deleteBrand = async (id, deletedBy = null) => {
         return { success: true, data: result };
     } catch (error) {
         console.error('Error in deleteBrand service:', error);
+        return { success: false, message: error.message };
+    }
+};
+
+export const getBrandsByCustomerId = async (customerId) => {
+    try {
+        const where = { is_deleted: false };
+        if (customerId && customerId !== 'ALL') {
+            where.customer_id = customerId;
+        }
+
+        const rawResult = await prisma.brand.findMany({
+            where,
+            include: {
+                _count: {
+                    select: {
+                        stickers: { where: { is_deleted: false } }
+                    }
+                }
+            },
+            orderBy: {
+                createdAt: 'desc'
+            }
+        });
+
+        const result = rawResult.map(brand => {
+            const { _count, ...rest } = brand;
+            return {
+                ...rest,
+                stickers: _count?.stickers || 0
+            };
+        });
+
+        return { success: true, data: result };
+    } catch (error) {
+        console.error('Error in getBrandsByCustomerId service:', error);
         return { success: false, message: error.message };
     }
 };

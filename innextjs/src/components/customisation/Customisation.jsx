@@ -11,7 +11,7 @@ import AddCustomisation from './modal/AddCustomisation';
 import EditCustomisation from './modal/EditCustomisation';
 import AddCustomer from '../customers/modal/AddCustomer';
 import AddBrandModal from './modal/AddBrandModal';
-import { getCustomersApi, deleteBrandApi } from '@/lib/fetcher';
+import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi } from '@/lib/fetcher';
 import { toast } from 'sonner';
 
 /* ════════════════════════════════════════════════════════════════════
@@ -204,40 +204,89 @@ function FixedCustomiseField({ label }) {
   );
 }
 
+import { createStickerApi, deleteStickerApi } from '@/lib/fetcher';
+
 function StickerEditor({ brand, onChange }) {
   const [draft, setDraft] = useState('');
   const [localError, setLocalError] = useState(null);
-  const addOption = () => {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const addOption = async () => {
     const value = draft.trim();
     if (!value) return;
-    if (brand.panelStickers.some((v) => v.toLowerCase() === value.toLowerCase())) { setLocalError('Option already exists.'); return; }
-    onChange([...brand.panelStickers, value]); setDraft(''); setLocalError(null);
+    if (brand.panelStickers.some((v) => v.name.toLowerCase() === value.toLowerCase())) { setLocalError('Option already exists.'); return; }
+    
+    setIsSubmitting(true);
+    try {
+      const res = await createStickerApi({ name: value, brand_id: brand.id });
+      if (res.data && res.data.success) {
+        onChange([...brand.panelStickers, res.data.data]);
+        setDraft('');
+        setLocalError(null);
+        toast.success('Sticker added');
+      } else {
+        setLocalError(res.data?.message || 'Failed to add sticker');
+      }
+    } catch (error) {
+      setLocalError('An unexpected error occurred');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
+  const removeOption = async (sticker) => {
+    if (sticker.id.startsWith('temp-')) {
+       onChange(brand.panelStickers.filter((v) => v.id !== sticker.id));
+       return;
+    }
+    
+    try {
+      const res = await deleteStickerApi(sticker.id);
+      if (res.data && res.data.success) {
+        onChange(brand.panelStickers.filter((v) => v.id !== sticker.id));
+        setLocalError(null);
+        toast.success('Sticker deleted');
+      } else {
+        toast.error(res.data?.message || 'Failed to delete sticker');
+      }
+    } catch (error) {
+      toast.error('An unexpected error occurred');
+    }
+  };
+
   const onKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addOption(); } };
+  
   return (
     <div className="flex flex-col h-full">
       <div className="mb-1 flex items-baseline justify-between gap-2">
         <label className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">Panel stickers · {brand.name}</label>
-        <span className="text-2xs tabular-nums text-grey-icon">{brand.panelStickers.length} option{brand.panelStickers.length === 1 ? '' : 's'}</span>
+        <span className="text-2xs tabular-nums text-grey-icon">{brand.stickerCount ?? brand.panelStickers.length} option{(brand.stickerCount ?? brand.panelStickers.length) === 1 ? '' : 's'}</span>
       </div>
-      {brand.panelStickers.length > 0 ? (
+      {!brand.stickersFetched ? (
+        <div className="flex flex-col h-full space-y-2 mt-2">
+          <div className="flex gap-1">
+            <div className="h-6 w-16 animate-pulse rounded bg-grey-border/60"></div>
+            <div className="h-6 w-16 animate-pulse rounded bg-grey-border/60"></div>
+          </div>
+        </div>
+      ) : brand.panelStickers.length > 0 ? (
         <div className="flex flex-wrap gap-1 mb-1.5">
           {brand.panelStickers.map((opt) => (
-            <span key={opt} className="inline-flex max-w-full items-center gap-1 rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">
-              <span className="truncate">{opt}</span>
-              <ChipRemoveButton onClick={() => { onChange(brand.panelStickers.filter((v) => v !== opt)); setLocalError(null); }} />
+            <span key={opt.id} className="inline-flex max-w-full items-center gap-1 rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">
+              <span className="truncate">{opt.name}</span>
+              <ChipRemoveButton onClick={() => removeOption(opt)} />
             </span>
           ))}
         </div>
       ) : (
-        <p className="text-2xs text-grey-icon mb-1.5">Add at least one panel sticker for this brand.</p>
+        <p className="text-2xs text-grey-icon mb-1.5 mt-1">Add at least one panel sticker for this brand.</p>
       )}
       <div className="flex gap-1.5 mt-auto">
         <Input type="text" value={draft}
           onChange={(e) => { setDraft(e.target.value); if (localError) setLocalError(null); }}
-          onKeyDown={onKeyDown} placeholder="Type option, press Enter"
+          onKeyDown={onKeyDown} placeholder="Type option, press Enter" disabled={isSubmitting}
           className="flex-1 min-w-0 [&_input]:!h-8 [&_input]:!min-h-0" />
-        <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim()} icon={Plus} />
+        <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim() || isSubmitting} icon={Plus} />
       </div>
       {localError && <p className="mt-1 text-2xs text-danger-dark">{localError}</p>}
     </div>
@@ -256,6 +305,7 @@ export default function Customisation() {
   // ── Data state ──
   const [models, setModels] = useState(() => cloneModels(PRODUCT_MODELS));
   const [customers, setCustomers] = useState([]);
+  const [currentBrands, setCurrentBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   // ── Customer brands state ──
@@ -277,8 +327,8 @@ export default function Customisation() {
 
   // ── KPI computations ──
   const configuredCount = useMemo(() => models.filter(isModelConfigured).length, [models]);
-  const totalBrands = useMemo(() => customers.reduce((sum, c) => sum + c.brands.length, 0), [customers]);
-  const totalStickers = useMemo(() => customers.reduce((sum, c) => sum + c.brands.reduce((s, b) => s + b.panelStickers.length, 0), 0), [customers]);
+  const totalBrands = useMemo(() => customers.reduce((sum, c) => sum + (typeof c.brands === 'number' ? c.brands : 0), 0), [customers]);
+  const totalStickers = useMemo(() => currentBrands.reduce((s, b) => s + (b.stickerCount ?? b.panelStickers?.length ?? 0), 0), [currentBrands]);
   const kpis = [
     { label: 'Total products', value: isLoading ? '...' : String(models.length), hint: 'Models in catalog', tone: 'neutral' },
     { label: 'Configured products', value: isLoading ? '...' : String(configuredCount), hint: 'With design & color options', tone: 'info' },
@@ -293,10 +343,7 @@ export default function Customisation() {
       try {
         const res = await getCustomersApi(1, 100);
         if (res.data && res.data.success) {
-          const fetchedCustomers = res.data.data.data.map(c => ({
-            ...c,
-            brands: (c.brands || []).map(b => ({ ...b, name: b.brandname, panelStickers: [] }))
-          }));
+          const fetchedCustomers = res.data.data.data || [];
           setCustomers(fetchedCustomers);
           if (fetchedCustomers.length > 0) {
             setCustomerId('ALL');
@@ -311,8 +358,55 @@ export default function Customisation() {
     fetchCustomers();
   }, []);
 
+  useEffect(() => {
+    if (!customerId) return;
+    
+    if (customerId === 'ALL') {
+      getBrandsApi(1, 100).then(res => {
+        if (res.data && res.data.success) {
+          const fetchedBrands = res.data.data.data || [];
+          setCurrentBrands(fetchedBrands.map(b => ({
+            ...b,
+            name: b.brandname,
+            panelStickers: Array.isArray(b.stickers) ? b.stickers : [],
+            stickerCount: typeof b.stickers === 'number' ? b.stickers : (Array.isArray(b.stickers) ? b.stickers.length : 0),
+            stickersFetched: Array.isArray(b.stickers)
+          })));
+        }
+      }).catch(err => console.error("Error fetching all brands", err));
+    } else {
+      getBrandsByCustomerIdApi(customerId).then(res => {
+        if (res.data && res.data.success) {
+          setCurrentBrands(res.data.data.map(b => ({
+            ...b,
+            name: b.brandname,
+            panelStickers: Array.isArray(b.stickers) ? b.stickers : [],
+            stickerCount: typeof b.stickers === 'number' ? b.stickers : (Array.isArray(b.stickers) ? b.stickers.length : 0),
+            stickersFetched: Array.isArray(b.stickers)
+          })));
+        }
+      }).catch(err => console.error("Error fetching brands by customer", err));
+    }
+  }, [customerId]);
+
+  useEffect(() => {
+    if (!activeBrandId) return;
+    const activeBrand = currentBrands.find(b => b.id === activeBrandId);
+    if (activeBrand && !activeBrand.stickersFetched) {
+      getStickersByBrandIdApi(activeBrandId).then(res => {
+        if (res.data && res.data.success) {
+          setCurrentBrands(prev => prev.map(b => b.id === activeBrandId ? {
+            ...b,
+            panelStickers: res.data.data,
+            stickerCount: res.data.data.length,
+            stickersFetched: true
+          } : b));
+        }
+      }).catch(err => console.error("Error fetching stickers for brand", err));
+    }
+  }, [activeBrandId, currentBrands]);
+
   const customer = customers.find((c) => c.id === customerId) ?? customers[0];
-  const currentBrands = customerId === 'ALL' ? customers.flatMap(c => c.brands) : (customer?.brands || []);
 
   useEffect(() => {
     if (currentBrands.length === 0) { setActiveBrandId(null); return; }
@@ -320,15 +414,10 @@ export default function Customisation() {
   }, [currentBrands, activeBrandId]);
 
   const activeBrand = currentBrands.find((b) => b.id === activeBrandId) ?? currentBrands[0];
-  const ownerCustomer = activeBrand ? customers.find(c => c.brands.some(b => b.id === activeBrand.id)) : null;
+  const ownerCustomer = customers.find(c => c.id === activeBrand?.customer_id) ?? null;
 
-  const updateCustomerById = (id, updater) => {
-    setCustomers(customers.map((c) => (c.id === id ? updater(c) : c)));
-  };
   const removeBrand = (brandId) => {
-    const owner = customers.find(c => c.brands.some(b => b.id === brandId));
-    if (!owner) return;
-    updateCustomerById(owner.id, (c) => ({ ...c, brands: c.brands.filter((b) => b.id !== brandId) }));
+    setCurrentBrands(prev => prev.filter((b) => b.id !== brandId));
   };
   const confirmDeleteBrand = async () => { 
     if (!brandToDelete) return; 
@@ -354,8 +443,8 @@ export default function Customisation() {
     }
   };
   const setPanelStickers = (next) => {
-    if (!ownerCustomer || !activeBrand) return;
-    updateCustomerById(ownerCustomer.id, (c) => ({ ...c, brands: c.brands.map((b) => b.id === activeBrand.id ? { ...b, panelStickers: next } : b) }));
+    if (!activeBrand) return;
+    setCurrentBrands(prev => prev.map((b) => b.id === activeBrand.id ? { ...b, panelStickers: next } : b));
   };
 
   const focusStickersInput = useCallback(() => {
@@ -401,9 +490,11 @@ export default function Customisation() {
     return () => document.removeEventListener('keydown', onKeyDown, true);
   }, [focusPane, focusBrandsPane, focusStickersInput, moveBrandHighlight, activeBrandId, currentBrands.length]);
 
-  const handleAddCustomer = (c) => { setCustomers([...customers, c]); setCustomerId(c.id); setActiveBrandId(null); setAddCustomerOpen(false); };
+  const handleAddCustomer = (c) => { setCustomers([...customers, { ...c, brands: 0 }]); setCustomerId(c.id); setActiveBrandId(null); setAddCustomerOpen(false); };
   const handleAddBrand = (targetId, brand) => {
-    updateCustomerById(targetId, (c) => ({ ...c, brands: [...c.brands, brand] }));
+    if (customerId === 'ALL' || customerId === targetId) {
+      setCurrentBrands(prev => [...prev, { ...brand, name: brand.brandname, panelStickers: brand.stickers || [], stickerCount: brand.stickers?.length || 0, stickersFetched: true }]);
+    }
     setCustomerId(targetId); setActiveBrandId(brand.id); setAddBrandOpen(false); focusStickersInput();
   };
 
@@ -514,7 +605,7 @@ export default function Customisation() {
             <Input type="select" label="Customer" className="w-full sm:w-56 [&_select]:!h-9"
               value={customerId} onChange={(e) => setCustomerId(e.target.value)}
               hidePlaceholder={true}
-              options={[{ label: `All customers (${totalBrands} brands)`, value: 'ALL' }, ...customers.map((c) => ({ label: `${c.name} (${c.brands.length} brand${c.brands.length === 1 ? '' : 's'})`, value: c.id }))]} />
+              options={[{ label: `All customers (${totalBrands} brands)`, value: 'ALL' }, ...customers.map((c) => ({ label: `${c.name} (${typeof c.brands === 'number' ? c.brands : 0} brand${(typeof c.brands === 'number' ? c.brands : 0) === 1 ? '' : 's'})`, value: c.id }))]} />
             <Button variant="secondary" className="!min-h-9 shrink-0 !h-9" icon={Plus} text="Add customer" onClick={() => setAddCustomerOpen(true)} />
           </div>
         </div>
@@ -555,7 +646,7 @@ export default function Customisation() {
                               onClick={() => { setActiveBrandId(brand.id); setFocusPane('brands'); }}
                               onDoubleClick={() => { setActiveBrandId(brand.id); focusStickersInput(); }}>
                               <span className="block truncate text-sm font-semibold text-grey-text-strong">{brand.name}</span>
-                              <span className="block text-2xs text-grey-muted">{brand.panelStickers.length} sticker{brand.panelStickers.length === 1 ? '' : 's'}</span>
+                              <span className="block text-2xs text-grey-muted">{brand.stickerCount ?? brand.panelStickers.length} sticker{(brand.stickerCount ?? brand.panelStickers.length) === 1 ? '' : 's'}</span>
                             </button>
                             <Button variant="ghost" size="square" data-remove-brand
                               className="!h-7 !w-7 shrink-0 text-grey-icon hover:text-grey-text-dark"
@@ -645,7 +736,7 @@ export default function Customisation() {
                 );
               })}
             </dl>
-            <div className="flex gap-2">
+            <div className="flex gap-2 ">
               <Button variant="secondary" className="flex-1" icon={Pencil} text="Edit" onClick={() => setEditingModel(model)} />
               <Button variant="danger" className="flex-1" icon={Trash2} text="Delete" onClick={() => setModelToDelete(model)} />
             </div>
