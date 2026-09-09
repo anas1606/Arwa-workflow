@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { toast } from 'sonner';
-import { createCategoryApi } from '@/lib/fetcher';
+import { createCategoryApi, getCategoriesApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -19,7 +20,7 @@ function getModalRoot() {
 
 export default function AddCategory({ isOpen, onClose, onAdd, categories, initialParentId }) {
   const [name, setName] = useState('');
-  const [parentId, setParentId] = useState('');
+  const [parentOption, setParentOption] = useState({ label: 'None', value: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleId = useId();
@@ -32,7 +33,13 @@ export default function AddCategory({ isOpen, onClose, onAdd, categories, initia
       setShouldRender(true);
       setIsAnimatingOut(false);
       if (initialParentId) {
-        setParentId(initialParentId);
+        const initialCat = categories.find(c => c.id === initialParentId);
+        setParentOption({ 
+          label: initialCat ? initialCat.name : 'None', 
+          value: initialParentId 
+        });
+      } else {
+        setParentOption({ label: 'None', value: '' });
       }
     } else if (shouldRender) {
       setIsAnimatingOut(true);
@@ -47,7 +54,7 @@ export default function AddCategory({ isOpen, onClose, onAdd, categories, initia
 
   const reset = () => {
     setName('');
-    setParentId('');
+    setParentOption({ label: 'None', value: '' });
   };
 
   const handleClose = () => {
@@ -80,16 +87,36 @@ export default function AddCategory({ isOpen, onClose, onAdd, categories, initia
     };
   }, [shouldRender]);
 
+  const loadParentOptions = async (inputValue) => {
+    try {
+      const response = await getCategoriesApi(1, 100, inputValue, 'ALL');
+      if (response?.data?.success) {
+        const cats = response.data.data.data || [];
+        const options = cats.map(c => ({ label: c.name, value: c.id }));
+        
+        if (!inputValue || 'none'.includes(inputValue.toLowerCase())) {
+          return [{ label: 'None', value: '' }, ...options];
+        }
+        return options;
+      }
+      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
+    } catch (error) {
+      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
 
     setIsSubmitting(true);
     try {
-      const response = await createCategoryApi({
+      const payload = {
         name: name.trim(),
-        parentId: parentId || null
-      });
+        parentId: parentOption.value || null,
+        isActive: true,
+      };
+      const response = await createCategoryApi(payload);
 
       if (response.data && response.data.success) {
         toast.success('Category added successfully');
@@ -149,16 +176,13 @@ export default function AddCategory({ isOpen, onClose, onAdd, categories, initia
               autoFocus
             />
 
-            <Input
-              type="select"
+            <AsyncSelectInput
               id="category-parent"
               label="Parent Category (Optional)"
-              value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
-              options={[
-                { label: 'None (Root Category)', value: '' },
-                ...categories.map(c => ({ label: c.name, value: c.id }))
-              ]}
+              value={parentOption}
+              onChange={setParentOption}
+              loadOptions={loadParentOptions}
+              defaultOptions
             />
           </form>
         </div>

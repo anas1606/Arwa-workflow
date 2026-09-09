@@ -3,8 +3,9 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { toast } from 'sonner';
-import { updateCategoryApi, getCategoryByIdApi } from '@/lib/fetcher';
+import { updateCategoryApi, getCategoryByIdApi, getCategoriesApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -19,7 +20,7 @@ function getModalRoot() {
 
 export default function EditCategory({ isOpen, onClose, onEdit, category, categories }) {
   const [name, setName] = useState('');
-  const [parentId, setParentId] = useState('');
+  const [parentOption, setParentOption] = useState({ label: 'None', value: '' });
   const [isActive, setIsActive] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,16 +35,40 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
       setIsAnimatingOut(false);
       if (category) {
         setName(category.name || '');
-        setParentId(category.parentId || '');
         setIsActive(category.isActive !== false);
+
+        // Filter descendants
+        const getDescendants = (parentId, allCats) => {
+          let descendants = new Set();
+          const children = allCats.filter(c => c.parentId === parentId);
+          children.forEach(c => {
+            descendants.add(c.id);
+            getDescendants(c.id, allCats).forEach(d => descendants.add(d));
+          });
+          return descendants;
+        };
+        const inv = getDescendants(category.id, categories);
+        inv.add(category.id);
+        const avail = categories.filter(c => !inv.has(c.id));
+
+        const updatePOpt = (pId) => {
+          if (!pId) {
+            setParentOption({ label: 'None', value: '' });
+          } else {
+            const found = avail.find(c => c.id === pId);
+            setParentOption({ label: found ? found.name : 'Selected Category', value: pId });
+          }
+        };
+
+        updatePOpt(category.parentId);
 
         // Fetch full category details by ID
         getCategoryByIdApi(category.id).then(res => {
           if (res.data && res.data.success) {
             const fetchedCat = res.data.data;
             setName(fetchedCat.name || '');
-            setParentId(fetchedCat.parentId || '');
             setIsActive(fetchedCat.isActive !== false);
+            updatePOpt(fetchedCat.parentId);
           }
         }).catch(err => console.error("Failed to fetch category by ID", err));
       }
@@ -60,7 +85,7 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
 
   const reset = () => {
     setName('');
-    setParentId('');
+    setParentOption({ label: 'None', value: '' });
     setIsActive(true);
   };
 
@@ -108,7 +133,24 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
   const invalidParents = category ? getDescendants(category.id, categories) : new Set();
   if (category) invalidParents.add(category.id); // Cannot be its own parent
 
-  const availableParents = categories.filter(c => !invalidParents.has(c.id));
+  const loadParentOptions = async (inputValue) => {
+    try {
+      const response = await getCategoriesApi(1, 100, inputValue, 'ALL');
+      if (response?.data?.success) {
+        const rawCats = response.data.data.data || [];
+        const cats = rawCats.filter(c => !invalidParents.has(c.id));
+        const options = cats.map(c => ({ label: c.name, value: c.id }));
+        
+        if (!inputValue || 'none'.includes(inputValue.toLowerCase())) {
+          return [{ label: 'None', value: '' }, ...options];
+        }
+        return options;
+      }
+      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
+    } catch (error) {
+      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
+    }
+  };
 
   const submit = async (e) => {
     e.preventDefault();
@@ -118,7 +160,7 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
     try {
       const response = await updateCategoryApi(category.id, {
         name: name.trim(),
-        parentId: parentId || null,
+        parentId: parentOption.value || null,
         isActive
       });
 
@@ -180,16 +222,13 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
               autoFocus
             />
 
-            <Input
-              type="select"
+            <AsyncSelectInput
               id="edit-category-parent"
               label="Parent Category (Optional)"
-              value={parentId}
-              onChange={(e) => setParentId(e.target.value)}
-              options={[
-                { label: 'None (Root Category)', value: '' },
-                ...availableParents.map(c => ({ label: c.name, value: c.id }))
-              ]}
+              value={parentOption}
+              onChange={setParentOption}
+              loadOptions={loadParentOptions}
+              defaultOptions
             />
 
             <div className="flex items-center justify-between mt-2">
