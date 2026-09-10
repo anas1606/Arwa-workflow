@@ -28,9 +28,14 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
                 { name: { contains: search, mode: 'insensitive' } },
                 { shortName: { contains: search, mode: 'insensitive' } },
             ];
-            // If search is a number, we could potentially search by quantityUnit, but usually string search is enough
+            // If search is a number, we can search by quantityUnit using a raw query for partial matching
             if (!isNaN(parseInt(search))) {
-                where.OR.push({ quantityUnit: parseInt(search) });
+                const rawUnits = await prisma.$queryRaw`
+                    SELECT id FROM "Unit" WHERE "quantity_unit"::text LIKE ${'%' + search + '%'}
+                `;
+                if (rawUnits.length > 0) {
+                    where.OR.push({ id: { in: rawUnits.map(u => u.id) } });
+                }
             }
         }
 
