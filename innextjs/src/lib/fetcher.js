@@ -62,10 +62,11 @@ export const createStickerApi = (payload) => postData("sticker", payload);
 export const deleteStickerApi = (id, deletedBy = null) => deleteData(`sticker/${id}`, { data: { deletedBy } });
 
 // category
-export const getCategoriesApi = async (page = 1, limit = 10, search = '', status = 'ALL') => {
+export const getCategoriesApi = async (page = 1, limit = 10, search = '', status = 'ALL', parentId = undefined) => {
   const params = { page, limit };
   if (search) params.search = search;
   if (status && status !== 'ALL') params.status = status;
+  if (parentId !== undefined) params.parentId = parentId;
   return await fetchDataWithParams('category', params);
 };
 
