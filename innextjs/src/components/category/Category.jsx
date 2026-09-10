@@ -28,10 +28,13 @@ export default function Category() {
 
     const [kpiData, setKpiData] = useState({ total: 0, root: 0, active: 0, inactive: 0 });
 
+    const [loadedChildren, setLoadedChildren] = useState({});
+
     const fetchCategories = async () => {
         setIsLoading(true);
         try {
-            const response = await getCategoriesApi(pageNo, pageSize, query, statusFilter);
+            const parentIdParam = query ? undefined : 'null';
+            const response = await getCategoriesApi(pageNo, pageSize, query, statusFilter, parentIdParam);
             if (response.data && response.data.success) {
                 setCategoriesData(response.data.data.data || []);
                 setTotalItems(response.data.data.pagination?.total || 0);
@@ -44,6 +47,27 @@ export default function Category() {
             toast.error('Failed to load categories');
         } finally {
             setIsLoading(false);
+        }
+    };
+
+    const refreshData = async () => {
+        await fetchCategories();
+        
+        // Also refresh any currently expanded child nodes
+        if (expandedCategories.size > 0 && !query) {
+            const currentExpanded = Array.from(expandedCategories);
+            const newChildren = {};
+            await Promise.all(currentExpanded.map(async (id) => {
+                try {
+                    const res = await getCategoriesApi(1, 100, '', 'ALL', id);
+                    if (res.data && res.data.success) {
+                        newChildren[id] = res.data.data.data || [];
+                    }
+                } catch (e) {
+                    console.error("Failed to refresh child", id);
+                }
+            }));
+            setLoadedChildren(prev => ({ ...prev, ...newChildren }));
         }
     };
 
@@ -111,8 +135,25 @@ export default function Category() {
         return () => window.removeEventListener('click', closeDropdown);
     }, [dropdownState]);
 
-    const toggleExpand = (id, e) => {
+    const toggleExpand = async (id, e) => {
         e.stopPropagation();
+
+        if (!expandedCategories.has(id) && !loadedChildren[id] && !query) {
+            try {
+                const response = await getCategoriesApi(1, 100, '', 'ALL', id);
+                if (response.data && response.data.success) {
+                    setLoadedChildren(prev => ({
+                        ...prev,
+                        [id]: response.data.data.data || []
+                    }));
+                }
+            } catch (err) {
+                console.error("Failed to load children", err);
+                toast.error("Failed to load child categories");
+                return;
+            }
+        }
+
         setExpandedCategories(prev => {
             const next = new Set(prev);
             if (next.has(id)) {
@@ -127,39 +168,25 @@ export default function Category() {
     // API already filters based on query and status, so we don't need a local filteredData
     // We just use categoriesData directly for our tree logic.
 
-    // Build tree logic for nesting
     const flattenedCategories = useMemo(() => {
-        const map = new Map();
-        const roots = [];
-
-        categoriesData.forEach(cat => {
-            map.set(cat.id, { ...cat, children: [] });
-        });
-
         if (query || statusFilter !== 'ALL') {
             return categoriesData.map(c => ({ ...c, depth: 0, hasChildren: false }));
         }
 
-        categoriesData.forEach(cat => {
-            if (cat.parentId && map.has(cat.parentId)) {
-                map.get(cat.parentId).children.push(map.get(cat.id));
-            } else {
-                roots.push(map.get(cat.id));
-            }
-        });
-
         const result = [];
         const traverse = (node, depth) => {
-            const hasChildren = node.children && node.children.length > 0;
+            const hasChildren = node._count?.children > 0;
             result.push({ ...node, depth, hasChildren });
+            
             if (expandedCategories.has(node.id) && hasChildren) {
-                node.children.forEach(child => traverse(child, depth + 1));
+                const children = loadedChildren[node.id] || [];
+                children.forEach(child => traverse(child, depth + 1));
             }
         };
 
-        roots.forEach(r => traverse(r, 0));
+        categoriesData.forEach(root => traverse(root, 0));
         return result;
-    }, [categoriesData, query, statusFilter, expandedCategories]);
+    }, [categoriesData, loadedChildren, query, statusFilter, expandedCategories]);
 
     const paginatedData = flattenedCategories;
 
@@ -196,12 +223,12 @@ export default function Category() {
     ];
 
     const handleAdd = (cat) => {
-        fetchCategories();
+        refreshData();
         fetchKpis();
     };
 
     const handleEdit = (updatedCat) => {
-        fetchCategories();
+        refreshData();
         fetchKpis();
     };
 
@@ -209,7 +236,7 @@ export default function Category() {
         try {
             const response = await updateCategoryApi(transferredCatId, { parentId: newParentId });
             if (response.data && response.data.success) {
-                fetchCategories();
+                refreshData();
                 fetchKpis();
                 setTransferOpen(false);
                 toast.success('Category transferred successfully');
@@ -225,7 +252,7 @@ export default function Category() {
         try {
             const response = await deleteCategoryApi(deletedCat.id);
             if (response.data && response.data.success) {
-                fetchCategories();
+                refreshData();
                 fetchKpis();
                 setDeleteOpen(false);
                 toast.success('Category deleted successfully');
@@ -264,8 +291,7 @@ export default function Category() {
             key: 'parent',
             label: 'Parent Category',
             render: (row) => {
-                const parent = categoriesData.find(c => c.id === row.parentId);
-                return <span className="text-sm text-grey-text">{parent ? parent.name : '-'}</span>;
+                return <span className="text-sm text-grey-text">{row.parent ? row.parent.name : '-'}</span>;
             },
         },
         {
@@ -273,16 +299,41 @@ export default function Category() {
             label: 'Status',
             type: 'toggle',
             onChange: async (row, newValue) => {
+                // Optimistic UI update
+                const updateState = (items) => items.map(c => c.id === row.id ? { ...c, isActive: newValue } : c);
+                const revertState = (items) => items.map(c => c.id === row.id ? { ...c, isActive: !newValue } : c);
+
+                setCategoriesData(prev => updateState(prev));
+                setLoadedChildren(prev => {
+                    const next = { ...prev };
+                    for (const key in next) next[key] = updateState(next[key]);
+                    return next;
+                });
+
                 try {
                     const response = await updateCategoryApi(row.id, { isActive: newValue });
                     if (response.data && response.data.success) {
-                        fetchCategories();
+                        refreshData();
                         fetchKpis();
                         toast.success('Category status updated');
                     } else {
+                        // Revert on failure
+                        setCategoriesData(prev => revertState(prev));
+                        setLoadedChildren(prev => {
+                            const next = { ...prev };
+                            for (const key in next) next[key] = revertState(next[key]);
+                            return next;
+                        });
                         toast.error(response.data?.message || 'Failed to update status');
                     }
                 } catch (error) {
+                    // Revert on error
+                    setCategoriesData(prev => revertState(prev));
+                    setLoadedChildren(prev => {
+                        const next = { ...prev };
+                        for (const key in next) next[key] = revertState(next[key]);
+                        return next;
+                    });
                     toast.error('An unexpected error occurred.');
                 }
             }

@@ -37,7 +37,7 @@ export const createCategory = async (data) => {
     }
 };
 
-export const getAllCategories = async (page = 1, limit = 10, search = '', statusFilter = 'ALL') => {
+export const getAllCategories = async (page = 1, limit = 10, search = '', statusFilter = 'ALL', parentId = undefined) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -45,6 +45,12 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
 
         if (search) {
             where.name = { contains: search, mode: 'insensitive' };
+        } else if (parentId !== undefined) {
+            if (parentId === 'null') {
+                where.parentId = null;
+            } else {
+                where.parentId = parentId;
+            }
         }
 
         if (statusFilter === 'ACTIVE') {
@@ -67,6 +73,9 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
                     isActive: true,
                     parentId: true
                 }
+            },
+            _count: {
+                select: { children: { where: { is_deleted: false } } }
             }
         };
 
