@@ -5,7 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { toast } from 'sonner';
-import { updateCategoryApi, getCategoryByIdApi, getCategoriesApi } from '@/lib/fetcher';
+import { createProductApi, getCategoriesApi, getUnitsApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -18,59 +18,26 @@ function getModalRoot() {
   return root;
 }
 
-export default function EditCategory({ isOpen, onClose, onEdit, category, categories }) {
+export default function AddProduct({ open, onClose, onAdd }) {
   const [name, setName] = useState('');
-  const [parentOption, setParentOption] = useState({ label: 'None', value: '' });
+  const [code, setCode] = useState('');
+  const [category, setCategory] = useState(null);
+  const [stockQuantity, setStockQuantity] = useState('');
+  const [lowStockThreshold, setLowStockThreshold] = useState('10');
+  const [unit, setUnit] = useState(null);
   const [isActive, setIsActive] = useState(true);
+  const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     let timer;
-    if (isOpen) {
+    if (open) {
       setShouldRender(true);
       setIsAnimatingOut(false);
-      if (category) {
-        setName('');
-        setIsActive(true);
-        setParentOption({ label: 'None', value: '' });
-        
-        setIsLoading(true);
-        // Fetch full category details by ID
-        getCategoryByIdApi(category.id).then(res => {
-          if (res.data && res.data.success) {
-            const fetchedCat = res.data.data;
-            setName(fetchedCat.name || '');
-            setIsActive(fetchedCat.isActive !== false);
-
-            // Filter descendants
-            const getDescendants = (parentId, allCats) => {
-              let descendants = new Set();
-              const children = allCats.filter(c => c.parentId === parentId);
-              children.forEach(c => {
-                descendants.add(c.id);
-                getDescendants(c.id, allCats).forEach(d => descendants.add(d));
-              });
-              return descendants;
-            };
-            const inv = getDescendants(fetchedCat.id, categories);
-            inv.add(fetchedCat.id);
-            const avail = categories.filter(c => !inv.has(c.id));
-
-            if (!fetchedCat.parentId) {
-              setParentOption({ label: 'None', value: '' });
-            } else {
-              const found = avail.find(c => c.id === fetchedCat.parentId);
-              setParentOption({ label: found ? found.name : 'Selected Category', value: fetchedCat.parentId });
-            }
-          }
-        }).catch(err => console.error("Failed to fetch category by ID", err))
-        .finally(() => setIsLoading(false));
-      }
     } else if (shouldRender) {
       setIsAnimatingOut(true);
       timer = setTimeout(() => {
@@ -80,12 +47,17 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
     return () => {
       if (timer) clearTimeout(timer);
     };
-  }, [isOpen, shouldRender, category]);
+  }, [open, shouldRender]);
 
   const reset = () => {
     setName('');
-    setParentOption({ label: 'None', value: '' });
+    setCode('');
+    setCategory(null);
+    setStockQuantity('');
+    setLowStockThreshold('10');
+    setUnit(null);
     setIsActive(true);
+    setError(null);
   };
 
   const handleClose = () => {
@@ -95,14 +67,14 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
 
   useEffect(() => {
     if (!shouldRender) return;
-
+    
     const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
     const prevOverflow = document.body.style.overflow;
     const prevPaddingRight = document.body.style.paddingRight;
-
+    
     document.body.style.overflow = 'hidden';
     document.body.style.paddingRight = `${scrollbarWidth}px`;
-
+    
     const onKeyDown = (e) => {
       if (e.key === 'Escape') {
         e.preventDefault();
@@ -110,7 +82,7 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
       }
     };
     document.addEventListener('keydown', onKeyDown);
-
+    
     return () => {
       document.body.style.overflow = prevOverflow;
       document.body.style.paddingRight = prevPaddingRight;
@@ -118,60 +90,40 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
     };
   }, [shouldRender]);
 
-  // Filter out the category itself and its descendants from available parents
-  const getDescendants = (catId, allCats) => {
-    let descendants = new Set();
-    const children = allCats.filter(c => c.parentId === catId);
-    children.forEach(c => {
-      descendants.add(c.id);
-      getDescendants(c.id, allCats).forEach(d => descendants.add(d));
-    });
-    return descendants;
-  };
-
-  const invalidParents = category ? getDescendants(category.id, categories) : new Set();
-  if (category) invalidParents.add(category.id); // Cannot be its own parent
-
-  const loadParentOptions = async (inputValue) => {
-    try {
-      const response = await getCategoriesApi(1, 100, inputValue, 'ALL');
-      if (response?.data?.success) {
-        const rawCats = response.data.data.data || [];
-        const cats = rawCats.filter(c => !invalidParents.has(c.id));
-        const options = cats.map(c => ({ label: c.name, value: c.id }));
-        
-        if (!inputValue || 'none'.includes(inputValue.toLowerCase())) {
-          return [{ label: 'None', value: '' }, ...options];
-        }
-        return options;
-      }
-      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
-    } catch (error) {
-      return !inputValue || 'none'.includes(inputValue.toLowerCase()) ? [{ label: 'None', value: '' }] : [];
-    }
-  };
-
   const submit = async (e) => {
     e.preventDefault();
-    if (!name.trim()) return;
-
+    const trimmedName = name.trim();
+    if (!trimmedName) {
+      setError('Product name is required.');
+      return;
+    }
+    
     setIsSubmitting(true);
+    setError(null);
     try {
-      const response = await updateCategoryApi(category.id, {
-        name: name.trim(),
-        parentId: parentOption.value || null,
+      const payload = {
+        name: trimmedName,
+        code: code.trim(),
+        stockQuantity: parseFloat(stockQuantity) || 0,
+        lowStockThreshold: parseFloat(lowStockThreshold) || 0,
+        categoryId: category ? category.value : null,
+        unitId: unit ? unit.value : null,
         isActive
-      });
-
+      };
+      
+      const response = await createProductApi(payload);
       if (response.data && response.data.success) {
-        toast.success('Category updated successfully');
-        onEdit();
-        handleClose();
+        toast.success('Product added successfully!');
+        onAdd(response.data.data);
+        reset();
       } else {
-        toast.error(response.data?.message || 'Failed to update category');
+        const errorMsg = response.error?.message || response.data?.message || 'Failed to add product';
+        setError(errorMsg);
+        toast.error(errorMsg);
       }
-    } catch (error) {
-      toast.error('An unexpected error occurred.');
+    } catch (err) {
+      setError('An error occurred while adding the product');
+      toast.error('An error occurred while adding the product');
     } finally {
       setIsSubmitting(false);
     }
@@ -196,8 +148,8 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
         className={`app-modal-panel bg-white shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
-          <h2 id={titleId} className="text-[17px] font-semibold text-grey-text-strong">
-            {isLoading ? 'Loading...' : 'Edit Category'}
+          <h2 id={titleId} className="text-base font-bold text-grey-text-strong">
+            Add product
           </h2>
           <button
             type="button"
@@ -209,34 +161,85 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <form id="category-edit-form" className="flex flex-col gap-4" onSubmit={submit}>
+          <form id="product-add-form" className="flex flex-col gap-4" onSubmit={submit}>
             <Input
               type="text"
-              id="edit-category-name"
-              label="Category Name"
+              id="product-name"
+              label="Product name"
               required
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Electronics"
+              placeholder="e.g. iPhone 15 Pro"
               autoFocus
             />
-
-            <AsyncSelectInput
-              id="edit-category-parent"
-              label="Parent Category (Optional)"
-              value={parentOption}
-              onChange={setParentOption}
-              loadOptions={loadParentOptions}
-              defaultOptions
+            <Input
+              type="text"
+              id="product-code"
+              label="Code"
+              value={code}
+              onChange={(e) => setCode(e.target.value)}
+              placeholder="e.g. PRD-001"
+              className="font-mono uppercase"
             />
-
+            <AsyncSelectInput
+              id="product-category"
+              label="Category"
+              value={category}
+              onChange={(opt) => setCategory(opt || null)}
+              placeholder="Select category"
+              defaultOptions={true}
+              loadOptions={async (input) => {
+                const res = await getCategoriesApi(1, 10, input, 'ACTIVE');
+                if (res.data?.success) {
+                  return res.data.data.data.map(c => ({ label: c.name, value: c.id }));
+                }
+                return [];
+              }}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                type="number"
+                id="product-stock"
+                label="Stock Quantity"
+                value={stockQuantity}
+                onChange={(e) => setStockQuantity(e.target.value)}
+                placeholder="0"
+                min="0"
+              />
+              <Input
+                type="number"
+                id="product-low-stock"
+                label="Low Stock Alert At"
+                value={lowStockThreshold}
+                onChange={(e) => setLowStockThreshold(e.target.value)}
+                placeholder="10"
+                min="0"
+              />
+            </div>
+            <div>
+              <AsyncSelectInput
+                id="product-unit"
+                label="Unit"
+                value={unit}
+                onChange={(opt) => setUnit(opt || null)}
+                placeholder="Select unit"
+                defaultOptions={true}
+                loadOptions={async (input) => {
+                  const res = await getUnitsApi(1, 10, input, 'ACTIVE');
+                  if (res.data?.success) {
+                    return res.data.data.data.map(u => ({ label: `${u.name} ${u.shortName ? `(${u.shortName})` : ''}`, value: u.id }));
+                  }
+                  return [];
+                }}
+              />
+            </div>
             <div className="flex items-center justify-between mt-2">
-              <label htmlFor="edit-status-toggle" className="text-sm font-medium text-grey-text cursor-pointer">
+              <label htmlFor="add-product-status-toggle" className="text-sm font-medium text-grey-text cursor-pointer">
                 Status: {isActive ? <span className="text-success-main font-semibold">Active</span> : <span className="text-grey-muted">Inactive</span>}
               </label>
               <button
                 type="button"
-                id="edit-status-toggle"
+                id="add-product-status-toggle"
                 onClick={() => setIsActive(!isActive)}
                 className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors focus:outline-none ${isActive ? 'bg-primary' : 'bg-grey-border'}`}
                 aria-pressed={isActive}
@@ -248,8 +251,8 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
           </form>
         </div>
         <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-grey-border px-4 py-3 sm:flex-row sm:justify-end">
-          <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" disabled={isSubmitting} />
-          <Button variant="primary" type="submit" form="category-edit-form" className="flex-1" text="Save Changes" disabled={isSubmitting} />
+          <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" />
+          <Button variant="primary" type="submit" form="product-add-form" className="flex-1" text={isSubmitting ? "Adding..." : "Add product"} disabled={isSubmitting} />
         </div>
       </div>
     </div>,

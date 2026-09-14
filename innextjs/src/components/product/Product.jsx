@@ -1,7 +1,537 @@
+import React, { useState, useMemo, useRef, useEffect } from 'react';
+import Head from 'next/head';
+import { Package, Search, Plus, ArrowLeft, ArrowRight, Pencil, Trash2 } from 'lucide-react';
+import CommonTable from '@/common/table/CommonTable';
+import Button from '@/common/buttons/Button';
+import Input from '@/common/input/Input';
+import clsx from 'clsx';
+import { toast } from 'sonner';
+import { getProductsApi, getCategoriesApi, getUnitsApi, getProductKpisApi, updateProductApi, deleteProductApi } from '@/lib/fetcher';
+
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
+import AddProduct from './modal/AddProduct';
+import EditProduct from './modal/EditProduct';
+import DeleteModal from '@/common/modal/DeleteModal';
+
+function productInitials(name) {
+  return name
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase();
+}
+
 export default function Product() {
-    return (
-        <div>
-            <h1>this is product page</h1>
+  const [productsData, setProductsData] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const [query, setQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState({ label: 'All categories', value: 'ALL' });
+  const [stockFilter, setStockFilter] = useState('ALL');
+  const [unitFilter, setUnitFilter] = useState({ label: 'All units', value: 'ALL' });
+  
+  const searchInputRef = useRef(null);
+  const categoryRef = useRef(null);
+  const stockRef = useRef(null);
+  const unitRef = useRef(null);
+  const statusRef = useRef(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setQuery(inputValue);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [inputValue]);
+
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.altKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
+        e.preventDefault();
+        searchInputRef.current?.focus();
+        return;
+      }
+
+      if (e.altKey && (e.key === 'ArrowRight' || e.code === 'ArrowRight' || e.key === 'ArrowLeft' || e.code === 'ArrowLeft')) {
+        e.preventDefault();
+        const refs = [searchInputRef, categoryRef, stockRef, unitRef, statusRef];
+        
+        // Find which ref currently contains the active element
+        const currentIndex = refs.findIndex(ref => {
+          if (!ref.current) return false;
+          if (ref.current === document.activeElement) return true;
+          // For react-select, check if activeElement is inside its container
+          if (ref.current.state && ref.current.controlRef && ref.current.controlRef.contains(document.activeElement)) return true;
+          if (ref.current.contains && ref.current.contains(document.activeElement)) return true;
+          return false;
+        });
+
+        if (e.key === 'ArrowRight' || e.code === 'ArrowRight') {
+          // Next element, loop to first if at end or none focused
+          const nextIndex = currentIndex === -1 ? 1 : (currentIndex + 1) % refs.length;
+          refs[nextIndex].current?.focus();
+        } else {
+          // Previous element, loop to last if at start or none focused
+          const prevIndex = currentIndex === -1 ? refs.length - 1 : (currentIndex - 1 + refs.length) % refs.length;
+          refs[prevIndex].current?.focus();
+        }
+      }
+    };
+    
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
+  const [pageNo, setPageNo] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const [dropdownState, setDropdownState] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [kpiData, setKpiData] = useState({ total: 0, active: 0, inactive: 0, lowStock: 0 });
+
+  const [addOpen, setAddOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
+  const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [productToDelete, setProductToDelete] = useState(null);
+  const [selectedProduct, setSelectedProduct] = useState(null);
+
+  useEffect(() => {
+    const closeDropdown = () => setDropdownState(null);
+    if (dropdownState) {
+      window.addEventListener('click', closeDropdown);
+    }
+    return () => window.removeEventListener('click', closeDropdown);
+  }, [dropdownState]);
+
+  const fetchProducts = async () => {
+    setIsLoading(true);
+    try {
+      const categoryId = categoryFilter ? categoryFilter.value : 'ALL';
+      const unitId = unitFilter ? unitFilter.value : 'ALL';
+      const response = await getProductsApi(pageNo, pageSize, query, statusFilter, categoryId, stockFilter, unitId);
+      if (response.data && response.data.success) {
+        setProductsData(response.data.data.data || []);
+        setTotalItems(response.data.data.pagination?.totalItems || 0);
+        setTotalPages(response.data.data.pagination?.totalPages || 1);
+      } else {
+        setProductsData([]);
+        setTotalItems(0);
+        setTotalPages(1);
+      }
+    } catch (error) {
+      console.error('Failed to fetch products:', error);
+      toast.error('Failed to load products');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const fetchKpis = async () => {
+    try {
+      const response = await getProductKpisApi();
+      if (response.data && response.data.success) {
+        setKpiData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch KPIs:', error);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, [pageNo, pageSize, query, statusFilter, categoryFilter, stockFilter, unitFilter]);
+
+  useEffect(() => {
+    fetchKpis();
+  }, []); // Refetch KPIs when needed (e.g. after add/edit)
+
+  useEffect(() => {
+    setPageNo(1);
+  }, [query, statusFilter, categoryFilter, stockFilter, unitFilter]);
+
+  const loadCategories = async (input) => {
+    try {
+      const response = await getCategoriesApi(1, 10, input, 'ACTIVE');
+      if (response.data && response.data.success) {
+        const options = response.data.data.data.map(c => ({ label: c.name, value: c.id }));
+        return [{ label: 'All categories', value: 'ALL' }, ...options];
+      }
+    } catch (error) {
+      console.error('Failed to load categories', error);
+    }
+    return [];
+  };
+
+  const loadUnits = async (input) => {
+    try {
+      const response = await getUnitsApi(1, 10, input, 'ACTIVE');
+      if (response.data && response.data.success) {
+        const options = response.data.data.data.map(u => ({ label: `${u.name} ${u.shortName ? `(${u.shortName})` : ''}`, value: u.id }));
+        return [{ label: 'All units', value: 'ALL' }, ...options];
+      }
+    } catch (error) {
+      console.error('Failed to load units', error);
+    }
+    return [];
+  };
+
+  const kpis = [
+    {
+      label: 'Total products',
+      value: String(kpiData.total),
+      hint: 'Items in catalog',
+      tone: 'neutral',
+    },
+    {
+      label: 'Active',
+      value: String(kpiData.active),
+      hint: 'Currently available',
+      tone: 'success',
+    },
+    {
+      label: 'Low stock',
+      value: String(kpiData.lowStock),
+      hint: 'Below minimum threshold',
+      tone: 'warning',
+    },
+    {
+      label: 'Inactive',
+      value: String(kpiData.inactive),
+      hint: 'Disabled items',
+      tone: 'danger',
+    },
+  ];
+
+  const columns = [
+    {
+      key: 'name',
+      label: 'Name',
+      render: (row) => (
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary-dark">
+            {productInitials(row.name)}
+          </span>
+          <span className="font-semibold text-grey-text-strong truncate max-w-[180px] sm:max-w-[250px]" title={row.name}>{row.name}</span>
         </div>
-    );
+      ),
+    },
+    {
+      key: 'code',
+      label: 'Code',
+      render: (row) => <span className="font-mono text-sm text-grey-text block truncate max-w-[120px]" title={row.code}>{row.code || '-'}</span>,
+    },
+    {
+      key: 'category',
+      label: 'Category',
+      render: (row) => (
+        <span className="inline-flex items-center gap-1 text-sm text-grey-text max-w-[150px]" title={row.category?.name}>
+          <span className="text-grey-text-strong font-medium text-[13px]">{row.category ? row.category.name : '-'}</span>
+        </span>
+      ),
+    },
+    {
+      key: 'stockQuantity',
+      label: 'Stock',
+      align: 'center',
+      render: (row) => (
+        <div className="text-center">
+          <span className={clsx(
+            "font-semibold text-sm",
+            row.stockQuantity <= (row.lowStockThreshold ?? 10) ? "text-danger-main" : "text-grey-text-strong"
+          )}>
+            {row.stockQuantity}
+          </span>
+
+        </div>
+      ),
+    },
+    {
+      key: 'unit',
+      label: 'Unit',
+      render: (row) => <span className="text-sm text-grey-text">{row.unit ? (row.unit.shortName || row.unit.name) : '-'}</span>,
+    },
+    {
+      key: 'isActive',
+      label: 'Status',
+      type: 'toggle',
+      onChange: async (row, newValue) => {
+        try {
+          // Optimistic update
+          setProductsData(prev => prev.map(p => p.id === row.id ? { ...p, isActive: newValue } : p));
+          const res = await updateProductApi(row.id, { isActive: newValue });
+          if (res.data?.success) {
+            toast.success('Product status updated');
+            fetchKpis();
+          } else {
+            throw new Error(res.data?.message || 'Failed to update status');
+          }
+        } catch (error) {
+          // Revert on error
+          setProductsData(prev => prev.map(p => p.id === row.id ? { ...p, isActive: !newValue } : p));
+          toast.error(error.message || 'Error updating product status');
+        }
+      }
+    },
+    {
+      key: 'actions',
+      label: 'Action',
+      type: 'action',
+      align: 'center',
+      onClick: (row, e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const dropdownHeight = 85; 
+        const spaceBelow = window.innerHeight - rect.bottom;
+        
+        let yPos = rect.bottom + window.scrollY;
+        if (spaceBelow < dropdownHeight) {
+          yPos = rect.top + window.scrollY - dropdownHeight;
+        }
+        
+        setDropdownState({
+          row,
+          x: rect.right - 128,
+          y: yPos,
+        });
+      },
+    },
+  ];
+
+  return (
+    <>
+      <Head>
+        <title>Products | Arwa Weld</title>
+      </Head>
+      <div className="w-full flex flex-col gap-5">
+        {/* Page Header */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="min-w-0">
+            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
+              Products
+            </h1>
+            <p className="mt-1 text-sm leading-snug text-grey-muted">
+              Manage your inventory catalog and stock levels.
+            </p>
+          </div>
+          <Button
+            variant="primary"
+            className="w-full sm:w-auto shrink-0"
+            onClick={() => setAddOpen(true)}
+            icon={Plus}
+            text="Add product"
+          />
+        </div>
+
+        {/* KPIs */}
+        <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Product KPIs">
+          {kpis.map((kpi) => {
+            const toneBar = {
+              neutral: 'bg-primary',
+              success: 'bg-success-dark',
+              warning: 'bg-warning-dark',
+              danger: 'bg-danger-dark',
+              info: 'bg-primary-dark',
+            };
+            return (
+              <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none">
+                <div
+                  className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])}
+                  aria-hidden
+                />
+                <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">
+                  {kpi.label}
+                </p>
+                <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">
+                  {kpi.value}
+                </p>
+                {kpi.hint ? <p className="mt-1 pl-2 text-xs text-grey-muted">{kpi.hint}</p> : null}
+              </article>
+            );
+          })}
+        </section>
+
+        {/* Toolbar */}
+        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input
+              type="text"
+              startIcon={Search}
+              placeholder="Search name, code…"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              className="flex-1 min-w-0"
+              ref={searchInputRef}
+            />
+            <div className="shrink-0 sm:w-48 z-20">
+              <AsyncSelectInput
+                ref={categoryRef}
+                value={categoryFilter}
+                onChange={(option) => setCategoryFilter(option || null)}
+                defaultOptions={true}
+                loadOptions={loadCategories}
+                placeholder="All categories"
+              />
+            </div>
+            <Input
+              type="select"
+              value={stockFilter}
+              onChange={(e) => setStockFilter(e.target.value)}
+              className="shrink-0 sm:w-32"
+              hidePlaceholder={true}
+              ref={stockRef}
+              options={[
+                { label: 'All stock', value: 'ALL' },
+                { label: 'Low stock', value: 'LOW' },
+              ]}
+            />
+            <div className="shrink-0 sm:w-36 z-20">
+              <AsyncSelectInput
+                ref={unitRef}
+                value={unitFilter}
+                onChange={(option) => setUnitFilter(option || null)}
+                defaultOptions={true}
+                loadOptions={loadUnits}
+                placeholder="All units"
+              />
+            </div>
+            <Input
+              type="select"
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="shrink-0 sm:w-32"
+              hidePlaceholder={true}
+              ref={statusRef}
+              options={[
+                { label: 'All status', value: 'ALL' },
+                { label: 'Active', value: 'ACTIVE' },
+                { label: 'Inactive', value: 'INACTIVE' },
+              ]}
+            />
+          </div>
+          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
+                <span className="text-grey-icon">+</span>
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
+              </span>
+              Focus search
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
+                <span className="text-grey-icon">+</span>
+                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
+                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
+              </span>
+              Switch focus
+            </span>
+          </div>
+        </div>
+
+        {/* Table */}
+        <CommonTable
+          columns={columns}
+          data={productsData}
+          isLoading={isLoading}
+          emptyState="No products match your search or filter."
+          pagination={{
+            totalItems,
+            pageSize,
+            pageNo,
+            totalPages,
+          }}
+          onPageChange={setPageNo}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPageNo(1);
+          }}
+        />
+      </div>
+
+      {dropdownState && (
+        <div
+          className="absolute z-50 bg-white border border-grey-border shadow-lg rounded-md py-1 w-32 flex flex-col"
+          style={{ top: dropdownState.y, left: dropdownState.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <button
+            className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
+            onClick={() => {
+              setSelectedProduct(dropdownState.row);
+              setEditOpen(true);
+              setDropdownState(null);
+            }}
+          >
+            <Pencil size={14} /> Edit
+          </button>
+          <button
+            className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
+            onClick={() => {
+              setProductToDelete(dropdownState.row);
+              setDeleteModalOpen(true);
+              setDropdownState(null);
+            }}
+          >
+            <Trash2 size={14} /> Delete
+          </button>
+        </div>
+      )}
+
+      <AddProduct
+        open={addOpen}
+        onClose={() => setAddOpen(false)}
+        onAdd={() => {
+          fetchProducts();
+          fetchKpis();
+          setAddOpen(false);
+        }}
+      />
+
+      <EditProduct
+        open={editOpen}
+        product={selectedProduct}
+        onClose={() => {
+          setEditOpen(false);
+          setSelectedProduct(null);
+        }}
+        onEdit={() => {
+          fetchProducts();
+          fetchKpis();
+          setEditOpen(false);
+        }}
+      />
+
+      <DeleteModal
+        open={deleteModalOpen}
+        onClose={() => {
+          setDeleteModalOpen(false);
+          setProductToDelete(null);
+        }}
+        onConfirm={async () => {
+          if (!productToDelete) return;
+          try {
+            const res = await deleteProductApi(productToDelete.id);
+            if (res.data?.success) {
+              toast.success('Product deleted successfully');
+              fetchProducts();
+              fetchKpis();
+              setDeleteModalOpen(false);
+              setProductToDelete(null);
+            } else {
+              throw new Error(res.data?.message || 'Failed to delete product');
+            }
+          } catch (error) {
+            throw error;
+          }
+        }}
+        item={productToDelete}
+        itemNameKey="name"
+        title="Delete Product"
+        itemType="product"
+        verificationWord="DELETE"
+      />
+    </>
+  );
 }
