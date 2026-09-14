@@ -62,7 +62,7 @@ export default function AddBrandModal({ open, initialCustomerId, onClose, onAdd 
     
     // Check local state first if brands are available
     const customer = customersList.find((c) => c.id === selectedCustomerId);
-    if (customer?.brands && customer.brands.some((b) => b.brandname?.toLowerCase() === name.toLowerCase() || b.name?.toLowerCase() === name.toLowerCase())) {
+    if (customer?.brands && Array.isArray(customer.brands) && customer.brands.some((b) => b.brandname?.toLowerCase() === name.toLowerCase() || b.name?.toLowerCase() === name.toLowerCase())) {
       return setError(`Brand "${name}" already exists for this customer.`);
     }
 
