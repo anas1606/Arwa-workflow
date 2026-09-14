@@ -241,7 +241,7 @@ export default function Category() {
                 setTransferOpen(false);
                 toast.success('Category transferred successfully');
             } else {
-                toast.error(response.data?.message || 'Failed to transfer category');
+                toast.error(response.error?.message || response.data?.message || 'Failed to transfer category');
             }
         } catch (error) {
             toast.error('An unexpected error occurred.');
@@ -257,7 +257,7 @@ export default function Category() {
                 setDeleteOpen(false);
                 toast.success('Category deleted successfully');
             } else {
-                toast.error(response.data?.message || 'Failed to delete category');
+                toast.error(response.error?.message || response.data?.message || 'Failed to delete category');
             }
         } catch (error) {
             toast.error('An unexpected error occurred.');

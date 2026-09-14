@@ -38,6 +38,14 @@ export default function EditCustomer({ open, onClose, onEdit, customer }) {
       setShouldRender(true);
       setIsAnimatingOut(false);
       
+      // Clear previous state
+      setName('');
+      setEmail('');
+      setPhone('');
+      setBalance('');
+      setCode('');
+      setRegion('');
+      
       const fetchCustomer = async () => {
         setIsLoading(true);
         try {

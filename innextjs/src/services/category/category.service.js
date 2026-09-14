@@ -75,7 +75,10 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
                 }
             },
             _count: {
-                select: { children: { where: { is_deleted: false } } }
+                select: { 
+                    children: { where: { is_deleted: false } },
+                    products: { where: { is_deleted: false } }
+                }
             }
         };
 
@@ -94,10 +97,15 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
 
         const totalPages = Math.ceil(total / take);
 
+        const mappedData = data.map(c => ({
+            ...c,
+            itemCount: c._count?.products || 0
+        }));
+
         return { 
             success: true, 
             data: {
-                data,
+                data: mappedData,
                 pagination: {
                     total,
                     page: parseInt(page),
@@ -160,6 +168,17 @@ export const deleteCategory = async (id, deletedBy = null) => {
         });
         if (!category || category.is_deleted) {
             return { success: false, message: 'Category not found or has already been deleted' };
+        }
+
+        const productCount = await prisma.product.count({
+            where: {
+                categoryId: id,
+                is_deleted: false
+            }
+        });
+
+        if (productCount > 0) {
+            return { success: false, message: 'Cannot delete category. It is associated with one or more active products.' };
         }
 
         // Soft delete the target category

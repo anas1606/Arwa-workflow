@@ -74,6 +74,8 @@ model Category {
   parent   Category?  @relation("CategoryHierarchy", fields: [parentId], references: [id])
   children Category[] @relation("CategoryHierarchy")
 
+  products Product[]
+
   // Audit fields
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
@@ -92,6 +94,8 @@ model Unit {
   productCount Int     @default(0) @map("product_count")
   status       Boolean @default(true)
 
+  products Product[]
+
   // Audit fields
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
@@ -100,4 +104,29 @@ model Unit {
   is_deleted Boolean   @default(false)
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
+}
+
+model Product {
+  id                String   @id @default(uuid())
+  name              String
+  code              String?  @unique
+  stockQuantity     Float    @default(0) @map("stock_quantity")
+  lowStockThreshold Float    @default(10) @map("low_stock_threshold")
+  isActive          Boolean  @default(true) @map("is_active")
+
+  // Relationships
+  categoryId    String?   @map("category_id")
+  category      Category? @relation(fields: [categoryId], references: [id])
+  
+  unitId        String?   @map("unit_id")
+  unit          Unit?     @relation(fields: [unitId], references: [id])
+
+  // Audit fields
+  createdAt     DateTime  @default(now()) @map("created_at")
+  createdBy     String?   @map("created_by")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+  updatedBy     String?   @map("updated_by")
+  is_deleted    Boolean   @default(false)
+  deletedAt     DateTime? @map("deleted_at")
+  deletedBy     String?   @map("deleted_by")
 }

@@ -100,7 +100,36 @@ export const getUnitByIdApi = async (id) => {
 };
 
 export const createUnitApi = (payload) => postData("unit", payload);
+
 export const updateUnitApi = async (id, payload) => {
   return await putData(`unit/${id}`, { id, ...payload });
 };
+
 export const deleteUnitApi = (id, deletedBy = null) => deleteData(`unit/${id}`, { data: { deletedBy } });
+
+// product
+export const getProductsApi = async (page = 1, limit = 10, search = '', status = 'ALL', categoryId = 'ALL', stock = 'ALL', unitId = 'ALL') => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (status && status !== 'ALL') params.status = status;
+  if (categoryId && categoryId !== 'ALL') params.categoryId = categoryId;
+  if (stock && stock !== 'ALL') params.stock = stock;
+  if (unitId && unitId !== 'ALL') params.unitId = unitId;
+  return await fetchDataWithParams('product', params);
+};
+
+export const getProductByIdApi = async (id) => {
+  return await fetchData(`product/${id}`);
+};
+
+export const createProductApi = (payload) => postData("product", payload);
+
+export const updateProductApi = async (id, payload) => {
+  return await putData(`product/${id}`, { id, ...payload });
+};
+
+export const deleteProductApi = (id, deletedBy = null) => deleteData(`product/${id}`, { data: { deletedBy } });
+
+export const getProductKpisApi = async () => {
+  return await fetchData('product/kpi');
+};
