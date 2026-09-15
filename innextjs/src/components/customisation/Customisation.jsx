@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import Head from 'next/head';
 import { Plus, X, Pencil, Search, Package, Settings2, Tags, Trash2, MoreVertical } from 'lucide-react';
 import clsx from 'clsx';
 import Button from '@/common/buttons/Button';
@@ -11,7 +12,8 @@ import AddCustomisation from './modal/AddCustomisation';
 import EditCustomisation from './modal/EditCustomisation';
 import AddCustomer from '../customers/modal/AddCustomer';
 import AddBrandModal from './modal/AddBrandModal';
-import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi } from '@/lib/fetcher';
+import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi, createStickerApi, deleteStickerApi } from '@/lib/fetcher';
+import DeleteModal from '@/common/modal/DeleteModal';
 import { toast } from 'sonner';
 
 /* ════════════════════════════════════════════════════════════════════
@@ -108,7 +110,7 @@ function OptionsCell({ field }) {
   const MAX_VISIBLE = 1;
   const overflow = options.length - MAX_VISIBLE;
   const visible = options.slice(0, MAX_VISIBLE);
-  
+
   return (
     <div className="flex items-center gap-1">
       {visible.map((opt) => (
@@ -204,7 +206,6 @@ function FixedCustomiseField({ label }) {
   );
 }
 
-import { createStickerApi, deleteStickerApi } from '@/lib/fetcher';
 
 function StickerEditor({ brand, onChange }) {
   const [draft, setDraft] = useState('');
@@ -215,7 +216,7 @@ function StickerEditor({ brand, onChange }) {
     const value = draft.trim();
     if (!value) return;
     if (brand.panelStickers.some((v) => v.name.toLowerCase() === value.toLowerCase())) { setLocalError('Option already exists.'); return; }
-    
+
     setIsSubmitting(true);
     try {
       const res = await createStickerApi({ name: value, brand_id: brand.id });
@@ -236,10 +237,10 @@ function StickerEditor({ brand, onChange }) {
 
   const removeOption = async (sticker) => {
     if (sticker.id.startsWith('temp-')) {
-       onChange(brand.panelStickers.filter((v) => v.id !== sticker.id));
-       return;
+      onChange(brand.panelStickers.filter((v) => v.id !== sticker.id));
+      return;
     }
-    
+
     try {
       const res = await deleteStickerApi(sticker.id);
       if (res.data && res.data.success) {
@@ -255,7 +256,7 @@ function StickerEditor({ brand, onChange }) {
   };
 
   const onKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addOption(); } };
-  
+
   return (
     <div className="flex flex-col h-full">
       <div className="mb-1 flex items-baseline justify-between gap-2">
@@ -366,7 +367,7 @@ export default function Customisation() {
       setLastFetchedCustomerId('');
       return;
     }
-    
+
     let cancelled = false;
 
     if (customerId === 'ALL') {
@@ -405,7 +406,7 @@ export default function Customisation() {
         setLastFetchedCustomerId(customerId);
       });
     }
-    
+
     return () => { cancelled = true; };
   }, [customerId]);
 
@@ -439,8 +440,8 @@ export default function Customisation() {
   const removeBrand = (brandId) => {
     setCurrentBrands(prev => prev.filter((b) => b.id !== brandId));
   };
-  const confirmDeleteBrand = async () => { 
-    if (!brandToDelete) return; 
+  const confirmDeleteBrand = async () => {
+    if (!brandToDelete) return;
     try {
       // In case it's a locally added dummy brand without a real db id yet, though AddBrandModal returns real IDs now
       if (brandToDelete.id.startsWith('b-')) {
@@ -464,7 +465,7 @@ export default function Customisation() {
   };
   const setPanelStickers = (next) => {
     if (!activeBrand) return;
-    setCurrentBrands(prev => prev.map((b) => b.id === activeBrand.id ? { ...b, panelStickers: next } : b));
+    setCurrentBrands(prev => prev.map((b) => b.id === activeBrand.id ? { ...b, panelStickers: next, stickerCount: next.length } : b));
   };
 
   const focusStickersInput = useCallback(() => {
@@ -576,214 +577,226 @@ export default function Customisation() {
 
   /* ──────────── RENDER ──────────── */
   return (
-    <div className="w-full flex flex-col gap-4">
+    <>
+      <Head>
+        <title>Customisation | Arwa Weld</title>
+      </Head>
+      <div className="w-full flex flex-col gap-4">
 
-      {/* ─── Page Header ─── */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div className="min-w-0">
-          <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">Customisation</h1>
-          <p className="mt-1 text-sm leading-snug text-grey-muted">Customer brands, panel stickers, and product model options for order specs.</p>
-        </div>
-        <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add model" onClick={() => setAddModelOpen(true)} />
-      </div>
-
-      {/* ─── KPIs ─── */}
-      <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Customisation KPIs">
-        {kpis.map((kpi) => (
-          <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
-            <div className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])} aria-hidden />
-            <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">{kpi.label}</p>
-            <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">{kpi.value}</p>
-            {kpi.hint && <p className="mt-1 pl-2 text-xs text-grey-muted">{kpi.hint}</p>}
-          </article>
-        ))}
-      </section>
-
-      {/* ─── Customer Brands Panel ─── */}
-      <div className="card-panel !p-3 space-y-2.5 rounded-md">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+        {/* ─── Page Header ─── */}
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
-              <h2 className="text-sm font-bold text-grey-text-strong">Customer brands</h2>
-              <span className="inline-flex flex-wrap items-center gap-1 text-2xs text-grey-icon" aria-label="Keyboard shortcuts">
-                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↑</kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↓</kbd>
-                <span>Move</span>
-                <span className="text-grey-border-strong">·</span>
-                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Enter</kbd>
-                <span>Select</span>
-                <span className="text-grey-border-strong">·</span>
-                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Alt</kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">←</kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">→</kbd>
-                <span>Panes</span>
-              </span>
-            </div>
-            <p className="mt-0.5 text-2xs text-grey-muted">Brands per customer · panel stickers per brand</p>
+            <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">Customisation</h1>
+            <p className="mt-1 text-sm leading-snug text-grey-muted">Customer brands, panel stickers, and product model options for order specs.</p>
           </div>
-          <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-end">
-            <Input type="select" label="Customer" className="w-full sm:w-56 [&_select]:!h-9"
-              value={customerId} onChange={(e) => setCustomerId(e.target.value)}
-              hidePlaceholder={true}
-              options={[{ label: `All customers (${totalBrands} brands)`, value: 'ALL' }, ...customers.map((c) => ({ label: `${c.name} (${typeof c.brands === 'number' ? c.brands : 0} brand${(typeof c.brands === 'number' ? c.brands : 0) === 1 ? '' : 's'})`, value: c.id }))]} />
-            <Button variant="secondary" className="!min-h-9 shrink-0 !h-9" icon={Plus} text="Add customer" onClick={() => setAddCustomerOpen(true)} />
-          </div>
+          <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add model" onClick={() => setAddModelOpen(true)} />
         </div>
 
-        {(customers.length > 0 || isLoading) && (
-          <div className="grid gap-2 lg:grid-cols-2">
-            {/* Brands pane */}
-            <div ref={brandsPaneRef} tabIndex={-1} data-pane="brands" aria-label="Brand names"
-              className={clsx('flex flex-col rounded-md border p-2 outline-none transition-colors', focusPane === 'brands' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
-              onFocusCapture={() => setFocusPane('brands')}>
-              <div className="mb-1 flex items-baseline justify-between gap-2 shrink-0">
-                <p className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">Brand names</p>
-                <span className="text-2xs tabular-nums text-grey-icon">{customerId === 'ALL' ? totalBrands : customer?.brands?.length || 0}</span>
-              </div>
-              <div className="flex-1 min-h-0 flex flex-col">
-                {isLoading || isFetchingBrands ? (
-                  <ul className="mb-1.5 space-y-1.5 max-h-[148px] overflow-hidden pr-1">
-                    {[1, 2, 3].map((i) => (
-                      <li key={i} className="flex items-center gap-1 rounded-md px-1.5 py-1.5 border border-transparent">
-                        <div className="flex-1 space-y-1.5">
-                          <div className="h-3.5 w-1/2 animate-pulse rounded bg-grey-border/60"></div>
-                          <div className="h-2.5 w-1/3 animate-pulse rounded bg-grey-surface/50"></div>
-                        </div>
-                        <div className="h-6 w-6 animate-pulse rounded bg-grey-surface/50"></div>
-                      </li>
-                    ))}
-                  </ul>
-                ) : currentBrands.length === 0 ? (
-                  <p className="mb-1.5 text-2xs text-grey-icon">No brands yet.</p>
-                ) : (
-                  <ul className="mb-1.5 space-y-0.5 max-h-[148px] overflow-y-auto pr-1 custom-scrollbar" role="listbox" aria-activedescendant={activeBrand ? `brand-option-${activeBrand.id}` : undefined}>
-                    {currentBrands.map((brand) => {
-                      const active = brand.id === activeBrand?.id;
-                      return (
-                        <li key={brand.id} id={`brand-option-${brand.id}`} role="option" aria-selected={active}>
-                          <div className={clsx('flex items-center gap-1 rounded-md px-1.5 py-1', active ? 'border border-primary/30 bg-white' : 'border border-transparent hover:bg-white/80')}>
-                            <button type="button" data-brand-select className="min-w-0 flex-1 text-left cursor-pointer"
-                              onClick={() => { setActiveBrandId(brand.id); setFocusPane('brands'); }}
-                              onDoubleClick={() => { setActiveBrandId(brand.id); focusStickersInput(); }}>
-                              <span className="block truncate text-sm font-semibold text-grey-text-strong">{brand.name}</span>
-                              <span className="block text-2xs text-grey-muted">{brand.stickerCount ?? brand.panelStickers.length} sticker{(brand.stickerCount ?? brand.panelStickers.length) === 1 ? '' : 's'}</span>
-                            </button>
-                            <Button variant="ghost" size="square" data-remove-brand
-                              className="!h-7 !w-7 shrink-0 text-grey-icon hover:text-grey-text-dark"
-                              aria-label={`Remove brand ${brand.name}`}
-                              onClick={() => setBrandToDelete(brand)}
-                              icon={() => <X className="h-3.5 w-3.5" />}
-                            />
-                          </div>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                )}
-                <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading || isFetchingBrands} />
-              </div>
-            </div>
+        {/* ─── KPIs ─── */}
+        <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Customisation KPIs">
+          {kpis.map((kpi) => (
+            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
+              <div className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])} aria-hidden />
+              <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">{kpi.label}</p>
+              <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">{kpi.value}</p>
+              {kpi.hint && <p className="mt-1 pl-2 text-xs text-grey-muted">{kpi.hint}</p>}
+            </article>
+          ))}
+        </section>
 
-            {/* Stickers pane */}
-            <div ref={stickersPaneRef} tabIndex={-1} data-pane="stickers" aria-label="Panel stickers"
-              className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'stickers' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
-              onFocusCapture={() => setFocusPane('stickers')}>
-              {isLoading || isFetchingBrands ? (
-                <div className="flex flex-col h-full">
-                  <div className="mb-1 flex items-baseline justify-between gap-2">
-                    <div className="h-3 w-1/3 animate-pulse rounded bg-grey-border/60"></div>
-                    <div className="h-3 w-10 animate-pulse rounded bg-grey-border/60"></div>
-                  </div>
-                  <div className="mt-1 flex flex-wrap gap-1 mb-1.5">
-                    <div className="h-6 w-20 animate-pulse rounded bg-grey-border/60"></div>
-                    <div className="h-6 w-16 animate-pulse rounded bg-grey-border/60"></div>
-                  </div>
-                  <div className="flex gap-1.5 mt-auto">
-                    <div className="h-8 flex-1 animate-pulse rounded bg-grey-surface/50"></div>
-                    <div className="h-8 w-10 animate-pulse rounded bg-grey-border/60 shrink-0"></div>
-                  </div>
+        {/* ─── Customer Brands Panel ─── */}
+        <div className="card-panel !p-3 space-y-2.5 rounded-md">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                <h2 className="text-sm font-bold text-grey-text-strong">Customer brands</h2>
+                <span className="inline-flex flex-wrap items-center gap-1 text-2xs text-grey-icon" aria-label="Keyboard shortcuts">
+                  <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↑</kbd>
+                  <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↓</kbd>
+                  <span>Move</span>
+                  <span className="text-grey-border-strong">·</span>
+                  <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Enter</kbd>
+                  <span>Select</span>
+                  <span className="text-grey-border-strong">·</span>
+                  <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">Alt</kbd>
+                  <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">←</kbd>
+                  <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">→</kbd>
+                  <span>Panes</span>
+                </span>
+              </div>
+              <p className="mt-0.5 text-2xs text-grey-muted">Brands per customer · panel stickers per brand</p>
+            </div>
+            <div className="flex w-full flex-col gap-1.5 sm:w-auto sm:flex-row sm:items-end">
+              <Input type="select" label="Customer" className="w-full sm:w-56 [&_select]:!h-9"
+                value={customerId} onChange={(e) => setCustomerId(e.target.value)}
+                hidePlaceholder={true}
+                options={[{ label: `All customers (${totalBrands} brands)`, value: 'ALL' }, ...customers.map((c) => ({ label: `${c.name} (${typeof c.brands === 'number' ? c.brands : 0} brand${(typeof c.brands === 'number' ? c.brands : 0) === 1 ? '' : 's'})`, value: c.id }))]} />
+              <Button variant="secondary" className="!min-h-9 shrink-0 !h-9" icon={Plus} text="Add customer" onClick={() => setAddCustomerOpen(true)} />
+            </div>
+          </div>
+
+          {(customers.length > 0 || isLoading) && (
+            <div className="grid gap-2 lg:grid-cols-2">
+              {/* Brands pane */}
+              <div ref={brandsPaneRef} tabIndex={-1} data-pane="brands" aria-label="Brand names"
+                className={clsx('flex flex-col rounded-md border p-2 outline-none transition-colors', focusPane === 'brands' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
+                onFocusCapture={() => setFocusPane('brands')}>
+                <div className="mb-1 flex items-baseline justify-between gap-2 shrink-0">
+                  <p className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">Brand names</p>
+                  <span className="text-2xs tabular-nums text-grey-icon">{customerId === 'ALL' ? totalBrands : customer?.brands?.length || 0}</span>
                 </div>
-              ) : activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} /> : (
-                <p className="px-1 py-4 text-center text-2xs text-grey-muted">Select or add a brand to manage panel stickers.</p>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-
-      {/* ─── Product Models Section ─── */}
-      <div className="card-panel flex w-full flex-col gap-3 rounded-md !p-3">
-        <div className="flex items-center gap-2">
-          <Tags className="h-4 w-4 text-grey-muted" aria-hidden />
-          <h2 className="text-sm font-bold text-grey-text-strong">Product models</h2>
-        </div>
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-          <Input type="text" startIcon={Search} placeholder="Search model name or code…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0" />
-          <Input type="select" className="shrink-0 sm:w-48" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-            options={[{ label: 'All categories', value: 'ALL' }, ...categories.map((cat) => ({ label: cat, value: cat }))]} />
-        </div>
-      </div>
-
-      {/* ─── Product Models Table (CommonTable) ─── */}
-      <CommonTable
-        columns={tableColumns}
-        data={filtered}
-        isLoading={isLoading}
-        emptyState="No products match your search or filter."
-        pagination={{ totalItems: filtered.length, pageSize: filtered.length, pageNo: 1, totalPages: 1 }}
-      />
-
-      {/* Mobile cards */}
-      <ul className="space-y-2 lg:hidden">
-        {filtered.map((model) => (
-          <li key={model.id} className="card-panel !p-3 rounded-md">
-            <div className="mb-3 flex items-start gap-2.5 border-b border-grey-border/40 pb-2.5">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-xs font-bold text-primary-dark">{modelInitials(model.code)}</span>
-              <div className="min-w-0 flex-1">
-                <p className="font-semibold text-grey-text-strong">{model.name}</p>
-                <p className="font-mono text-2xs text-grey-muted">{model.code} · {model.category}</p>
+                <div className="flex-1 min-h-0 flex flex-col">
+                  {isLoading || isFetchingBrands ? (
+                    <ul className="mb-1.5 space-y-1.5 max-h-[148px] overflow-hidden pr-1">
+                      {[1, 2, 3].map((i) => (
+                        <li key={i} className="flex items-center gap-1 rounded-md px-1.5 py-1.5 border border-transparent">
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3.5 w-1/2 animate-pulse rounded bg-grey-border/60"></div>
+                            <div className="h-2.5 w-1/3 animate-pulse rounded bg-grey-surface/50"></div>
+                          </div>
+                          <div className="h-6 w-6 animate-pulse rounded bg-grey-surface/50"></div>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : currentBrands.length === 0 ? (
+                    <p className="mb-1.5 text-2xs text-grey-icon">No brands yet.</p>
+                  ) : (
+                    <ul className="mb-1.5 space-y-0.5 max-h-[148px] overflow-y-auto pr-1 custom-scrollbar" role="listbox" aria-activedescendant={activeBrand ? `brand-option-${activeBrand.id}` : undefined}>
+                      {currentBrands.map((brand) => {
+                        const active = brand.id === activeBrand?.id;
+                        return (
+                          <li key={brand.id} id={`brand-option-${brand.id}`} role="option" aria-selected={active}>
+                            <div className={clsx('flex items-center gap-1 rounded-md px-1.5 py-1', active ? 'border border-primary/30 bg-white' : 'border border-transparent hover:bg-white/80')}>
+                              <button type="button" data-brand-select className="min-w-0 flex-1 text-left cursor-pointer"
+                                onClick={() => { setActiveBrandId(brand.id); setFocusPane('brands'); }}
+                                onDoubleClick={() => { setActiveBrandId(brand.id); focusStickersInput(); }}>
+                                <span className="block truncate text-sm font-semibold text-grey-text-strong">{brand.name}</span>
+                                <span className="block text-2xs text-grey-muted">{brand.stickerCount ?? brand.panelStickers.length} sticker{(brand.stickerCount ?? brand.panelStickers.length) === 1 ? '' : 's'}</span>
+                              </button>
+                              <Button variant="ghost" size="square" data-remove-brand
+                                className="!h-7 !w-7 shrink-0 text-grey-icon hover:text-grey-text-dark"
+                                aria-label={`Remove brand ${brand.name}`}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  e.preventDefault();
+                                  setBrandToDelete(brand);
+                                }}
+                                icon={() => <X className="h-3.5 w-3.5" />}
+                              />
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  )}
+                  <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading || isFetchingBrands} />
+                </div>
               </div>
-              <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark">
-                <Settings2 className="h-3 w-3" aria-hidden />Configured
-              </span>
-            </div>
-            <dl className="mb-3 grid gap-2.5 sm:grid-cols-2">
-              {TABLE_SPEC_KEYS.map((key) => {
-                const field = CUSTOMISATION_SPECS.find((f) => f.key === key);
-                if (!field) return null;
-                return (
-                  <div key={key}><dt className="mb-1 text-2xs font-semibold uppercase tracking-wide text-grey-icon">{field.label}</dt><dd>{renderSpecCell(model, field)}</dd></div>
-                );
-              })}
-            </dl>
-            <div className="flex gap-2 ">
-              <Button variant="secondary" className="flex-1" icon={Pencil} text="Edit" onClick={() => setEditingModel(model)} />
-              <Button variant="danger" className="flex-1" icon={Trash2} text="Delete" onClick={() => setModelToDelete(model)} />
-            </div>
-          </li>
-        ))}
-      </ul>
 
-      <p className="mt-1 flex items-center gap-1.5 text-2xs text-grey-icon">
-        <Package className="h-3.5 w-3.5" aria-hidden />
-        Model options, customer brands, and brand stickers drive the Specs step when creating an order.
-      </p>
+              {/* Stickers pane */}
+              <div ref={stickersPaneRef} tabIndex={-1} data-pane="stickers" aria-label="Panel stickers"
+                className={clsx('rounded-md border p-2 outline-none transition-colors', focusPane === 'stickers' ? 'border-primary/35 bg-primary/5 ring-1 ring-primary/20' : 'border-grey-border/60 bg-grey-bg/30')}
+                onFocusCapture={() => setFocusPane('stickers')}>
+                {isLoading || isFetchingBrands ? (
+                  <div className="flex flex-col h-full">
+                    <div className="mb-1 flex items-baseline justify-between gap-2">
+                      <div className="h-3 w-1/3 animate-pulse rounded bg-grey-border/60"></div>
+                      <div className="h-3 w-10 animate-pulse rounded bg-grey-border/60"></div>
+                    </div>
+                    <div className="mt-1 flex flex-wrap gap-1 mb-1.5">
+                      <div className="h-6 w-20 animate-pulse rounded bg-grey-border/60"></div>
+                      <div className="h-6 w-16 animate-pulse rounded bg-grey-border/60"></div>
+                    </div>
+                    <div className="flex gap-1.5 mt-auto">
+                      <div className="h-8 flex-1 animate-pulse rounded bg-grey-surface/50"></div>
+                      <div className="h-8 w-10 animate-pulse rounded bg-grey-border/60 shrink-0"></div>
+                    </div>
+                  </div>
+                ) : activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} /> : (
+                  <p className="px-1 py-4 text-center text-2xs text-grey-muted">Select or add a brand to manage panel stickers.</p>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
 
-      {/* ─── Modals ─── */}
-      <AddCustomer open={addCustomerOpen} onClose={() => setAddCustomerOpen(false)} onAdd={handleAddCustomer} />
-      <AddBrandModal open={addBrandOpen} customers={customers} initialCustomerId={customer?.id ?? ''} onClose={() => setAddBrandOpen(false)} onAdd={handleAddBrand} />
-      <ConfirmModal open={!!brandToDelete} title="Delete brand" onClose={() => setBrandToDelete(null)} onConfirm={confirmDeleteBrand}>
-        <p className="text-sm text-grey-text">
-          Are you sure you want to delete <strong className="font-semibold text-grey-text-strong">{brandToDelete?.name}</strong>? This action cannot be undone.
+        {/* ─── Product Models Section ─── */}
+        <div className="card-panel flex w-full flex-col gap-3 rounded-md !p-3">
+          <div className="flex items-center gap-2">
+            <Tags className="h-4 w-4 text-grey-muted" aria-hidden />
+            <h2 className="text-sm font-bold text-grey-text-strong">Product models</h2>
+          </div>
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            <Input type="text" startIcon={Search} placeholder="Search model name or code…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0" />
+            <Input type="select" className="shrink-0 sm:w-48" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
+              options={[{ label: 'All categories', value: 'ALL' }, ...categories.map((cat) => ({ label: cat, value: cat }))]} />
+          </div>
+        </div>
+
+        {/* ─── Product Models Table (CommonTable) ─── */}
+        <CommonTable
+          columns={tableColumns}
+          data={filtered}
+          isLoading={isLoading}
+          emptyState="No products match your search or filter."
+          pagination={{ totalItems: filtered.length, pageSize: filtered.length, pageNo: 1, totalPages: 1 }}
+        />
+
+        {/* Mobile cards */}
+        <ul className="space-y-2 lg:hidden">
+          {filtered.map((model) => (
+            <li key={model.id} className="card-panel !p-3 rounded-md">
+              <div className="mb-3 flex items-start gap-2.5 border-b border-grey-border/40 pb-2.5">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-xs font-bold text-primary-dark">{modelInitials(model.code)}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="font-semibold text-grey-text-strong">{model.name}</p>
+                  <p className="font-mono text-2xs text-grey-muted">{model.code} · {model.category}</p>
+                </div>
+                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark">
+                  <Settings2 className="h-3 w-3" aria-hidden />Configured
+                </span>
+              </div>
+              <dl className="mb-3 grid gap-2.5 sm:grid-cols-2">
+                {TABLE_SPEC_KEYS.map((key) => {
+                  const field = CUSTOMISATION_SPECS.find((f) => f.key === key);
+                  if (!field) return null;
+                  return (
+                    <div key={key}><dt className="mb-1 text-2xs font-semibold uppercase tracking-wide text-grey-icon">{field.label}</dt><dd>{renderSpecCell(model, field)}</dd></div>
+                  );
+                })}
+              </dl>
+              <div className="flex gap-2 ">
+                <Button variant="secondary" className="flex-1" icon={Pencil} text="Edit" onClick={() => setEditingModel(model)} />
+                <Button variant="danger" className="flex-1" icon={Trash2} text="Delete" onClick={() => setModelToDelete(model)} />
+              </div>
+            </li>
+          ))}
+        </ul>
+
+        <p className="mt-1 flex items-center gap-1.5 text-2xs text-grey-icon">
+          <Package className="h-3.5 w-3.5" aria-hidden />
+          Model options, customer brands, and brand stickers drive the Specs step when creating an order.
         </p>
-      </ConfirmModal>
-      <AddCustomisation open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
-      <EditCustomisation open={!!editingModel} model={editingModel} onClose={() => setEditingModel(null)} onSave={handleEditModel} />
-      <ConfirmModal open={!!modelToDelete} title="Delete model" onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}>
-        <p className="text-sm text-grey-text">
-          Are you sure you want to delete <strong className="font-semibold text-grey-text-strong">{modelToDelete?.name}</strong>? This action cannot be undone.
-        </p>
-      </ConfirmModal>
-    </div>
+
+        {/* ─── Modals ─── */}
+        <AddCustomer open={addCustomerOpen} onClose={() => setAddCustomerOpen(false)} onAdd={handleAddCustomer} />
+        <AddBrandModal open={addBrandOpen} customers={customers} initialCustomerId={customer?.id ?? ''} onClose={() => setAddBrandOpen(false)} onAdd={handleAddBrand} />
+        <DeleteModal
+          open={!!brandToDelete}
+          onClose={() => setBrandToDelete(null)}
+          onConfirm={confirmDeleteBrand}
+          title="Delete brand"
+          item={brandToDelete}
+          itemType="brand"
+        />
+        <AddCustomisation open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
+        <EditCustomisation open={!!editingModel} model={editingModel} onClose={() => setEditingModel(null)} onSave={handleEditModel} />
+        <ConfirmModal open={!!modelToDelete} title="Delete model" onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}>
+          <p className="text-sm text-grey-text">
+            Are you sure you want to delete <strong className="font-semibold text-grey-text-strong">{modelToDelete?.name}</strong>? This action cannot be undone.
+          </p>
+        </ConfirmModal>
+      </div>
+    </>
   );
 }
