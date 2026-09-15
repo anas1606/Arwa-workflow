@@ -97,9 +97,39 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
 
         const totalPages = Math.ceil(total / take);
 
+        // Fetch all categories to calculate cumulative item counts efficiently
+        const allCategories = await prisma.category.findMany({
+            where: { is_deleted: false },
+            select: { 
+                id: true, 
+                parentId: true, 
+                _count: { select: { products: { where: { is_deleted: false } } } } 
+            }
+        });
+        
+        const childrenMap = {};
+        allCategories.forEach(cat => {
+            if (cat.parentId) {
+                if (!childrenMap[cat.parentId]) childrenMap[cat.parentId] = [];
+                childrenMap[cat.parentId].push(cat.id);
+            }
+        });
+        
+        const getCumulativeCount = (id) => {
+            const cat = allCategories.find(c => c.id === id);
+            if (!cat) return 0;
+            let sum = cat._count?.products || 0;
+            if (childrenMap[id]) {
+                for (const childId of childrenMap[id]) {
+                    sum += getCumulativeCount(childId);
+                }
+            }
+            return sum;
+        };
+
         const mappedData = data.map(c => ({
             ...c,
-            itemCount: c._count?.products || 0
+            itemCount: getCumulativeCount(c.id)
         }));
 
         return { 
