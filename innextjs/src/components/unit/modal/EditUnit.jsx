@@ -96,16 +96,19 @@ export default function EditUnit({ open, onClose, onEdit, unit }) {
         quantityUnit: parseInt(quantityUnit, 10),
       };
       const res = await updateUnitApi(unit.id, payload);
-      if (res.data?.success) {
+      if (res.data && res.data.success) {
         toast.success('Unit updated successfully');
         onEdit();
+        handleClose();
       } else {
-        setError(res.data?.message || 'Failed to update unit');
-        toast.error(res.data?.message || 'Failed to update unit');
+        const errorMsg = res.error?.message || res.data?.message || 'Failed to update unit';
+        setError(errorMsg);
+        toast.error(errorMsg);
       }
     } catch (err) {
-      setError(err?.response?.data?.message || 'An unexpected error occurred.');
-      toast.error(err?.response?.data?.message || 'An unexpected error occurred.');
+      const errorMsg = err?.response?.data?.message || err.message || 'An unexpected error occurred.';
+      setError(errorMsg);
+      toast.error(errorMsg);
     } finally {
       setIsSubmitting(false);
     }

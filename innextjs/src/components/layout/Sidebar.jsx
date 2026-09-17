@@ -1,6 +1,7 @@
 import { useEffect, useId, useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import useUser from '@/hooks/useUser';
 import {
   Building2,
   ChevronDown,
@@ -13,37 +14,44 @@ import {
   Package,
   Tags,
   Box,
-  Ruler
+  Ruler,
+  User,
+  LogOut,
+  Users
 } from 'lucide-react';
 import clsx from 'clsx';
 
 const operationsNav = [
-  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/customers', label: 'Customers', icon: Building2 },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true, moduleKey: 'dashboard' },
+  { to: '/customers', label: 'Customers', icon: Building2, moduleKey: 'customers' },
   {
     to: '/orders',
     label: 'Orders',
     icon: ClipboardList,
     children: [
-      { to: '/orders', label: 'All orders', icon: LayoutList, end: true },
-      { to: '/orders/customisation', label: 'Customisation', icon: Settings2 },
+      { to: '/orders', label: 'All orders', icon: LayoutList, end: true, moduleKey: 'orders' },
+      { to: '/orders/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'brands' },
     ],
   },
-  { to: '/production', label: 'Production', icon: Factory },
+  { to: '/production', label: 'Production', icon: Factory, moduleKey: 'production' },
   {
     to: '/inventory',
     label: 'Inventory',
     icon: Package,
     children: [
-      { to: '/inventory/category', label: 'Category', icon: Tags },
-      { to: '/inventory/product', label: 'Product', icon: Box },
-      { to: '/inventory/unit', label: 'Unit', icon: Ruler },
+      { to: '/inventory/category', label: 'Category', icon: Tags, moduleKey: 'categories' },
+      { to: '/inventory/product', label: 'Product', icon: Box, moduleKey: 'products' },
+      { to: '/inventory/unit', label: 'Unit', icon: Ruler, moduleKey: 'units' },
     ],
   },
 ];
 
 const masterNav = [
-  { to: '/bom', label: 'BOM', icon: Layers },
+  { to: '/bom', label: 'BOM', icon: Layers, moduleKey: 'bom' },
+];
+
+const adminNav = [
+  { to: '/users', label: 'Users & Roles', icon: Users, moduleKey: 'users' },
 ];
 
 const allNav = [
@@ -53,6 +61,7 @@ const allNav = [
   { to: '/production', label: 'Production', icon: Factory },
   { to: '/bom', label: 'BOM', icon: Layers },
   { to: '/inventory/product', label: 'Inventory', icon: Package },
+  { to: '/users', label: 'Users', icon: Users },
 ];
 
 function NavItemLink({ item }) {
@@ -220,14 +229,31 @@ function NestedNavItem({ item, pathname }) {
 
 function NavSection({ title, items }) {
   const router = useRouter();
+  const { hasPermission } = useUser();
+
+  const filteredItems = items.map(item => {
+    if (item.children) {
+      return {
+        ...item,
+        children: item.children.filter(child => !child.moduleKey || hasPermission(child.moduleKey, 'can_read'))
+      };
+    }
+    return item;
+  }).filter(item => {
+    if (item.moduleKey && !hasPermission(item.moduleKey, 'can_read')) return false;
+    if (item.children && item.children.length === 0) return false;
+    return true;
+  });
+
+  if (filteredItems.length === 0) return null;
 
   return (
     <div className="mb-5">
-      <p className="mb-2 px-3 text-2xs font-semibold uppercase tracking-wider text-grey-icon/90">
+      <p className="mb-2 px-4 text-[10px] font-black uppercase tracking-wider text-grey-muted">
         {title}
       </p>
       <ul className="flex flex-col gap-0.5">
-        {items.map((item) =>
+        {filteredItems.map((item) =>
           item.children?.length ? (
             <NestedNavItem key={item.to} item={item} pathname={router.pathname} />
           ) : (
@@ -242,6 +268,9 @@ function NavSection({ title, items }) {
 }
 
 export function Sidebar() {
+  const { user, logout } = useUser();
+  const [profileOpen, setProfileOpen] = useState(false);
+
   return (
     <aside className="glass-nav" aria-label="Application">
       <div className="glass-nav-header">
@@ -266,21 +295,61 @@ export function Sidebar() {
       <nav className="glass-nav-body" aria-label="Primary">
         <NavSection title="Operations" items={operationsNav} />
         <NavSection title="Master data" items={masterNav} />
+        <NavSection title="Administration" items={adminNav} />
       </nav>
 
-      <div className="glass-nav-footer">
-        <div className="glass-nav-status">
-          <p className="text-2xs font-semibold uppercase tracking-wide text-grey-icon">
-            Plant status
-          </p>
-          <p className="mt-1 flex items-center gap-1.5 text-xs font-semibold text-grey-text-dark">
-            <span
-              className="h-1.5 w-1.5 rounded-full bg-success-dark shadow-[0_0_0_3px_rgba(21,128,61,0.15)]"
-              aria-hidden
-            />
-            Shift A · Live
-          </p>
-        </div>
+      <div className="glass-nav-footer relative px-2 py-3 mt-auto">
+        {profileOpen && (
+          <div className="absolute bottom-full left-2 mb-2 w-56 rounded-md bg-white p-2 shadow-xl ring-1 ring-black/5 z-50">
+            <div className="flex flex-col gap-1">
+              <Link 
+                href="/profile"
+                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-grey-text-strong hover:bg-grey-bg transition-colors"
+                onClick={() => setProfileOpen(false)}
+              >
+                <User className="h-4 w-4 text-grey-icon" />
+                Profile
+              </Link>
+              <button
+                onClick={async () => {
+                  try {
+                    const { postData } = await import('@/lib/apiClient');
+                    await postData('/auth/logout');
+                  } catch (e) {}
+                  logout();
+                }}
+                className="flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-semibold text-danger-main hover:bg-danger-bg transition-colors"
+              >
+                <LogOut className="h-4 w-4" />
+                Logout
+              </button>
+            </div>
+          </div>
+        )}
+        
+        {user ? (
+          <button
+            onClick={() => setProfileOpen(!profileOpen)}
+            className="flex w-full items-center justify-between rounded-lg border border-transparent bg-transparent px-2.5 py-2 hover:bg-grey-bg transition-colors"
+          >
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary-dark shadow-sm ring-1 ring-primary/20">
+                {user.username ? user.username.slice(0, 2).toUpperCase() : 'U'}
+              </div>
+              <div className="flex flex-col items-start min-w-0">
+                <span className="truncate text-sm font-bold text-grey-text-strong w-full text-left">
+                  {user.username}
+                </span>
+                <span className="truncate text-[10px] font-bold uppercase tracking-wider text-grey-muted w-full text-left">
+                  {user.role}
+                </span>
+              </div>
+            </div>
+            <ChevronDown className={`h-4 w-4 shrink-0 text-grey-icon transition-transform ${profileOpen ? 'rotate-180' : ''}`} />
+          </button>
+        ) : (
+          <div className="flex h-12 w-full animate-pulse rounded-lg bg-grey-bg" />
+        )}
       </div>
     </aside>
   );

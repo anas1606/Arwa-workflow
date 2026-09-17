@@ -12,9 +12,8 @@ export const successResponse = (res, message, data = null, meta = null, statusCo
 export const errorResponse = (res, message, error = null, statusCode = 400) => {
     const response = {
         success: false,
-        message,
+        message: error || message,
     };
-    if (error) response.error = error;
     
     return res.status(statusCode).json(response);
 };

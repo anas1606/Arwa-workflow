@@ -310,3 +310,18 @@ body {
 .animate-modal-panel-out {
   animation: modal-scale-out 0.15s ease-in forwards;
 }
+.app-page-bg {
+  background-color: var(--app-bg);
+  background-image:
+    radial-gradient(ellipse 90% 70% at 0% 0%,
+      color-mix(in srgb, var(--color-primary) 10%, transparent),
+      transparent 58%),
+    radial-gradient(ellipse 70% 55% at 100% 0%,
+      color-mix(in srgb, var(--color-primary) 7%, transparent),
+      transparent 52%),
+    linear-gradient(165deg,
+      var(--app-bg) 0%,
+      var(--app-bg-accent) 48%,
+      #e6edf7 100%);
+  background-attachment: fixed;
+}

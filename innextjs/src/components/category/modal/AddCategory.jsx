@@ -123,10 +123,10 @@ export default function AddCategory({ isOpen, onClose, onAdd, categories, initia
         onAdd();
         handleClose();
       } else {
-        toast.error(response.data?.message || 'Failed to add category');
+        toast.error(response.error?.message || response.data?.message || 'Failed to add category');
       }
     } catch (error) {
-      toast.error('An unexpected error occurred.');
+      toast.error(error.response?.data?.message || error.message || 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }
