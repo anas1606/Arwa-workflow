@@ -18,8 +18,17 @@ export const getAllUsers = async (page = 1, limit = 10, search = '') => {
                 where,
                 skip,
                 take: limit,
-                include: {
-                    security_role: true
+                select: {
+                    id: true,
+                    username: true,
+                    email: true,
+                    phone: true,
+                    isActive: true,
+                    security_role_id: true,
+                    createdAt: true,
+                    security_role: {
+                        select: { id: true, role_name: true, role_number: true }
+                    }
                 },
                 orderBy: { createdAt: 'desc' }
             }),
@@ -45,7 +54,19 @@ export const getUserById = async (id) => {
     try {
         const user = await prisma.user.findUnique({
             where: { id, is_deleted: false },
-            include: { security_role: true }
+            select: {
+                id: true,
+                username: true,
+                email: true,
+                phone: true,
+                password: true,
+                isActive: true,
+                security_role_id: true,
+                createdAt: true,
+                security_role: {
+                    select: { id: true, role_name: true, role_number: true }
+                }
+            }
         });
 
         if (!user) return { success: false, message: 'User not found' };
