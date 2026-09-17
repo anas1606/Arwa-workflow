@@ -133,3 +133,24 @@ export const deleteProductApi = (id, deletedBy = null) => deleteData(`product/${
 export const getProductKpisApi = async () => {
   return await fetchData('product/kpi');
 };
+
+// Users
+export const getUsersApi = async (page = 1, limit = 10, search = '') => {
+  return await fetchDataWithParams('user', { page, limit, search });
+};
+export const getUserByIdApi = async (id) => fetchData(`user/${id}`);
+export const createUserApi = (payload) => postData('user', payload);
+export const updateUserApi = async (id, payload) => putData(`user/${id}`, { id, ...payload });
+export const deleteUserApi = (id, deletedBy = null) => deleteData(`user/${id}`, { data: { deletedBy } });
+
+// Security Roles
+export const getSecurityRolesApi = async (page = 1, limit = 10, search = '') => {
+  return await fetchDataWithParams('security_role', { page, limit, search });
+};
+export const getSecurityRoleByIdApi = async (id) => fetchData(`security_role/${id}`);
+export const createSecurityRoleApi = (payload) => postData('security_role', payload);
+export const updateSecurityRoleApi = async (id, payload) => putData(`security_role/${id}`, { id, ...payload });
+export const deleteSecurityRoleApi = (id, deletedBy = null) => deleteData(`security_role/${id}`, { data: { deletedBy } });
+
+// Modules
+export const getModulesApi = async () => fetchData('module');

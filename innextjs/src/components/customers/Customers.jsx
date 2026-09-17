@@ -21,8 +21,10 @@ function customerInitials(name) {
 }
 
 import { getCustomersApi, deleteCustomerApi } from '@/lib/fetcher';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Customers() {
+  const { canRead, canCreate, canUpdate, canDelete } = usePermission('customers');
   const [customersData, setCustomersData] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
@@ -228,29 +230,32 @@ export default function Customers() {
         );
       },
     },
-    {
-      key: 'actions',
-      label: 'Action',
-      type: 'action',
-      align: 'center',
-      onClick: (row, e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        const dropdownHeight = 85; // Approximate height of 2 menu items
-        const spaceBelow = window.innerHeight - rect.bottom;
-        
-        let yPos = rect.bottom + window.scrollY;
-        if (spaceBelow < dropdownHeight) {
-          yPos = rect.top + window.scrollY - dropdownHeight;
-        }
-        
-        setDropdownState({
-          row,
-          x: rect.right - 128, // exact width for w-32 (8rem/128px)
-          y: yPos,
+    ];
+
+    if (canUpdate || canDelete) {
+        columns.push({
+            key: 'actions',
+            label: 'Action',
+            type: 'action',
+            align: 'center',
+            onClick: (row, e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                const dropdownHeight = 85; // Approximate height of 2 menu items
+                const spaceBelow = window.innerHeight - rect.bottom;
+                
+                let yPos = rect.bottom + window.scrollY;
+                if (spaceBelow < dropdownHeight) {
+                    yPos = rect.top + window.scrollY - dropdownHeight;
+                }
+                
+                setDropdownState({
+                    row,
+                    x: rect.right - 128, // exact width for w-32 (8rem/128px)
+                    y: yPos,
+                });
+            },
         });
-      },
-    },
-  ];
+    }
 
   return (
     <>
@@ -268,13 +273,15 @@ export default function Customers() {
               Search accounts and manage customer master data.
             </p>
           </div>
-          <Button
-            variant="primary"
-            className="w-full sm:w-auto shrink-0"
-            onClick={() => setAddOpen(true)}
-            icon={Plus}
-            text="Add customer"
-          />
+          {canCreate && (
+            <Button
+              variant="primary"
+              className="w-full sm:w-auto shrink-0"
+              onClick={() => setAddOpen(true)}
+              icon={Plus}
+              text="Add customer"
+            />
+          )}
         </div>
 
         {/* KPIs */}
@@ -377,26 +384,30 @@ export default function Customers() {
           style={{ top: dropdownState.y, left: dropdownState.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <button
-            className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
-            onClick={() => {
-              setSelectedCustomer(dropdownState.row);
-              setEditOpen(true);
-              setDropdownState(null);
-            }}
-          >
-            <Pencil size={14} /> Edit
-          </button>
-          <button
-            className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
-            onClick={() => {
-              setSelectedCustomer(dropdownState.row);
-              setDeleteOpen(true);
-              setDropdownState(null);
-            }}
-          >
-            <Trash2 size={14} /> Delete
-          </button>
+          {canUpdate && (
+            <button
+              className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
+              onClick={() => {
+                setSelectedCustomer(dropdownState.row);
+                setEditOpen(true);
+                setDropdownState(null);
+              }}
+            >
+              <Pencil size={14} /> Edit
+            </button>
+          )}
+          {canDelete && (
+            <button
+              className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
+              onClick={() => {
+                setSelectedCustomer(dropdownState.row);
+                setDeleteOpen(true);
+                setDropdownState(null);
+              }}
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+          )}
         </div>
       )}
 

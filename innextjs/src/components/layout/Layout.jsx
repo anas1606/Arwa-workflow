@@ -1,8 +1,34 @@
 import { Sidebar, MobileNav } from './Sidebar';
 import clsx from 'clsx';
 import Link from 'next/link';
+import useUser from '@/hooks/useUser';
+import AccessRestricted from './AccessRestricted';
+import { useRouter } from 'next/router';
 
 export function Layout({ children }) {
+  const { hasPermission, isLoading } = useUser();
+  const router = useRouter();
+
+  const ROUTE_PERMISSIONS = {
+    '/dashboard': 'dashboard',
+    '/customers': 'customers',
+    '/orders/customisation': 'brands',
+    '/orders': 'orders',
+    '/production': 'production',
+    '/bom': 'bom',
+    '/inventory/category': 'categories',
+    '/inventory/product': 'products',
+    '/inventory/unit': 'units',
+    '/users': 'users'
+  };
+
+  const moduleKey = ROUTE_PERMISSIONS[router.pathname];
+  const isAuthorized = !moduleKey || hasPermission(moduleKey, 'can_read');
+
+  if (isLoading) {
+    return <div className="flex h-dvh items-center justify-center">Loading...</div>;
+  }
+
   // Keeping layout simple for dashboard
   return (
     <div className="flex w-full min-h-dvh">
@@ -38,7 +64,7 @@ export function Layout({ children }) {
           tabIndex={-1}
           className="mx-auto w-full flex-1 p-3 outline-none focus:outline-none lg:max-w-none"
         >
-          {children}
+          {isAuthorized ? children : <AccessRestricted />}
         </main>
       </div>
 

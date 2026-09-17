@@ -10,8 +10,10 @@ import DeleteModal from '@/common/modal/DeleteModal';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { getUnitsApi, deleteUnitApi, updateUnitApi } from '@/lib/fetcher';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Unit() {
+  const { canRead, canCreate, canUpdate, canDelete } = usePermission('units');
   const [unitsData, setUnitsData] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
@@ -205,24 +207,35 @@ export default function Unit() {
     {
       key: 'status',
       label: 'STATUS',
-      type: 'toggle',
-      onChange: (row) => toggleStatus(row.id, row.status),
+      ...(canUpdate ? {
+        type: 'toggle',
+        onChange: (row) => toggleStatus(row.id, row.status),
+      } : {
+        render: (row) => (
+          <span className={`badge ${row.status === 'ACTIVE' ? 'bg-success-subtle text-success-text' : 'bg-danger-subtle text-danger-text'}`}>
+            {row.status === 'ACTIVE' ? 'Active' : 'Inactive'}
+          </span>
+        )
+      })
     },
-    {
-      key: 'actions',
-      label: 'Actions',
-      type: 'action',
-      align: 'center',
-      onClick: (row, e) => {
-        const rect = e.currentTarget.getBoundingClientRect();
-        setDropdownState({
-          row,
-          x: rect.right - 160,
-          y: rect.bottom + window.scrollY,
+    ];
+
+    if (canUpdate || canDelete) {
+        columns.push({
+            key: 'actions',
+            label: 'Actions',
+            type: 'action',
+            align: 'center',
+            onClick: (row, e) => {
+                const rect = e.currentTarget.getBoundingClientRect();
+                setDropdownState({
+                    row,
+                    x: rect.right - 160,
+                    y: rect.bottom + window.scrollY,
+                });
+            },
         });
-      },
-    },
-  ];
+    }
 
   return (
     <>
@@ -240,13 +253,15 @@ export default function Unit() {
               Search and manage units of measurement.
             </p>
           </div>
-          <Button
-            variant="primary"
-            className="w-full sm:w-auto shrink-0"
-            onClick={() => setAddOpen(true)}
-            icon={Plus}
-            text="Add unit"
-          />
+          {canCreate && (
+            <Button
+              variant="primary"
+              className="w-full sm:w-auto shrink-0"
+              onClick={() => setAddOpen(true)}
+              icon={Plus}
+              text="Add unit"
+            />
+          )}
         </div>
 
         {/* KPIs */}
@@ -351,29 +366,33 @@ export default function Unit() {
           style={{ top: dropdownState.y, left: dropdownState.x }}
           onClick={(e) => e.stopPropagation()}
         >
-          <Button
-            variant="ghost"
-            icon={Pencil}
-            text="Edit"
-            className="w-full justify-start rounded-none px-4 py-2 font-medium"
-            onClick={() => {
-              setSelectedUnit(dropdownState.row);
-              setEditOpen(true);
-              setDropdownState(null);
-            }}
-          />
-          <div className="h-px" />
-          <Button
-            variant="ghost"
-            icon={Trash2}
-            text="Delete"
-            className="w-full justify-start rounded-none px-4 py-2 font-medium text-red-500"
-            onClick={() => {
-              setSelectedUnit(dropdownState.row);
-              setDeleteOpen(true);
-              setDropdownState(null);
-            }}
-          />
+          {canUpdate && (
+            <Button
+              variant="ghost"
+              icon={Pencil}
+              text="Edit"
+              className="w-full justify-start rounded-none px-4 py-2 font-medium"
+              onClick={() => {
+                setSelectedUnit(dropdownState.row);
+                setEditOpen(true);
+                setDropdownState(null);
+              }}
+            />
+          )}
+          {canUpdate && canDelete && <div className="h-px bg-grey-border my-1" />}
+          {canDelete && (
+            <Button
+              variant="ghost"
+              icon={Trash2}
+              text="Delete"
+              className="w-full justify-start rounded-none px-4 py-2 font-medium text-red-500"
+              onClick={() => {
+                setSelectedUnit(dropdownState.row);
+                setDeleteOpen(true);
+                setDropdownState(null);
+              }}
+            />
+          )}
         </div>
       )}
 

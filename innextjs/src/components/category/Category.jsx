@@ -11,8 +11,11 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import { toast } from 'sonner';
 import { getCategoriesApi, deleteCategoryApi, updateCategoryApi, getCategoryKpisApi } from '@/lib/fetcher';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function Category() {
+    const { canRead, canCreate, canUpdate, canDelete } = usePermission('categories');
+
     const [categoriesData, setCategoriesData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [inputValue, setInputValue] = useState('');
@@ -297,8 +300,9 @@ export default function Category() {
         {
             key: 'isActive',
             label: 'Status',
-            type: 'toggle',
-            onChange: async (row, newValue) => {
+            ...(canUpdate ? {
+                type: 'toggle',
+                onChange: async (row, newValue) => {
                 // Optimistic UI update
                 const updateState = (items) => items.map(c => c.id === row.id ? { ...c, isActive: newValue } : c);
                 const revertState = (items) => items.map(c => c.id === row.id ? { ...c, isActive: !newValue } : c);
@@ -337,6 +341,13 @@ export default function Category() {
                     toast.error('An unexpected error occurred.');
                 }
             }
+        } : {
+            render: (row) => (
+                <span className={`badge ${row.isActive ? 'bg-success-subtle text-success-text' : 'bg-danger-subtle text-danger-text'}`}>
+                    {row.isActive ? 'Active' : 'Inactive'}
+                </span>
+            )
+        }),
         },
         {
             key: 'itemCount',
@@ -344,7 +355,10 @@ export default function Category() {
             align: 'center',
             render: (row) => <span className="text-sm text-grey-text">{row.itemCount || 0}</span>,
         },
-        {
+    ];
+
+    if (canCreate || canUpdate || canDelete) {
+        columns.push({
             key: 'actions',
             label: 'Action',
             type: 'action',
@@ -365,8 +379,8 @@ export default function Category() {
                     y: yPos,
                 });
             },
-        },
-    ];
+        });
+    }
 
     return (
         <>
@@ -386,13 +400,15 @@ export default function Category() {
                             Manage hierarchical categories for products.
                         </p>
                     </div>
-                    <Button
-                        variant="primary"
-                        className="w-full sm:w-auto shrink-0"
-                        onClick={() => setAddOpen(true)}
-                        icon={Plus}
-                        text="Add category"
-                    />
+                    {canCreate && (
+                        <Button
+                            variant="primary"
+                            className="w-full sm:w-auto shrink-0"
+                            onClick={() => setAddOpen(true)}
+                            icon={Plus}
+                            text="Add category"
+                        />
+                    )}
                 </div>
 
                 {/* KPIs */}
@@ -499,46 +515,54 @@ export default function Category() {
                     style={{ top: dropdownState.y, left: dropdownState.x }}
                     onClick={(e) => e.stopPropagation()}
                 >
-                    <button
-                        onClick={() => {
-                            setAddParentId(dropdownState.row.id);
-                            setAddOpen(true);
-                            setDropdownState(null);
-                        }}
-                        className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
-                    >
-                        <FolderPlus size={14} /> Add Subcategory
-                    </button>
-                    <button
-                        onClick={() => {
-                            setSelectedCategory(dropdownState.row);
-                            setEditOpen(true);
-                            setDropdownState(null);
-                        }}
-                        className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
-                    >
-                        <Pencil size={14} /> Edit
-                    </button>
-                    <button
-                        onClick={() => {
-                            setSelectedCategory(dropdownState.row);
-                            setTransferOpen(true);
-                            setDropdownState(null);
-                        }}
-                        className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
-                    >
-                        <ArrowRightLeft size={14} /> Transfer
-                    </button>
-                    <button
-                        onClick={() => {
-                            setSelectedCategory(dropdownState.row);
-                            setDeleteOpen(true);
-                            setDropdownState(null);
-                        }}
-                        className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
-                    >
-                        <Trash2 size={14} /> Delete
-                    </button>
+                    {canCreate && (
+                        <button
+                            onClick={() => {
+                                setAddParentId(dropdownState.row.id);
+                                setAddOpen(true);
+                                setDropdownState(null);
+                            }}
+                            className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
+                        >
+                            <FolderPlus size={14} /> Add Subcategory
+                        </button>
+                    )}
+                    {canUpdate && (
+                        <>
+                            <button
+                                onClick={() => {
+                                    setSelectedCategory(dropdownState.row);
+                                    setEditOpen(true);
+                                    setDropdownState(null);
+                                }}
+                                className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
+                            >
+                                <Pencil size={14} /> Edit
+                            </button>
+                            <button
+                                onClick={() => {
+                                    setSelectedCategory(dropdownState.row);
+                                    setTransferOpen(true);
+                                    setDropdownState(null);
+                                }}
+                                className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
+                            >
+                                <ArrowRightLeft size={14} /> Transfer
+                            </button>
+                        </>
+                    )}
+                    {canDelete && (
+                        <button
+                            onClick={() => {
+                                setSelectedCategory(dropdownState.row);
+                                setDeleteOpen(true);
+                                setDropdownState(null);
+                            }}
+                            className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
+                        >
+                            <Trash2 size={14} /> Delete
+                        </button>
+                    )}
                 </div>
             )}
 

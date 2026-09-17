@@ -14,6 +14,20 @@ const apiClient = axios.create({
   },
 });
 
+// Add request interceptor to attach token
+apiClient.interceptors.request.use(
+  (config) => {
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('token');
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    }
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
 // Intercept responses to handle 401 Unauthorized (expired/changed token)
 apiClient.interceptors.response.use(
   (response) => response,
@@ -32,7 +46,8 @@ apiClient.interceptors.response.use(
           // Ignore error on logout
         }
 
-        window.location.href = '/auth/login';
+        localStorage.removeItem('token');
+        window.location.href = '/login';
       }
     }
     return Promise.reject(error);

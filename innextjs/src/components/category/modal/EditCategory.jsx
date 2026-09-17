@@ -168,10 +168,10 @@ export default function EditCategory({ isOpen, onClose, onEdit, category, catego
         onEdit();
         handleClose();
       } else {
-        toast.error(response.data?.message || 'Failed to update category');
+        toast.error(response.error?.message || response.data?.message || 'Failed to update category');
       }
     } catch (error) {
-      toast.error('An unexpected error occurred.');
+      toast.error(error.response?.data?.message || error.message || 'An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
     }
