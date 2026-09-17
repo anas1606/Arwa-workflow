@@ -4,7 +4,7 @@ import CommonTable from '@/common/table/CommonTable';
 import DeleteModal from '@/common/modal/DeleteModal';
 import EditUser from '../modal/EditUser';
 import ViewUser from '../modal/ViewUser';
-import { getUsersApi, deleteUserApi } from '@/lib/fetcher';
+import { getUsersApi, deleteUserApi, updateUserApi } from '@/lib/fetcher';
 import { toast } from 'sonner';
 import { usePermission } from '@/hooks/usePermission';
 
@@ -77,6 +77,23 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
         }
     };
 
+    const toggleStatus = async (id, currentStatus) => {
+        try {
+            setUsers((list) => list.map(u => u.id === id ? { ...u, isActive: !currentStatus } : u));
+            
+            const res = await updateUserApi(id, { isActive: !currentStatus });
+            if (res.error || (res.data && !res.data.success)) {
+                setUsers((list) => list.map(u => u.id === id ? { ...u, isActive: currentStatus } : u));
+                toast.error(res.error?.message || res.data?.message || 'Failed to update status');
+            } else {
+                toast.success('Status updated successfully');
+            }
+        } catch (err) {
+            setUsers((list) => list.map(u => u.id === id ? { ...u, isActive: currentStatus } : u));
+            toast.error('An unexpected error occurred.');
+        }
+    };
+
     const handleUpdate = () => {
         fetchUsers();
         setEditOpen(false);
@@ -122,18 +139,23 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
             }
         },
         {
-            key: 'status',
+            key: 'isActive',
             label: 'Status',
             align: 'center',
-            render: (row) => (
-                <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                    row.isActive
-                        ? 'bg-success-bg text-success-dark ring-1 ring-inset ring-success-dark/20'
-                        : 'bg-danger-bg text-danger-dark ring-1 ring-inset ring-danger-dark/20'
-                }`}>
-                    {row.isActive ? 'Active' : 'Inactive'}
-                </span>
-            )
+            ...(canUpdate ? {
+                type: 'toggle',
+                onChange: (row) => toggleStatus(row.id, row.isActive),
+            } : {
+                render: (row) => (
+                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                        row.isActive
+                            ? 'bg-success-bg text-success-dark ring-1 ring-inset ring-success-dark/20'
+                            : 'bg-danger-bg text-danger-dark ring-1 ring-inset ring-danger-dark/20'
+                    }`}>
+                        {row.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                )
+            })
         },
     ];
 

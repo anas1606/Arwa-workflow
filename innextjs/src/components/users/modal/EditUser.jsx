@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X, Copy, Lock, Key, ChevronRight } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import { updateUserApi, getSecurityRolesApi, getUserByIdApi } from '@/lib/fetcher';
@@ -33,6 +33,7 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [showPasswordSection, setShowPasswordSection] = useState(false);
 
   // Fetch roles for the dropdown when modal opens
   useEffect(() => {
@@ -57,7 +58,6 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
           setEmail(freshUser.email || '');
           setPhone(freshUser.phone || '');
           setSecurityRoleId(freshUser.security_role_id || '');
-          setPassword(decryptString(freshUser.password) || '');
         }
       }).catch(console.error).finally(() => {
         setIsFetchingUser(false);
@@ -87,6 +87,7 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
     setPhone('');
     setPassword('');
     setError(null);
+    setShowPasswordSection(false);
   };
 
   const handleClose = () => {
@@ -194,13 +195,57 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
               value={username}
               onChange={(e) => setUsername(e.target.value)}
             />
-            <Input
-              type="password"
-              label="New Password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Leave blank to keep unchanged"
-            />
+            <div className="flex flex-col gap-1">
+              <label className="text-sm font-semibold text-grey-text-strong">
+                Portal Access <span className="text-danger-muted">*</span>
+              </label>
+              {!showPasswordSection ? (
+                <div
+                  className="flex h-11 w-full cursor-pointer items-center justify-between rounded-md border border-grey-border bg-white/60 px-3 transition-colors hover:bg-white shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]"
+                  onClick={() => setShowPasswordSection(true)}
+                >
+                  <div className="flex items-center gap-2 text-grey-text-strong">
+                    <Lock size={16} className="text-grey-icon" />
+                    <span className="text-sm">View / Change Password</span>
+                  </div>
+                  <ChevronRight size={16} className="text-grey-icon" />
+                </div>
+              ) : (
+                <div className="flex flex-col gap-4 mt-1">
+                  <div className="flex flex-col gap-1">
+                    <label className="text-sm font-semibold text-grey-text-strong">Current Password</label>
+                    <div className="flex h-11 w-full items-center justify-between rounded-md border border-grey-border bg-white/60 px-3 text-sm shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]">
+                      <div className="flex items-center gap-2">
+                        <Lock size={18} className="text-grey-icon" />
+                        <span className="text-grey-text-strong ml-1">{user?.password ? (decryptString(user.password) || 'Not available') : 'Not available'}</span>
+                      </div>
+                      <button
+                        type="button"
+                        className="flex items-center gap-1.5 text-primary-dark hover:text-primary transition-colors text-sm font-semibold"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          const pass = decryptString(user?.password) || '';
+                          if (pass) {
+                            navigator.clipboard.writeText(pass);
+                            toast.success('Password copied to clipboard');
+                          }
+                        }}
+                      >
+                        <Copy size={16} /> Copy
+                      </button>
+                    </div>
+                  </div>
+                  <Input
+                    type="password"
+                    label="New Password (optional)"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Leave empty to keep current"
+                    startIcon={Key}
+                  />
+                </div>
+              )}
+            </div>
             <Input
               type="email"
               label="Email (optional)"

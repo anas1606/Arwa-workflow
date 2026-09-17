@@ -62,7 +62,7 @@ export const createSecurityRole = async (data) => {
         const existingName = await prisma.securityRole.findUnique({
             where: { role_name: data.role_name }
         });
-        
+
         if (existingName && !existingName.is_deleted) {
             return { success: false, message: 'Role name already exists' };
         }
@@ -101,8 +101,8 @@ export const updateSecurityRole = async (id, data) => {
 
         if (roleData.role_number != null) {
             const existingNumber = await prisma.securityRole.findFirst({
-                where: { 
-                    role_number: roleData.role_number, 
+                where: {
+                    role_number: roleData.role_number,
                     is_deleted: false,
                     id: { not: id }
                 }
@@ -157,7 +157,7 @@ export const deleteSecurityRole = async (id) => {
             where: { id },
             data: { is_deleted: true, deletedAt: new Date() }
         });
-        
+
         return { success: true, data: null };
     } catch (error) {
         console.error('Service error deleting role:', error);
