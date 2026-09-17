@@ -20,17 +20,6 @@ export default function useUser() {
                     window.location.href = '/login';
                 } else {
                     setUser(decoded);
-                    // Verify signature with backend
-                    fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || '/api/v1'}/auth/verify`, {
-                        headers: { Authorization: `Bearer ${token}` }
-                    }).then(res => {
-                        if (!res.ok) {
-                            console.error("Token signature invalid");
-                            localStorage.removeItem('token');
-                            setUser(null);
-                            window.location.href = '/login';
-                        }
-                    }).catch(console.error);
                 }
             } catch (error) {
                 console.error("Invalid token", error);

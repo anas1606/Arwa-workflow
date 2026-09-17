@@ -45,7 +45,7 @@ function PermissionsSummary({ permissions = [] }) {
                 return (
                     <span
                         key={p.module_key}
-                        className="inline-flex items-center gap-2.5 rounded-[10px] bg-white px-3 py-1.5 text-[13px] font-bold text-[#334155] border border-grey-border shadow-sm"
+                        className="inline-flex items-center gap-2.5 rounded-md bg-white px-2 py-1 text-[11px] font-bold text-[#334155] border border-grey-border shadow-sm"
                     >
                         {displayName}
                         <span className="flex items-center gap-1">
@@ -53,7 +53,7 @@ function PermissionsSummary({ permissions = [] }) {
                                 <span
                                     key={b.letter}
                                     title={b.title}
-                                    className="inline-flex items-center justify-center h-[20px] w-[20px] rounded border-2 border-[#bbf7d0] bg-[#f0fdf4] text-[10px] font-black text-[#16a34a]"
+                                    className="inline-flex items-center justify-center h-[15px] w-[15px] rounded border-2 border-[#bbf7d0] bg-[#f0fdf4] text-[10px] font-black text-[#16a34a]"
                                 >
                                     {b.letter}
                                 </span>

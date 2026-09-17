@@ -135,15 +135,20 @@ export default function UsersTabs() {
             {/* Toolbar / Tabs */}
             <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <nav className="flex items-center gap-1 shrink-0 bg-grey-bg/50 p-1 rounded-lg" aria-label="Tabs">
+                    <nav className="relative flex items-center p-1 bg-slate-200/60 rounded-xl shrink-0" aria-label="Tabs">
+                        {/* Animated Background Pill */}
+                        <div
+                            className={clsx(
+                                "absolute top-1 bottom-1 w-[130px] rounded-lg bg-primary shadow-md transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                                activeTab === 'users' ? "left-1" : "left-[135px]"
+                            )}
+                        />
                         {canReadUsers && (
                             <button
                                 onClick={() => setActiveTab('users')}
                                 className={clsx(
-                                    'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all duration-150',
-                                    activeTab === 'users'
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-grey-text hover:bg-grey-bg hover:text-grey-text-strong'
+                                    'relative z-10 w-[130px] flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors duration-300',
+                                    activeTab === 'users' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
                                 )}
                             >
                                 Users
@@ -153,10 +158,8 @@ export default function UsersTabs() {
                             <button
                                 onClick={() => setActiveTab('roles')}
                                 className={clsx(
-                                    'inline-flex items-center gap-2 rounded-md px-4 py-2 text-sm font-semibold transition-all duration-150',
-                                    activeTab === 'roles'
-                                        ? 'bg-primary text-white shadow-md shadow-primary/20'
-                                        : 'text-grey-text hover:bg-grey-bg hover:text-grey-text-strong'
+                                    'relative z-10 w-[130px] flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors duration-300',
+                                    activeTab === 'roles' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
                                 )}
                             >
                                 Security Roles
