@@ -16,12 +16,11 @@ async function main() {
   const modulesToCreate = [
     { module_key: 'dashboard', name: 'Dashboard' },
     { module_key: 'customers', name: 'Customers' },
-    { module_key: 'brands', name: 'Brands' },
+    { module_key: 'customisation', name: 'Customisation' },
     { module_key: 'products', name: 'Products' },
     { module_key: 'categories', name: 'Categories' },
     { module_key: 'units', name: 'Units' },
     { module_key: 'users', name: 'Users' },
-    { module_key: 'settings', name: 'Settings' },
     { module_key: 'security_roles', name: 'Security Roles' },
     { module_key: 'orders', name: 'Orders' },
     { module_key: 'production', name: 'Production' },

@@ -13,7 +13,13 @@ export default function UsersTabs() {
     const { canRead: canReadUsers, canCreate: canCreateUsers } = usePermission('users');
     const { canRead: canReadRoles, canCreate: canCreateRoles } = usePermission('security_roles');
     const router = useRouter();
-    const [activeTab, setActiveTab] = useState('users');
+    const [activeTab, setActiveTab] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('tab') === 'roles') return 'roles';
+        }
+        return 'users';
+    });
 
     useEffect(() => {
         if (router.query.tab === 'roles' && canReadRoles) {
@@ -68,8 +74,8 @@ export default function UsersTabs() {
                 else if (activeTab === 'roles' && canCreateRoles) router.push('/users/roles/add');
                 return;
             }
-            // Ctrl+K or / → Focus search
-            if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.key === '/' && !e.ctrlKey && !e.altKey && document.activeElement?.tagName !== 'INPUT')) {
+            // Ctrl+S or / → Focus search
+            if ((e.ctrlKey && e.key.toLowerCase() === 's') || (e.key === '/' && !e.ctrlKey && !e.altKey && document.activeElement?.tagName !== 'INPUT')) {
                 e.preventDefault();
                 searchInputRef.current?.focus();
                 return;
@@ -183,7 +189,7 @@ export default function UsersTabs() {
                         <span className="flex items-center gap-1">
                             <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Ctrl</kbd>
                             <span className="text-grey-icon">+</span>
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">K</kbd>
+                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
                         </span>
                         Search
                     </span>

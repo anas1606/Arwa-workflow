@@ -19,7 +19,7 @@ export default function EditRole() {
 
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isFetchingRole, setIsFetchingRole] = useState(false);
+  const [isFetchingRole, setIsFetchingRole] = useState(true);
 
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);

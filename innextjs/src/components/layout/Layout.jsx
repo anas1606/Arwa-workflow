@@ -12,7 +12,7 @@ export function Layout({ children }) {
   const ROUTE_PERMISSIONS = [
     { path: '/dashboard', module: 'dashboard' },
     { path: '/customers', module: 'customers' },
-    { path: '/orders/customisation', module: 'brands' },
+    { path: '/orders/customisation', module: 'customisation' },
     { path: '/orders', module: 'orders' },
     { path: '/production', module: 'production' },
     { path: '/bom', module: 'bom' },

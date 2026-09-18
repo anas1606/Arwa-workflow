@@ -119,7 +119,7 @@ export default function ViewUser({ open, onClose, user }) {
             </div>
             <h3 className="text-lg font-bold text-grey-text-strong">{displayUser.username}</h3>
             <span className="mt-1.5 inline-flex items-center rounded-md bg-grey-bg px-2.5 py-0.5 text-xs font-semibold text-grey-text-strong ring-1 ring-inset ring-grey-border">
-                {displayUser.security_role?.role_name || 'No Role Assigned'}
+                {!displayUser.security_role_id ? 'Super Admin' : displayUser.security_role?.role_name || 'No Role Assigned'}
             </span>
           </div>
 
@@ -164,7 +164,7 @@ export default function ViewUser({ open, onClose, user }) {
                         </div>
                         <div className="flex flex-col min-w-0 flex-1">
                             <span className="text-xs font-medium uppercase text-grey-muted">Security Role</span>
-                            <span className="text-sm font-semibold text-grey-text-strong truncate">{displayUser.security_role?.role_name || 'None'}</span>
+                            <span className="text-sm font-semibold text-grey-text-strong truncate">{!displayUser.security_role_id ? 'Super Admin' : displayUser.security_role?.role_name || 'None'}</span>
                         </div>
                     </div>
                     <div className="flex items-center gap-4 px-4 py-3">

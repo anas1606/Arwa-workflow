@@ -9,9 +9,10 @@ const moduleMap = {
     '/api/v1/product': 'products',
     '/api/v1/customer': 'customers',
     '/api/v1/unit': 'units',
-    '/api/v1/brand': 'brands',
-    '/api/v1/sticker': 'brands',
+    '/api/v1/brand': 'customisation',
+    '/api/v1/sticker': 'customisation',
     '/api/v1/user': 'users',
+    '/api/v1/production': 'production',
     '/api/v1/security_role': 'security_roles',
     '/api/v1/module': 'modules',
 };

@@ -112,6 +112,14 @@ export default function AddUser({ open, onClose, onAdd }) {
       return;
     }
 
+    if (email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        setError('Please enter a valid email address.');
+        return;
+      }
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
@@ -204,8 +212,8 @@ export default function AddUser({ open, onClose, onAdd }) {
               type="tel"
               label="Phone (optional)"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="e.g. +1 555-0123"
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="e.g. 1234567890"
             />
             <Input
               type="select"
@@ -213,7 +221,7 @@ export default function AddUser({ open, onClose, onAdd }) {
               value={securityRoleId}
               onChange={(e) => setSecurityRoleId(e.target.value)}
               options={[
-                { label: 'Super Admin', value: '' },
+                { label: 'Select Role', value: '' },
                 ...roles.map(r => ({ label: r.role_name, value: r.id }))
               ]}
               hidePlaceholder={true}

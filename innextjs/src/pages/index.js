@@ -18,7 +18,7 @@ export default function Home() {
     const moduleToRoute = {
       'customers': '/customers',
       'orders': '/orders',
-      'brands': '/orders/customisation',
+      'customisation': '/orders/customisation',
       'production': '/production',
       'bom': '/bom',
       'categories': '/inventory/category',
