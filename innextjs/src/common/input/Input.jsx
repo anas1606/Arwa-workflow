@@ -1,5 +1,5 @@
 import React, { useState, useRef, useId, forwardRef } from "react";
-import { Upload, ChevronDown } from "lucide-react";
+import { Upload, ChevronDown, Eye, EyeOff } from "lucide-react";
 import clsx from "clsx";
 
 const Input = forwardRef(({
@@ -126,7 +126,10 @@ const Input = forwardRef(({
         );
     }
 
-    // Default text/email/password etc.
+    const isPassword = type === "password";
+    const [showPassword, setShowPassword] = useState(false);
+    const actualType = isPassword ? (showPassword ? "text" : "password") : type;
+
     return (
         <div className={`w-full ${className}`}>
             {label && (
@@ -141,7 +144,7 @@ const Input = forwardRef(({
                     </span>
                 )}
                 <input
-                    type={type}
+                    type={actualType}
                     id={id}
                     ref={ref}
                     placeholder={placeholder}
@@ -151,12 +154,20 @@ const Input = forwardRef(({
                         "focus:border-primary-muted focus:bg-white focus:ring-4 focus:ring-primary-muted/10",
                         error ? "border-danger-muted" : "",
                         StartIcon && "pl-10",
-                        EndIcon && "pr-10"
+                        (EndIcon || isPassword) && "pr-10"
                     )}
                     required={required}
                     {...props}
                 />
-                {EndIcon && (
+                {isPassword ? (
+                    <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute z-10 right-3 top-1/2 -translate-y-1/2 text-grey-icon hover:text-grey-text-strong focus:outline-none"
+                    >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                ) : EndIcon && (
                     <span className="pointer-events-none absolute z-10 right-3 top-1/2 -translate-y-1/2 text-grey-icon">
                         <EndIcon size={18} />
                     </span>

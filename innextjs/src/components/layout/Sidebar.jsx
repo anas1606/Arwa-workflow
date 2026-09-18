@@ -51,7 +51,7 @@ const masterNav = [
 ];
 
 const adminNav = [
-  { to: '/users', label: 'Users & Roles', icon: Users, moduleKey: 'users' },
+  { to: '/users', label: 'Users & Roles', icon: Users, moduleKey: 'users', fallbackModuleKey: 'security_roles' },
 ];
 
 const allNav = [
@@ -235,12 +235,15 @@ function NavSection({ title, items }) {
     if (item.children) {
       return {
         ...item,
-        children: item.children.filter(child => !child.moduleKey || hasPermission(child.moduleKey, 'can_read'))
+        children: item.children.filter(child => {
+          if (child.moduleKey && !hasPermission(child.moduleKey, 'can_read') && (!child.fallbackModuleKey || !hasPermission(child.fallbackModuleKey, 'can_read'))) return false;
+          return true;
+        })
       };
     }
     return item;
   }).filter(item => {
-    if (item.moduleKey && !hasPermission(item.moduleKey, 'can_read')) return false;
+    if (item.moduleKey && !hasPermission(item.moduleKey, 'can_read') && (!item.fallbackModuleKey || !hasPermission(item.fallbackModuleKey, 'can_read'))) return false;
     if (item.children && item.children.length === 0) return false;
     return true;
   });
