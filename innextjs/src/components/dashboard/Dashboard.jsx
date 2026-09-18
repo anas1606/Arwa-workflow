@@ -8,6 +8,7 @@ import {
 import Button from '../../common/buttons/Button';
 import { AlertTriangle, Info, OctagonX, Plus } from 'lucide-react';
 import clsx from 'clsx';
+import { usePermission } from '@/hooks/usePermission';
 
 const machineStatusMeta = {
   RUNNING: {
@@ -47,6 +48,8 @@ const toneBorder = {
 };
 
 export default function Dashboard() {
+  const { canCreate: canCreateOrder } = usePermission('orders');
+
   return (
     <div>
       {/* Page Header */}
@@ -60,9 +63,11 @@ export default function Dashboard() {
           </p>
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
-          <Button href="/orders/new" variant="primary" icon={Plus} className="w-full sm:w-auto">
-            New order
-          </Button>
+          {canCreateOrder && (
+            <Button href="/orders/new" variant="primary" icon={Plus} className="w-full sm:w-auto">
+              New order
+            </Button>
+          )}
         </div>
       </div>
 
