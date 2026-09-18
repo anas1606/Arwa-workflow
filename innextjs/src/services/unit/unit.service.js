@@ -1,13 +1,13 @@
 import prisma from '@/lib/prisma';
 
-export const createUnit = async (data) => {
+export const createUnit = async (data, userId = null) => {
     try {
         const result = await prisma.unit.create({
             data: {
                 name: data.name,
                 shortName: data.shortName || null,
                 quantityUnit: data.quantityUnit || 1,
-                createdBy: data.createdBy || null,
+                createdBy: userId || data.createdBy || null,
             }
         });
         return { success: true, data: result };
@@ -107,7 +107,7 @@ export const getUnitById = async (id) => {
     }
 };
 
-export const updateUnit = async (data) => {
+export const updateUnit = async (data, userId = null) => {
     try {
         const existingUnit = await prisma.unit.findFirst({
             where: { id: data.id, is_deleted: false }
@@ -124,7 +124,7 @@ export const updateUnit = async (data) => {
                 shortName: data.shortName !== undefined ? data.shortName : existingUnit.shortName,
                 quantityUnit: data.quantityUnit !== undefined ? data.quantityUnit : existingUnit.quantityUnit,
                 status: data.status !== undefined ? data.status : existingUnit.status,
-                updatedBy: data.updatedBy || null,
+                updatedBy: userId || data.updatedBy || null,
             }
         });
         return { success: true, data: result };

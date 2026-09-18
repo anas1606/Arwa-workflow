@@ -76,7 +76,7 @@ export const getUserById = async (id) => {
     }
 };
 
-export const createUser = async (data) => {
+export const createUser = async (data, userId = null) => {
     try {
         if (!data.security_role_id) {
             return { success: false, message: 'Security role is required. Super admin cannot be created manually.' };
@@ -96,7 +96,8 @@ export const createUser = async (data) => {
         // Password comes already encrypted from frontend
         const newUser = await prisma.user.create({
             data: {
-                ...data
+                ...data,
+                createdBy: userId || data.createdBy || null,
             },
             select: userSelect
         });
@@ -108,13 +109,13 @@ export const createUser = async (data) => {
     }
 };
 
-export const updateUser = async (id, data) => {
+export const updateUser = async (id, data, userId = null) => {
     try {
         if (data.hasOwnProperty('security_role_id') && !data.security_role_id) {
             return { success: false, message: 'Security role is required. Super admin cannot be assigned manually.' };
         }
 
-        const updateData = { ...data };
+        const updateData = { ...data, updatedBy: userId || data.updatedBy || null };
         // If password is included, it is already encrypted by frontend
 
         const updatedUser = await prisma.user.update({
@@ -130,11 +131,11 @@ export const updateUser = async (id, data) => {
     }
 };
 
-export const deleteUser = async (id) => {
+export const deleteUser = async (id, deletedBy = null) => {
     try {
         await prisma.user.update({
             where: { id },
-            data: { is_deleted: true, deletedAt: new Date() }
+            data: { is_deleted: true, deletedAt: new Date(), deletedBy: deletedBy }
         });
         return { success: true, data: null };
     } catch (error) {

@@ -7,8 +7,7 @@ export const getAllModules = async () => {
                 id: true,
                 module_key: true,
                 name: true,
-                createdAt: true,
-                updatedAt: true
+                createdAt: true
             },
             orderBy: { name: 'asc' }
         });

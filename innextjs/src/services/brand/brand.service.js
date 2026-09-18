@@ -1,13 +1,13 @@
 import prisma from '@/lib/prisma';
 
-export const createBrand = async (data) => {
+export const createBrand = async (data, userId = null) => {
     try {
         const result = await prisma.brand.create({
             data: {
                 brandname: data.brandname,
                 customer_id: data.customer_id,
                 description: data.description || null,
-                createdBy: data.createdBy || null,
+                createdBy: userId || data.createdBy || null,
             }
         });
         return { success: true, data: result };
@@ -82,7 +82,7 @@ export const getBrandById = async (id) => {
     }
 };
 
-export const updateBrand = async (id, data) => {
+export const updateBrand = async (id, data, userId = null) => {
     try {
         const result = await prisma.brand.update({
             where: { id },
@@ -90,7 +90,7 @@ export const updateBrand = async (id, data) => {
                 brandname: data.brandname !== undefined ? data.brandname : undefined,
                 customer_id: data.customer_id !== undefined ? data.customer_id : undefined,
                 description: data.description !== undefined ? (data.description || null) : undefined,
-                updatedBy: data.updatedBy || null,
+                updatedBy: userId || data.updatedBy || null,
             }
         });
         return { success: true, data: result };

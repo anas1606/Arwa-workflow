@@ -100,7 +100,7 @@ export const getSecurityRoleById = async (id) => {
     }
 };
 
-export const createSecurityRole = async (data) => {
+export const createSecurityRole = async (data, userId = null) => {
     try {
         const existingName = await prisma.securityRole.findUnique({
             where: { role_name: data.role_name }
@@ -124,6 +124,7 @@ export const createSecurityRole = async (data) => {
         const newRole = await prisma.securityRole.create({
             data: {
                 ...roleData,
+                createdBy: userId || data.createdBy || null,
                 permissions: {
                     create: permissions || []
                 }
@@ -138,7 +139,7 @@ export const createSecurityRole = async (data) => {
     }
 };
 
-export const updateSecurityRole = async (id, data) => {
+export const updateSecurityRole = async (id, data, userId = null) => {
     try {
         const { permissions, ...roleData } = data;
 
@@ -169,6 +170,7 @@ export const updateSecurityRole = async (id, data) => {
                 where: { id },
                 data: {
                     ...roleData,
+                    updatedBy: userId || data.updatedBy || null,
                     ...(permissions && {
                         permissions: {
                             create: permissions
@@ -186,7 +188,7 @@ export const updateSecurityRole = async (id, data) => {
     }
 };
 
-export const deleteSecurityRole = async (id) => {
+export const deleteSecurityRole = async (id, deletedBy = null) => {
     try {
         const usersWithRole = await prisma.user.count({
             where: { security_role_id: id, is_deleted: false }
@@ -198,7 +200,7 @@ export const deleteSecurityRole = async (id) => {
 
         await prisma.securityRole.update({
             where: { id },
-            data: { is_deleted: true, deletedAt: new Date() }
+            data: { is_deleted: true, deletedAt: new Date(), deletedBy: deletedBy }
         });
 
         return { success: true, data: null };

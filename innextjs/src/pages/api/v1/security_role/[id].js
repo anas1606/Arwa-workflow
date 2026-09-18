@@ -19,13 +19,15 @@ export default async function handler(req, res) {
 
             case 'PUT':
             case 'PATCH': {
-                const result = await updateSecurityRole(id, req.body);
+                const userId = req.headers['x-user-id'];
+                const result = await updateSecurityRole(id, req.body, userId);
                 if (result.success) return successResponse(res, 'Security Role updated successfully', result.data);
                 return errorResponse(res, 'Failed to update Security Role', result.message);
             }
 
             case 'DELETE': {
-                const result = await deleteSecurityRole(id);
+                const deletedBy = req.headers['x-user-id'] || null;
+                const result = await deleteSecurityRole(id, deletedBy);
                 if (result.success) return successResponse(res, 'Security Role deleted successfully', null);
                 return errorResponse(res, 'Failed to delete Security Role', result.message);
             }

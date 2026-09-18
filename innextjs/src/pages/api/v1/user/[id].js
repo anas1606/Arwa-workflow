@@ -26,13 +26,15 @@ export default async function handler(req, res) {
                     return errorResponse(res, 'Validation Error', errorMessage, 400);
                 }
 
-                const result = await updateUser(id, validationResult.data);
+                const userId = req.headers['x-user-id'];
+                const result = await updateUser(id, validationResult.data, userId);
                 if (result.success) return successResponse(res, 'User updated successfully', result.data);
                 return errorResponse(res, 'Failed to update User', result.message);
             }
 
             case 'DELETE': {
-                const result = await deleteUser(id);
+                const deletedBy = req.headers['x-user-id'] || null;
+                const result = await deleteUser(id, deletedBy);
                 if (result.success) return successResponse(res, 'User deleted successfully', null);
                 return errorResponse(res, 'Failed to delete User', result.message);
             }

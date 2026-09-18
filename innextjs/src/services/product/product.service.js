@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 
-export const createProduct = async (data) => {
+export const createProduct = async (data, userId = null) => {
     try {
         // Ensure name is unique or code is unique? Typically code is unique.
         if (data.code) {
@@ -54,7 +54,7 @@ export const createProduct = async (data) => {
                 categoryId: data.categoryId || null,
                 unitId: data.unitId || null,
                 isActive: data.isActive !== undefined ? data.isActive : true,
-                createdBy: data.createdBy || null,
+                createdBy: userId || data.createdBy || null,
             }
         });
         return { success: true, data: result };
@@ -198,7 +198,7 @@ export const getProductById = async (id) => {
     }
 };
 
-export const updateProduct = async (id, data) => {
+export const updateProduct = async (id, data, userId = null) => {
     try {
         const existing = await prisma.product.findUnique({
             where: { id, is_deleted: false }
@@ -242,7 +242,7 @@ export const updateProduct = async (id, data) => {
         if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
         if (data.unitId !== undefined) updateData.unitId = data.unitId;
         if (data.isActive !== undefined) updateData.isActive = data.isActive;
-        if (data.updatedBy) updateData.updatedBy = data.updatedBy;
+        if (userId || data.updatedBy) updateData.updatedBy = userId || data.updatedBy;
 
         const result = await prisma.product.update({
             where: { id },

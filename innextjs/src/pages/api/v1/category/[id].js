@@ -36,13 +36,15 @@ export default async function handler(req, res) {
                     return errorResponse(res, 'Validation Error', errorMessage, 400);
                 }
 
-                const result = await updateCategory(id, validationResult.data);
+                const userId = req.headers['x-user-id'];
+                const result = await updateCategory(id, validationResult.data, userId);
                 if (result.success) return successResponse(res, 'Category updated successfully', result.data);
                 return errorResponse(res, 'Failed to update Category', result.message);
             }
 
             case 'DELETE': {
-                const result = await deleteCategory(id);
+                const userId = req.headers['x-user-id'];
+                const result = await deleteCategory(id, userId);
                 if (result.success) return successResponse(res, 'Category deleted successfully', null);
                 return errorResponse(res, 'Failed to delete Category', result.message);
             }
