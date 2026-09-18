@@ -129,6 +129,14 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
       setError('Username is required.');
       return;
     }
+
+    if (email.trim()) {
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email.trim())) {
+        setError('Please enter a valid email address.');
+        return;
+      }
+    }
     
     setIsSubmitting(true);
     setError(null);
@@ -259,7 +267,8 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
               type="tel"
               label="Phone (optional)"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
+              onChange={(e) => setPhone(e.target.value.replace(/\D/g, '').slice(0, 10))}
+              placeholder="e.g. 1234567890"
             />
             <Input
               type="select"
@@ -267,7 +276,7 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
               value={securityRoleId}
               onChange={(e) => setSecurityRoleId(e.target.value)}
               options={[
-                { label: 'Super Admin', value: '' },
+                { label: 'Select Role', value: '' },
                 ...roles.map(r => ({ label: r.role_name, value: r.id }))
               ]}
               hidePlaceholder={true}

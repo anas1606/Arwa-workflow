@@ -30,7 +30,7 @@ const operationsNav = [
     icon: ClipboardList,
     children: [
       { to: '/orders', label: 'All orders', icon: LayoutList, end: true, moduleKey: 'orders' },
-      { to: '/orders/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'brands' },
+      { to: '/orders/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'customisation' },
     ],
   },
   { to: '/production', label: 'Production', icon: Factory, moduleKey: 'production' },
