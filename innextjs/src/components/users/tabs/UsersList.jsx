@@ -118,6 +118,11 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
             render: (row) => <span className="text-sm text-grey-text block truncate max-w-[220px]">{row.email || '-'}</span>
         },
         {
+            key: 'phone',
+            label: 'Phone',
+            render: (row) => <span className="text-sm text-grey-text block truncate max-w-[220px]">{row.phone || '-'}</span>
+        },
+        {
             key: 'role',
             label: 'Role',
             align: 'center',

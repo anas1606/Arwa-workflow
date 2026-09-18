@@ -9,7 +9,7 @@ import { User, Lock, LogIn } from 'lucide-react';
 import { encryptString } from '@/lib/encryption';
 
 export default function Login() {
-    const [username, setUsername] = useState('');
+    const [identifier, setIdentifier] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -32,7 +32,7 @@ export default function Login() {
             const encryptedPassword = encryptString(password);
             
             const response = await axios.post('/api/v1/auth/login', {
-                username,
+                identifier,
                 password: encryptedPassword
             });
 
@@ -72,13 +72,13 @@ export default function Login() {
                     <div className="space-y-4 rounded-md">
                         <div>
                             <Input
-                                id="username"
-                                name="username"
+                                id="identifier"
+                                name="identifier"
                                 type="text"
                                 required
-                                placeholder="Username"
-                                value={username}
-                                onChange={(e) => setUsername(e.target.value)}
+                                placeholder="Username, Email, or Phone"
+                                value={identifier}
+                                onChange={(e) => setIdentifier(e.target.value)}
                                 startIcon={User}
                             />
                         </div>

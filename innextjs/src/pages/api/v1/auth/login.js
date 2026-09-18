@@ -8,8 +8,8 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { username, password } = req.body;
-    const result = await loginUser(username, password);
+    const { identifier, password } = req.body;
+    const result = await loginUser(identifier, password);
 
     if (result.success) {
       return successResponse(res, 'Login successful', result.data);

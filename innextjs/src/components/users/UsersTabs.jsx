@@ -97,14 +97,14 @@ export default function UsersTabs() {
             title: 'Users',
             subtitle: 'Manage your application users and team members.',
             addText: 'Add User',
-            searchPlaceholder: 'Search users (Ctrl+K or /)...',
+            searchPlaceholder: 'Search users (Ctrl+S or /)...',
         },
         roles: {
             icon: ShieldCheck,
             title: 'Security Roles',
             subtitle: 'Define access permissions and module restrictions for user groups.',
             addText: 'Add Role',
-            searchPlaceholder: 'Search roles (Ctrl+K or /)...',
+            searchPlaceholder: 'Search roles (Ctrl+S or /)...',
         },
     };
 
