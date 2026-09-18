@@ -180,7 +180,7 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
         },
     ];
 
-    if (canRead || canUpdate || canDelete) {
+    if (canUpdate || canDelete) {
         columns.push({
             key: 'actions',
             label: 'Actions',

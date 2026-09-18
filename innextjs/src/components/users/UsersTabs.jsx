@@ -26,6 +26,11 @@ export default function UsersTabs() {
             setActiveTab('roles');
         } else if (router.query.tab === 'users' && canReadUsers) {
             setActiveTab('users');
+        } else if (!router.query.tab) {
+            // Default to roles if they can't read users but can read roles
+            if (!canReadUsers && canReadRoles) {
+                setActiveTab('roles');
+            }
         }
     }, [router.query.tab, canReadRoles, canReadUsers]);
 
@@ -146,7 +151,9 @@ export default function UsersTabs() {
                         <div
                             className={clsx(
                                 "absolute top-1 bottom-1 w-[130px] rounded-lg bg-primary shadow-md transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                                activeTab === 'users' ? "left-1" : "left-[135px]"
+                                activeTab === 'users' 
+                                    ? "left-1" 
+                                    : (canReadUsers ? "left-[135px]" : "left-1")
                             )}
                         />
                         {canReadUsers && (

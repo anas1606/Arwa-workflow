@@ -19,12 +19,13 @@ export function Layout({ children }) {
     { path: '/inventory/category', module: 'categories' },
     { path: '/inventory/product', module: 'products' },
     { path: '/inventory/unit', module: 'units' },
-    { path: '/users', module: 'users' }
+    { path: '/users', module: 'users', fallbackModule: 'security_roles' }
   ];
 
   const matchedRoute = ROUTE_PERMISSIONS.find(route => router.pathname === route.path || router.pathname.startsWith(route.path + '/'));
   const moduleKey = matchedRoute ? matchedRoute.module : null;
-  const isAuthorized = !moduleKey || hasPermission(moduleKey, 'can_read');
+  const fallbackModuleKey = matchedRoute ? matchedRoute.fallbackModule : null;
+  const isAuthorized = !moduleKey || hasPermission(moduleKey, 'can_read') || (fallbackModuleKey && hasPermission(fallbackModuleKey, 'can_read'));
 
   if (isLoading) {
     return <div className="flex h-dvh items-center justify-center">Loading...</div>;
