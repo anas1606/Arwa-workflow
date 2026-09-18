@@ -306,8 +306,8 @@ export default function AddRole() {
                                               checked={isChecked}
                                               onChange={(e) => handlePermissionChange(mod.module_key, action, e.target.checked)}
                                           />
-                                          <span className={clsx("h-3 w-3 rounded-sm border flex items-center justify-center transition-colors", isChecked ? 'bg-primary border-primary' : 'border-grey-icon bg-white')}>
-                                              {isChecked && <CheckSquare className="h-2.5 w-2.5 text-white" strokeWidth={4} />}
+                                          <span className={clsx("h-4 w-4 rounded-sm border flex items-center justify-center transition-colors", isChecked ? 'bg-primary border-primary' : 'border-grey-icon bg-white')}>
+                                              {isChecked && <svg className="h-3 w-3 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>}
                                           </span>
                                           <span className="text-[11px] font-bold">{label}</span>
                                           {IconComponent && <IconComponent className="h-3 w-3 opacity-70" />}
