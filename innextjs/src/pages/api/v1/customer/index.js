@@ -24,7 +24,8 @@ export default async function handler(req, res) {
                     return errorResponse(res, 'Validation Error', errorMessage, 400);
                 }
 
-                const result = await createCustomer(validationResult.data);
+                const userId = req.headers['x-user-id'];
+                const result = await createCustomer(validationResult.data, userId);
                 if (result.success) return successResponse(res, 'Customer created successfully', result.data, null, 201);
                 return errorResponse(res, 'Failed to create Customer', result.message);
             }

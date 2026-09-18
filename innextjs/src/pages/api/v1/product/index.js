@@ -28,7 +28,8 @@ export default async function handler(req, res) {
                 // Inject createdBy from user context if available (assuming basic setup for now)
                 const data = { ...validationResult.data };
 
-                const result = await createProduct(data);
+                const userId = req.headers['x-user-id'];
+                const result = await createProduct(validationResult.data, userId);
                 if (result.success) return successResponse(res, 'Product created successfully', result.data, null, 201);
                 return errorResponse(res, 'Failed to create Product', result.message);
             }

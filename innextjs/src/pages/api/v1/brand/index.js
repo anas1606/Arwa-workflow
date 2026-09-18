@@ -24,7 +24,8 @@ export default async function handler(req, res) {
                     return errorResponse(res, 'Validation Error', errorMessage, 400);
                 }
 
-                const result = await createBrand(validationResult.data);
+                const userId = req.headers['x-user-id'];
+                const result = await createBrand(validationResult.data, userId);
                 if (result.success) return successResponse(res, 'Brand created successfully', result.data, null, 201);
                 return errorResponse(res, 'Failed to create Brand', result.message);
             }

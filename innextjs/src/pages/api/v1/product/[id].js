@@ -29,16 +29,14 @@ export default async function handler(req, res) {
                     return errorResponse(res, 'Validation Error', errorMessage, 400);
                 }
 
-                // Inject updatedBy from user context if available
-                const data = { ...validationResult.data };
-
-                const result = await updateProduct(id, data);
+                const userId = req.headers['x-user-id'];
+                const result = await updateProduct(id, validationResult.data, userId);
                 if (result.success) return successResponse(res, 'Product updated successfully', result.data);
                 return errorResponse(res, 'Failed to update Product', result.message);
             }
 
             case 'DELETE': {
-                const deletedBy = req.body?.deletedBy || null;
+                const deletedBy = req.headers['x-user-id'] || null;
                 const result = await deleteProduct(id, deletedBy);
                 if (result.success) return successResponse(res, 'Product deleted successfully', result.data);
                 return errorResponse(res, 'Failed to delete Product', result.message);

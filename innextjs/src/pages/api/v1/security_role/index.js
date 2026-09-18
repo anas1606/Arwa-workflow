@@ -14,7 +14,8 @@ export default async function handler(req, res) {
             }
 
             case 'POST': {
-                const result = await createSecurityRole(req.body);
+                const userId = req.headers['x-user-id'];
+                const result = await createSecurityRole(req.body, userId);
                 if (result.success) return successResponse(res, 'Role created successfully', result.data, null, 201);
                 return errorResponse(res, 'Failed to create Role', result.message);
             }

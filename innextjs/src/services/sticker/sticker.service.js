@@ -1,12 +1,12 @@
 import prisma from '@/lib/prisma';
 
-export const createSticker = async (data) => {
+export const createSticker = async (data, userId = null) => {
     try {
         const result = await prisma.sticker.create({
             data: {
                 name: data.name,
                 brand_id: data.brand_id,
-                createdBy: data.createdBy || null,
+                createdBy: userId || data.createdBy || null,
             }
         });
         return { success: true, data: result };
@@ -65,14 +65,14 @@ export const getStickerById = async (id) => {
     }
 };
 
-export const updateSticker = async (id, data) => {
+export const updateSticker = async (id, data, userId = null) => {
     try {
         const result = await prisma.sticker.update({
             where: { id },
             data: {
                 name: data.name !== undefined ? data.name : undefined,
                 brand_id: data.brand_id !== undefined ? data.brand_id : undefined,
-                updatedBy: data.updatedBy || null,
+                updatedBy: userId || data.updatedBy || null,
             }
         });
         return { success: true, data: result };

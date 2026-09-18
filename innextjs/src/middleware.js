@@ -80,7 +80,14 @@ export async function middleware(req) {
             }
         }
 
-        return NextResponse.next();
+        const requestHeaders = new Headers(req.headers);
+        requestHeaders.set('x-user-id', decoded.id);
+
+        return NextResponse.next({
+            request: {
+                headers: requestHeaders,
+            },
+        });
     } catch (error) {
         console.error('Middleware Error:', error);
         return NextResponse.json({ success: false, message: 'Unauthorized: Invalid token signature' }, { status: 401 });

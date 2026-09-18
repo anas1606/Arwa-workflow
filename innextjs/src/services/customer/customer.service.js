@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 
-export const createCustomer = async (data) => {
+export const createCustomer = async (data, userId = null) => {
     try {
         const result = await prisma.customer.create({
             data: {
@@ -10,7 +10,7 @@ export const createCustomer = async (data) => {
                 balance: data.balance ? parseFloat(data.balance) : 0,
                 code: data.code || null,
                 region: data.region || null,
-                createdBy: data.createdBy || null,
+                createdBy: userId || data.createdBy || null,
             }
         });
         return { success: true, data: result };
@@ -117,7 +117,7 @@ export const getCustomerById = async (id) => {
     }
 };
 
-export const updateCustomer = async (id, data) => {
+export const updateCustomer = async (id, data, userId = null) => {
     try {
         const result = await prisma.customer.update({
             where: { id },
@@ -128,7 +128,7 @@ export const updateCustomer = async (id, data) => {
                 balance: data.balance !== undefined ? parseFloat(data.balance) : undefined,
                 code: data.code !== undefined ? (data.code || null) : undefined,
                 region: data.region !== undefined ? (data.region || null) : undefined,
-                updatedBy: data.updatedBy || null,
+                updatedBy: userId || data.updatedBy || null,
             }
         });
         return { success: true, data: result };

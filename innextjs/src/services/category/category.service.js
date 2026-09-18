@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 
-export const createCategory = async (data) => {
+export const createCategory = async (data, userId = null) => {
     try {
         const existing = await prisma.category.findFirst({
             where: {
@@ -27,7 +27,7 @@ export const createCategory = async (data) => {
                 name: data.name,
                 parentId: data.parentId || null,
                 isActive: data.isActive !== undefined ? data.isActive : true,
-                createdBy: data.createdBy || null,
+                createdBy: userId || data.createdBy || null,
             }
         });
         return { success: true, data: result };
@@ -150,7 +150,7 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
     }
 };
 
-export const updateCategory = async (id, data) => {
+export const updateCategory = async (id, data, userId = null) => {
     try {
         if (data.name !== undefined) {
             const existing = await prisma.category.findFirst({
@@ -181,7 +181,7 @@ export const updateCategory = async (id, data) => {
                 name: data.name !== undefined ? data.name : undefined,
                 parentId: data.parentId !== undefined ? data.parentId : undefined,
                 isActive: data.isActive !== undefined ? data.isActive : undefined,
-                updatedBy: data.updatedBy || null,
+                updatedBy: userId || data.updatedBy || null,
             }
         });
         return { success: true, data: result };
