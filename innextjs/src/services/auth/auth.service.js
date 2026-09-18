@@ -2,15 +2,21 @@ import prisma from '@/lib/prisma';
 import { decryptString } from '@/lib/encryption';
 import { generateToken } from '@/lib/jwt';
 
-export const loginUser = async (username, password) => {
+export const loginUser = async (identifier, password) => {
     try {
-        if (!username || !password) {
-            return { success: false, message: 'Username and password are required' };
+        if (!identifier || !password) {
+            return { success: false, message: 'Username/Email/Phone and password are required' };
         }
 
         // Find the user
-        const user = await prisma.user.findUnique({
-            where: { username },
+        const user = await prisma.user.findFirst({
+            where: {
+                OR: [
+                    { username: identifier },
+                    { email: identifier },
+                    { phone: identifier }
+                ]
+            },
             include: {
                 security_role: {
                     include: {
@@ -35,7 +41,7 @@ export const loginUser = async (username, password) => {
         const decryptedLoginPassword = decryptString(password);
         
         console.log("Login Debug:", {
-            username,
+            identifier,
             storedEncrypted: user.password,
             sentEncrypted: password,
             decryptedStoredPassword,

@@ -15,6 +15,7 @@ import AddBrandModal from './modal/AddBrandModal';
 import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi, createStickerApi, deleteStickerApi } from '@/lib/fetcher';
 import DeleteModal from '@/common/modal/DeleteModal';
 import { toast } from 'sonner';
+import { usePermission } from '@/hooks/usePermission';
 
 /* ════════════════════════════════════════════════════════════════════
    Constants
@@ -303,6 +304,7 @@ function StickerEditor({ brand, onChange }) {
    ════════════════════════════════════════════════════════════════════ */
 
 export default function Customisation() {
+  const { canCreate: canCreateCustomer } = usePermission('customers');
   // ── Data state ──
   const [models, setModels] = useState(() => cloneModels(PRODUCT_MODELS));
   const [customers, setCustomers] = useState([]);
@@ -438,6 +440,10 @@ export default function Customisation() {
   const ownerCustomer = customers.find(c => c.id === activeBrand?.customer_id) ?? null;
 
   const removeBrand = (brandId) => {
+    const brand = currentBrands.find((b) => b.id === brandId);
+    if (brand && brand.customer_id) {
+      setCustomers(prev => prev.map(c => c.id === brand.customer_id ? { ...c, brands: Math.max(0, (typeof c.brands === 'number' ? c.brands : 0) - 1) } : c));
+    }
     setCurrentBrands(prev => prev.filter((b) => b.id !== brandId));
   };
   const confirmDeleteBrand = async () => {
@@ -513,6 +519,7 @@ export default function Customisation() {
 
   const handleAddCustomer = (c) => { setCustomers([...customers, { ...c, brands: 0 }]); setCustomerId(c.id); setActiveBrandId(null); setAddCustomerOpen(false); };
   const handleAddBrand = (targetId, brand) => {
+    setCustomers(prev => prev.map(c => c.id === targetId ? { ...c, brands: (typeof c.brands === 'number' ? c.brands : 0) + 1 } : c));
     if (customerId === 'ALL' || customerId === targetId) {
       setCurrentBrands(prev => [...prev, { ...brand, name: brand.brandname, panelStickers: brand.stickers || [], stickerCount: brand.stickers?.length || 0, stickersFetched: true }]);
     }
@@ -631,7 +638,9 @@ export default function Customisation() {
                 value={customerId} onChange={(e) => setCustomerId(e.target.value)}
                 hidePlaceholder={true}
                 options={[{ label: `All customers (${totalBrands} brands)`, value: 'ALL' }, ...customers.map((c) => ({ label: `${c.name} (${typeof c.brands === 'number' ? c.brands : 0} brand${(typeof c.brands === 'number' ? c.brands : 0) === 1 ? '' : 's'})`, value: c.id }))]} />
-              <Button variant="secondary" className="!min-h-9 shrink-0 !h-9" icon={Plus} text="Add customer" onClick={() => setAddCustomerOpen(true)} />
+            {canCreateCustomer && (
+                <Button variant="secondary" className="!min-h-9 shrink-0 !h-9" icon={Plus} text="Add customer" onClick={() => setAddCustomerOpen(true)} />
+              )}
             </div>
           </div>
 
