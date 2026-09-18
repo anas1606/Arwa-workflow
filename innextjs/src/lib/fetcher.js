@@ -147,6 +147,9 @@ export const deleteUserApi = (id, deletedBy = null) => deleteData(`user/${id}`, 
 export const getSecurityRolesApi = async (page = 1, limit = 10, search = '') => {
   return await fetchDataWithParams('security_role', { page, limit, search });
 };
+export const getSecurityRoleOptionsApi = async (search = '') => {
+  return await fetchDataWithParams('security_role/options', { search });
+};
 export const getSecurityRoleByIdApi = async (id) => fetchData(`security_role/${id}`);
 export const createSecurityRoleApi = (payload) => postData('security_role', payload);
 export const updateSecurityRoleApi = async (id, payload) => putData(`security_role/${id}`, { id, ...payload });

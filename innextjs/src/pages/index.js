@@ -1,18 +1,45 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/router';
+import useUser from '@/hooks/useUser';
 
 export default function Home() {
   const router = useRouter();
+  const { user, hasPermission, isLoading } = useUser();
 
   useEffect(() => {
-    // Automatically navigate to the dashboard page
-    router.replace('/dashboard');
-  }, [router]);
+    if (isLoading) return;
+    if (!user) return; // useUser will handle redirect to /login
+
+    if (user.role === 'super_admin' || hasPermission('dashboard', 'can_read')) {
+      router.replace('/dashboard');
+      return;
+    }
+
+    const moduleToRoute = {
+      'customers': '/customers',
+      'orders': '/orders',
+      'brands': '/orders/customisation',
+      'production': '/production',
+      'bom': '/bom',
+      'categories': '/inventory/category',
+      'products': '/inventory/product',
+      'units': '/inventory/unit',
+      'users': '/users'
+    };
+
+    const permissions = user.security_role?.permissions || [];
+    const firstReadable = permissions.find(p => p.can_read && moduleToRoute[p.module_key]);
+
+    if (firstReadable) {
+      router.replace(moduleToRoute[firstReadable.module_key]);
+    } else {
+      router.replace('/dashboard'); // fallback
+    }
+  }, [router, user, hasPermission, isLoading]);
 
   return (
-    <div style={{ padding: '2rem', textAlign: 'center', fontFamily: 'sans-serif' }}>
-      <h1>Hello World</h1>
-      <p>Redirecting to dashboard...</p>
+    <div className="flex h-screen items-center justify-center">
+      <div className="animate-pulse">Loading...</div>
     </div>
   );
 }

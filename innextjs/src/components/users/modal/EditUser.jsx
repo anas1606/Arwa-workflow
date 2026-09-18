@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X, Copy, Lock, Key, ChevronRight } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
-import { updateUserApi, getSecurityRolesApi, getUserByIdApi } from '@/lib/fetcher';
+import { updateUserApi, getSecurityRoleOptionsApi, getUserByIdApi } from '@/lib/fetcher';
 import { toast } from 'sonner';
 import { encryptString, decryptString } from '@/lib/encryption';
 
@@ -23,6 +23,7 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
   const [email, setEmail] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
   const [securityRoleId, setSecurityRoleId] = useState('');
   
   const [roles, setRoles] = useState([]);
@@ -38,9 +39,9 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
   // Fetch roles for the dropdown when modal opens
   useEffect(() => {
     if (open) {
-      getSecurityRolesApi(1, 100).then(res => {
+      getSecurityRoleOptionsApi().then(res => {
         if (res.data && res.data.success) {
-          const fetchedRoles = res.data.data.roles || [];
+          const fetchedRoles = res.data.data || [];
           setRoles(fetchedRoles);
         }
       }).catch(console.error);
@@ -58,6 +59,7 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
           setEmail(freshUser.email || '');
           setPhone(freshUser.phone || '');
           setSecurityRoleId(freshUser.security_role_id || '');
+          setCurrentPassword(freshUser.password || '');
         }
       }).catch(console.error).finally(() => {
         setIsFetchingUser(false);
@@ -86,7 +88,8 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
     setEmail('');
     setPhone('');
     setPassword('');
-    setError(null);
+    setCurrentPassword('');
+    setSecurityRoleId('');
     setShowPasswordSection(false);
   };
 
@@ -217,14 +220,14 @@ export default function EditUser({ open, onClose, onUpdate, user }) {
                     <div className="flex h-11 w-full items-center justify-between rounded-md border border-grey-border bg-white/60 px-3 text-sm shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]">
                       <div className="flex items-center gap-2">
                         <Lock size={18} className="text-grey-icon" />
-                        <span className="text-grey-text-strong ml-1">{user?.password ? (decryptString(user.password) || 'Not available') : 'Not available'}</span>
+                        <span className="text-grey-text-strong ml-1">{currentPassword ? (decryptString(currentPassword) || 'Not available') : 'Not available'}</span>
                       </div>
                       <button
                         type="button"
                         className="flex items-center gap-1.5 text-primary-dark hover:text-primary transition-colors text-sm font-semibold"
                         onClick={(e) => {
                           e.preventDefault();
-                          const pass = decryptString(user?.password) || '';
+                          const pass = decryptString(currentPassword) || '';
                           if (pass) {
                             navigator.clipboard.writeText(pass);
                             toast.success('Password copied to clipboard');

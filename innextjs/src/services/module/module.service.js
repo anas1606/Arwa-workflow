@@ -3,6 +3,13 @@ import prisma from '@/lib/prisma';
 export const getAllModules = async () => {
     try {
         const modules = await prisma.module.findMany({
+            select: {
+                id: true,
+                module_key: true,
+                name: true,
+                createdAt: true,
+                updatedAt: true
+            },
             orderBy: { name: 'asc' }
         });
         

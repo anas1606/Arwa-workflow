@@ -37,18 +37,7 @@ async function main() {
   }
   console.log('Modules seeded.');
 
-  // 2. Create Super Admin Role (Role number 1)
-  const superAdminRole = await prisma.securityRole.upsert({
-    where: { role_name: 'super_admin' },
-    update: {},
-    create: {
-      role_name: 'super_admin',
-      role_number: 1,
-    },
-  });
-  console.log('Super Admin role created.');
-
-  // 3. Create Super Admin User
+  // 2. Create Super Admin User (Without a Security Role)
   const encryptedPassword = encryptString('admin123'); // Default password for super admin
   await prisma.user.upsert({
     where: { username: 'admin' },
@@ -57,7 +46,7 @@ async function main() {
       username: 'admin',
       email: 'admin@arwa.com',
       password: encryptedPassword,
-      security_role_id: superAdminRole.id,
+      // No security_role_id provided means they are super admin
       isActive: true,
     },
   });

@@ -9,20 +9,21 @@ export function Layout({ children }) {
   const { hasPermission, isLoading } = useUser();
   const router = useRouter();
 
-  const ROUTE_PERMISSIONS = {
-    '/dashboard': 'dashboard',
-    '/customers': 'customers',
-    '/orders/customisation': 'brands',
-    '/orders': 'orders',
-    '/production': 'production',
-    '/bom': 'bom',
-    '/inventory/category': 'categories',
-    '/inventory/product': 'products',
-    '/inventory/unit': 'units',
-    '/users': 'users'
-  };
+  const ROUTE_PERMISSIONS = [
+    { path: '/dashboard', module: 'dashboard' },
+    { path: '/customers', module: 'customers' },
+    { path: '/orders/customisation', module: 'brands' },
+    { path: '/orders', module: 'orders' },
+    { path: '/production', module: 'production' },
+    { path: '/bom', module: 'bom' },
+    { path: '/inventory/category', module: 'categories' },
+    { path: '/inventory/product', module: 'products' },
+    { path: '/inventory/unit', module: 'units' },
+    { path: '/users', module: 'users' }
+  ];
 
-  const moduleKey = ROUTE_PERMISSIONS[router.pathname];
+  const matchedRoute = ROUTE_PERMISSIONS.find(route => router.pathname === route.path || router.pathname.startsWith(route.path + '/'));
+  const moduleKey = matchedRoute ? matchedRoute.module : null;
   const isAuthorized = !moduleKey || hasPermission(moduleKey, 'can_read');
 
   if (isLoading) {

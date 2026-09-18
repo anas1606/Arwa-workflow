@@ -20,7 +20,11 @@ export const loginUser = async (username, password) => {
             }
         });
 
-        if (!user || !user.isActive || user.is_deleted) {
+        if (!user || user.is_deleted) {
+            return { success: false, message: 'User not found' };
+        }
+
+        if (!user.isActive) {
             return { success: false, message: 'Invalid credentials or inactive account' };
         }
 
