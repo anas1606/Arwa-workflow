@@ -82,9 +82,17 @@ export default function EditRole() {
     setPermissions(prev => {
       const newPerms = { ...prev };
       newPerms[moduleKey] = { ...newPerms[moduleKey], [action]: checked };
+      
       if (checked && action !== 'can_read') {
         newPerms[moduleKey].can_read = true;
       }
+      
+      if (!checked && action === 'can_read') {
+        newPerms[moduleKey].can_create = false;
+        newPerms[moduleKey].can_update = false;
+        newPerms[moduleKey].can_delete = false;
+      }
+      
       return newPerms;
     });
   };
@@ -197,8 +205,15 @@ export default function EditRole() {
               </div>
               <div className="p-6">
                 {isFetchingRole ? (
-                  <div className="flex justify-center p-8">
-                    <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-r-transparent"></div>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="flex flex-col gap-2 animate-pulse">
+                      <div className="h-[14px] w-32 bg-grey-border/60 rounded"></div>
+                      <div className="h-[38px] w-full bg-grey-border/40 rounded-md"></div>
+                    </div>
+                    <div className="flex flex-col gap-2 animate-pulse">
+                      <div className="h-[14px] w-16 bg-grey-border/60 rounded"></div>
+                      <div className="h-[38px] w-full bg-grey-border/40 rounded-md"></div>
+                    </div>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">

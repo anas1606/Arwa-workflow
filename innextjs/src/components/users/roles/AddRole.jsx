@@ -79,6 +79,12 @@ export default function AddRole() {
       if (checked && action !== 'can_read') {
         newPerms[moduleKey].can_read = true;
       }
+      // Auto-uncheck others if read is unchecked
+      if (!checked && action === 'can_read') {
+        newPerms[moduleKey].can_create = false;
+        newPerms[moduleKey].can_update = false;
+        newPerms[moduleKey].can_delete = false;
+      }
       return newPerms;
     });
   };
