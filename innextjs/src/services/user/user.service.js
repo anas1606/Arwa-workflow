@@ -1,5 +1,19 @@
 import prisma from '@/lib/prisma';
 
+const userSelect = {
+    id: true,
+    username: true,
+    email: true,
+    phone: true,
+    isActive: true,
+    security_role_id: true,
+    createdAt: true,
+    updatedAt: true,
+    security_role: {
+        select: { id: true, role_name: true, role_number: true }
+    }
+};
+
 export const getAllUsers = async (page = 1, limit = 10, search = '') => {
     try {
         const skip = (page - 1) * limit;
@@ -18,18 +32,7 @@ export const getAllUsers = async (page = 1, limit = 10, search = '') => {
                 where,
                 skip,
                 take: limit,
-                select: {
-                    id: true,
-                    username: true,
-                    email: true,
-                    phone: true,
-                    isActive: true,
-                    security_role_id: true,
-                    createdAt: true,
-                    security_role: {
-                        select: { id: true, role_name: true, role_number: true }
-                    }
-                },
+                select: userSelect,
                 orderBy: { createdAt: 'desc' }
             }),
             prisma.user.count({ where })
@@ -39,9 +42,12 @@ export const getAllUsers = async (page = 1, limit = 10, search = '') => {
             success: true,
             data: {
                 users,
-                total,
-                page,
-                totalPages: Math.ceil(total / limit)
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
             }
         };
     } catch (error) {
@@ -55,17 +61,8 @@ export const getUserById = async (id) => {
         const user = await prisma.user.findUnique({
             where: { id, is_deleted: false },
             select: {
-                id: true,
-                username: true,
-                email: true,
-                phone: true,
-                password: true,
-                isActive: true,
-                security_role_id: true,
-                createdAt: true,
-                security_role: {
-                    select: { id: true, role_name: true, role_number: true }
-                }
+                ...userSelect,
+                password: true
             }
         });
 
@@ -81,6 +78,10 @@ export const getUserById = async (id) => {
 
 export const createUser = async (data) => {
     try {
+        if (!data.security_role_id) {
+            return { success: false, message: 'Security role is required. Super admin cannot be created manually.' };
+        }
+
         const existing = await prisma.user.findFirst({
             where: {
                 OR: [
@@ -96,7 +97,8 @@ export const createUser = async (data) => {
         const newUser = await prisma.user.create({
             data: {
                 ...data
-            }
+            },
+            select: userSelect
         });
 
         return { success: true, data: newUser };
@@ -108,12 +110,17 @@ export const createUser = async (data) => {
 
 export const updateUser = async (id, data) => {
     try {
+        if (data.hasOwnProperty('security_role_id') && !data.security_role_id) {
+            return { success: false, message: 'Security role is required. Super admin cannot be assigned manually.' };
+        }
+
         const updateData = { ...data };
         // If password is included, it is already encrypted by frontend
 
         const updatedUser = await prisma.user.update({
             where: { id },
-            data: updateData
+            data: updateData,
+            select: userSelect
         });
 
         return { success: true, data: updatedUser };

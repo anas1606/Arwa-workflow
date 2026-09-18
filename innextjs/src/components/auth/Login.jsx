@@ -33,7 +33,7 @@ export default function Login() {
                 const token = response.data.data.token;
                 localStorage.setItem('token', token);
                 toast.success('Logged in successfully');
-                router.push('/dashboard'); // or anywhere else you want to go
+                router.push('/'); // Navigate to index to calculate default route based on permissions
             }
         } catch (error) {
             toast.error(error.response?.data?.message || 'Login failed. Please try again.');

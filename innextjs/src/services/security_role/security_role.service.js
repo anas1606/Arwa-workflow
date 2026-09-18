@@ -1,13 +1,31 @@
 import prisma from '@/lib/prisma';
 
+const permissionSelect = {
+    id: true,
+    module_key: true,
+    can_read: true,
+    can_create: true,
+    can_update: true,
+    can_delete: true
+};
+
+const securityRoleSelect = {
+    id: true,
+    role_name: true,
+    role_number: true,
+    createdAt: true,
+    updatedAt: true,
+    permissions: {
+        select: permissionSelect
+    }
+};
+
 export const getAllSecurityRoles = async (page = 1, limit = 10, search = '') => {
     try {
         const skip = (page - 1) * limit;
         const where = {
             is_deleted: false,
-            ...(search && {
-                role_name: { contains: search, mode: 'insensitive' }
-            })
+            role_name: { not: 'super_admin', ...(search && { contains: search, mode: 'insensitive' }) }
         };
 
         const [roles, total] = await Promise.all([
@@ -16,10 +34,7 @@ export const getAllSecurityRoles = async (page = 1, limit = 10, search = '') => 
                 skip,
                 take: limit,
                 orderBy: { role_number: 'asc' },
-                include: {
-                    permissions: true,
-                    _count: { select: { users: { where: { is_deleted: false } } } }
-                }
+                select: securityRoleSelect
             }),
             prisma.securityRole.count({ where })
         ]);
@@ -28,9 +43,12 @@ export const getAllSecurityRoles = async (page = 1, limit = 10, search = '') => 
             success: true,
             data: {
                 roles,
-                total,
-                page,
-                totalPages: Math.ceil(total / limit)
+                pagination: {
+                    total,
+                    page,
+                    limit,
+                    totalPages: Math.ceil(total / limit)
+                }
             }
         };
     } catch (error) {
@@ -39,13 +57,38 @@ export const getAllSecurityRoles = async (page = 1, limit = 10, search = '') => 
     }
 };
 
+export const getSecurityRoleOptions = async (search = '') => {
+    try {
+        const where = {
+            is_deleted: false,
+            role_name: { not: 'super_admin', ...(search && { contains: search, mode: 'insensitive' }) }
+        };
+
+        const roles = await prisma.securityRole.findMany({
+            where,
+            select: {
+                id: true,
+                role_name: true,
+                role_number: true
+            },
+            orderBy: { role_number: 'asc' }
+        });
+
+        return {
+            success: true,
+            data: roles
+        };
+    } catch (error) {
+        console.error('Service error getting role options:', error);
+        return { success: false, message: 'Internal server error' };
+    }
+};
+
 export const getSecurityRoleById = async (id) => {
     try {
         const role = await prisma.securityRole.findUnique({
             where: { id, is_deleted: false },
-            include: {
-                permissions: true
-            }
+            select: securityRoleSelect
         });
 
         if (!role) return { success: false, message: 'Security Role not found' };
@@ -85,7 +128,7 @@ export const createSecurityRole = async (data) => {
                     create: permissions || []
                 }
             },
-            include: { permissions: true }
+            select: securityRoleSelect
         });
 
         return { success: true, data: newRole };
@@ -132,7 +175,7 @@ export const updateSecurityRole = async (id, data) => {
                         }
                     })
                 },
-                include: { permissions: true }
+                select: securityRoleSelect
             });
         });
 

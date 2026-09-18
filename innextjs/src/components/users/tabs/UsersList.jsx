@@ -142,20 +142,36 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
             key: 'isActive',
             label: 'Status',
             align: 'center',
-            ...(canUpdate ? {
-                type: 'toggle',
-                onChange: (row) => toggleStatus(row.id, row.isActive),
-            } : {
-                render: (row) => (
-                    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
-                        row.isActive
-                            ? 'bg-success-bg text-success-dark ring-1 ring-inset ring-success-dark/20'
-                            : 'bg-danger-bg text-danger-dark ring-1 ring-inset ring-danger-dark/20'
-                    }`}>
-                        {row.isActive ? 'Active' : 'Inactive'}
-                    </span>
-                )
-            })
+            render: (row) => {
+                const isSuperAdmin = !row.security_role_id;
+                if (!canUpdate || isSuperAdmin) {
+                    return (
+                        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold ${
+                            row.isActive
+                                ? 'bg-success-bg text-success-dark ring-1 ring-inset ring-success-dark/20'
+                                : 'bg-danger-bg text-danger-dark ring-1 ring-inset ring-danger-dark/20'
+                        }`}>
+                            {row.isActive ? 'Active' : 'Inactive'}
+                        </span>
+                    );
+                }
+                
+                return (
+                    <button
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            toggleStatus(row.id, row.isActive);
+                        }}
+                        className={`relative inline-flex h-5 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full transition-colors duration-200 ease-in-out focus:outline-none ${row.isActive ? 'bg-primary' : 'bg-grey-border-strong'}`}
+                    >
+                        <span className="sr-only">Toggle</span>
+                        <span
+                            aria-hidden="true"
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${row.isActive ? 'translate-x-2' : '-translate-x-2'}`}
+                        />
+                    </button>
+                );
+            }
         },
     ];
 
@@ -220,7 +236,7 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
                             <Eye size={14} /> View Details
                         </button>
                     )}
-                    {canUpdate && (
+                    {canUpdate && dropdownState.row?.security_role_id && (
                         <button
                             className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
                             onClick={() => {
@@ -232,7 +248,7 @@ export default function UsersList({ searchQuery = '', refreshTrigger = 0 }) {
                             <Pencil size={14} /> Edit
                         </button>
                     )}
-                    {canDelete && (
+                    {canDelete && dropdownState.row?.security_role_id && (
                         <button
                             className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
                             onClick={() => {

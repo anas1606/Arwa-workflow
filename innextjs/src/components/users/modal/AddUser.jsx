@@ -3,7 +3,7 @@ import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
-import { createUserApi, getSecurityRolesApi } from '@/lib/fetcher';
+import { createUserApi, getSecurityRoleOptionsApi } from '@/lib/fetcher';
 import { encryptString } from '@/lib/encryption';
 import { toast } from 'sonner';
 
@@ -36,9 +36,9 @@ export default function AddUser({ open, onClose, onAdd }) {
   // Fetch roles for the dropdown when modal opens
   useEffect(() => {
     if (open) {
-      getSecurityRolesApi(1, 100).then(res => {
+      getSecurityRoleOptionsApi().then(res => {
         if (res.data && res.data.success) {
-          const fetchedRoles = res.data.data.roles || [];
+          const fetchedRoles = res.data.data || [];
           setRoles(fetchedRoles);
         }
       }).catch(console.error);
