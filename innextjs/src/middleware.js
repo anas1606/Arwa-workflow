@@ -63,7 +63,15 @@ export async function middleware(req) {
                     default: requiredAction = 'can_read'; break;
                 }
 
-                if (!modulePerms || !modulePerms[requiredAction]) {
+                let hasPermission = modulePerms && modulePerms[requiredAction];
+
+                // --- OPEN READ EXCEPTION ---
+                // Allow all authenticated users to perform GET requests (Open Read, Strict Write)
+                if (req.method === 'GET') {
+                    hasPermission = true;
+                }
+
+                if (!hasPermission) {
                     return NextResponse.json(
                         { success: false, message: `Forbidden: You do not have ${requiredAction} permission for ${matchedModuleKey}` }, 
                         { status: 403 }
