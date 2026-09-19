@@ -355,6 +355,32 @@ export default function Category() {
             align: 'center',
             render: (row) => <span className="text-sm text-grey-text">{row.itemCount || 0}</span>,
         },
+        {
+            key: 'createdBy',
+            label: 'Created By',
+            render: (row) => (
+                <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
+                    <span className="text-xs text-grey-muted">
+                        {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
+                    </span>
+                </div>
+            ),
+        },
+        {
+            key: 'updatedBy',
+            label: 'Updated By',
+            render: (row) => (
+                <div className="flex flex-col gap-0.5">
+                    <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
+                    {row.updatedBy ? (
+                        <span className="text-xs text-grey-muted">
+                            {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                        </span>
+                    ) : null}
+                </div>
+            ),
+        }
     ];
 
     if (canCreate || canUpdate || canDelete) {

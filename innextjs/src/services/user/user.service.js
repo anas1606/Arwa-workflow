@@ -9,6 +9,8 @@ const userSelect = {
     security_role_id: true,
     createdAt: true,
     updatedAt: true,
+    createdBy: true,
+    updatedBy: true,
     security_role: {
         select: { id: true, role_name: true, role_number: true }
     }
@@ -38,10 +40,26 @@ export const getAllUsers = async (page = 1, limit = 10, search = '') => {
             prisma.user.count({ where })
         ]);
 
+        const userIds = [...new Set(users.flatMap(u => [u.createdBy, u.updatedBy]).filter(Boolean))];
+        const userRecords = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, username: true }
+        });
+        const userMap = {};
+        userRecords.forEach(u => {
+            userMap[u.id] = u.username;
+        });
+
+        const mappedUsers = users.map(user => ({
+            ...user,
+            createdByName: user.createdBy ? userMap[user.createdBy] || user.createdBy : 'Unknown',
+            updatedByName: user.updatedBy ? userMap[user.updatedBy] || user.updatedBy : '-',
+        }));
+
         return {
             success: true,
             data: {
-                users,
+                users: mappedUsers,
                 pagination: {
                     total,
                     page,

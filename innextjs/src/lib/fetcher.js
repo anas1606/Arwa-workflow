@@ -157,3 +157,23 @@ export const deleteSecurityRoleApi = (id, deletedBy = null) => deleteData(`secur
 
 // Modules
 export const getModulesApi = async () => fetchData('module');
+
+// packaging
+export const getPackagingsApi = async (page = 1, limit = 10, search = '', productId = 'ALL') => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (productId && productId !== 'ALL') params.productId = productId;
+  return await fetchDataWithParams('packaging', params);
+};
+
+export const getPackagingByIdApi = async (id) => {
+  return await fetchData(`packaging/${id}`);
+};
+
+export const createPackagingApi = (payload) => postData("packaging", payload);
+
+export const updatePackagingApi = async (id, payload) => {
+  return await putData(`packaging/${id}`, { id, ...payload });
+};
+
+export const deletePackagingApi = (id, deletedBy = null) => deleteData(`packaging/${id}`, { data: { deletedBy } });

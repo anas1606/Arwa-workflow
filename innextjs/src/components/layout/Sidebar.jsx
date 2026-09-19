@@ -39,9 +39,10 @@ const operationsNav = [
     label: 'Inventory',
     icon: Package,
     children: [
-      { to: '/inventory/category', label: 'Category', icon: Tags, moduleKey: 'categories' },
       { to: '/inventory/product', label: 'Product', icon: Box, moduleKey: 'products' },
+      { to: '/inventory/category', label: 'Category', icon: Tags, moduleKey: 'categories' },
       { to: '/inventory/unit', label: 'Unit', icon: Ruler, moduleKey: 'units' },
+      { to: '/inventory/packaging', label: 'Packaging', icon: Package, moduleKey: 'packaging' },
     ],
   },
 ];
