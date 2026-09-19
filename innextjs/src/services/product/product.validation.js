@@ -10,6 +10,18 @@ export const createProductSchema = z.object({
   categoryId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   unitId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   isActive: z.boolean().optional().default(true),
+  bodyDesigns: z.array(
+    z.object({
+      name: z.string().min(1, 'Body Design name is required'),
+      type: z.enum(['STANDARD', 'NON_STANDARD'])
+    })
+  ).optional(),
+  colours: z.array(
+    z.object({
+      name: z.string().min(1, 'Colour name is required'),
+      type: z.enum(['STANDARD', 'NON_STANDARD'])
+    })
+  ).optional(),
 });
 
 export const updateProductSchema = z.object({
@@ -21,4 +33,16 @@ export const updateProductSchema = z.object({
   categoryId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   unitId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   isActive: z.boolean().optional(),
+  bodyDesigns: z.array(
+    z.object({
+      name: z.string().min(1, 'Body Design name is required'),
+      type: z.enum(['STANDARD', 'NON_STANDARD'])
+    })
+  ).optional(),
+  colours: z.array(
+    z.object({
+      name: z.string().min(1, 'Colour name is required'),
+      type: z.enum(['STANDARD', 'NON_STANDARD'])
+    })
+  ).optional(),
 });

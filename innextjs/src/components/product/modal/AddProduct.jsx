@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X, Plus, Minus } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
@@ -26,6 +26,10 @@ export default function AddProduct({ open, onClose, onAdd }) {
   const [lowStockThreshold, setLowStockThreshold] = useState('10');
   const [unit, setUnit] = useState(null);
   const [isActive, setIsActive] = useState(true);
+  
+  const [bodyDesigns, setBodyDesigns] = useState([{ name: '', type: 'STANDARD' }]);
+  const [colours, setColours] = useState([{ name: '', type: 'STANDARD' }]);
+
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -57,6 +61,8 @@ export default function AddProduct({ open, onClose, onAdd }) {
     setLowStockThreshold('10');
     setUnit(null);
     setIsActive(true);
+    setBodyDesigns([{ name: '', type: 'STANDARD' }]);
+    setColours([{ name: '', type: 'STANDARD' }]);
     setError(null);
   };
 
@@ -108,7 +114,9 @@ export default function AddProduct({ open, onClose, onAdd }) {
         lowStockThreshold: parseFloat(lowStockThreshold) || 0,
         categoryId: category ? category.value : null,
         unitId: unit ? unit.value : null,
-        isActive
+        isActive,
+        bodyDesigns: bodyDesigns.filter(d => d.name.trim() !== ''),
+        colours: colours.filter(c => c.name.trim() !== '')
       };
       
       const response = await createProductApi(payload);
@@ -233,7 +241,136 @@ export default function AddProduct({ open, onClose, onAdd }) {
                 }}
               />
             </div>
-            <div className="flex items-center justify-between mt-2">
+            
+            {/* Body Designs */}
+            <div className="flex flex-col gap-2 border-t border-grey-border pt-4">
+              <label className="text-xs font-bold text-grey-text-strong uppercase tracking-wider mb-1">
+                Body Designs <span className="text-grey-muted normal-case font-normal">(optional)</span>
+              </label>
+              
+              {bodyDesigns.length > 0 && (
+                <div className="flex items-center gap-2 pr-[5.5rem]">
+                  <div className="flex-1 text-xs font-semibold text-grey-text-strong">Design Name</div>
+                  <div className="w-40 text-xs font-semibold text-grey-text-strong">Type</div>
+                </div>
+              )}
+
+              {bodyDesigns.map((design, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Input type="text" placeholder="e.g. Elegant Curves" value={design.name} onChange={(e) => {
+                      const newDesigns = [...bodyDesigns];
+                      newDesigns[index].name = e.target.value;
+                      setBodyDesigns(newDesigns);
+                    }} />
+                  </div>
+                  <div className="w-40 shrink-0">
+                    <Input type="select" value={design.type} onChange={(e) => {
+                      const newDesigns = [...bodyDesigns];
+                      newDesigns[index].type = e.target.value;
+                      setBodyDesigns(newDesigns);
+                    }} options={[{label: 'Standard', value: 'STANDARD'}, {label: 'Non-Standard', value: 'NON_STANDARD'}]} hidePlaceholder />
+                  </div>
+                  
+                  {bodyDesigns.length === 1 ? (
+                    <>
+                      <button type="button" onClick={() => setBodyDesigns([...bodyDesigns, { name: '', type: 'STANDARD' }])} className="h-10 w-10 flex-shrink-0 bg-primary hover:bg-primary-dark text-white rounded-md transition-colors flex items-center justify-center">
+                        <Plus className="w-5 h-5" />
+                      </button>
+                      <div className="w-10 flex-shrink-0" />
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => {
+                        const newDesigns = [...bodyDesigns];
+                        newDesigns.splice(index, 1);
+                        setBodyDesigns(newDesigns);
+                      }} className="h-10 w-10 flex-shrink-0 bg-danger-main hover:bg-danger-dark text-white rounded-md transition-colors flex items-center justify-center">
+                        <Minus className="w-5 h-5" />
+                      </button>
+
+                      {index === bodyDesigns.length - 1 ? (
+                        <button type="button" onClick={() => setBodyDesigns([...bodyDesigns, { name: '', type: 'STANDARD' }])} className="h-10 w-10 flex-shrink-0 bg-primary hover:bg-primary-dark text-white rounded-md transition-colors flex items-center justify-center">
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      ) : (
+                        <div className="w-10 flex-shrink-0" />
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+
+              {bodyDesigns.length === 0 && (
+                <Button variant="secondary" size="sm" icon={Plus} text="Add Body Design" type="button" onClick={() => setBodyDesigns([{ name: '', type: 'STANDARD' }])} className="self-start" />
+              )}
+            </div>
+
+            {/* Colours */}
+            <div className="flex flex-col gap-2 border-t border-grey-border pt-4">
+              <label className="text-xs font-bold text-grey-text-strong uppercase tracking-wider mb-1">
+                Colours <span className="text-grey-muted normal-case font-normal">(optional)</span>
+              </label>
+              
+              {colours.length > 0 && (
+                <div className="flex items-center gap-2 pr-[5.5rem]">
+                  <div className="flex-1 text-xs font-semibold text-grey-text-strong">Colour Name</div>
+                  <div className="w-40 text-xs font-semibold text-grey-text-strong">Type</div>
+                </div>
+              )}
+
+              {colours.map((colour, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="flex-1">
+                    <Input type="text" placeholder="e.g. Matte Black" value={colour.name} onChange={(e) => {
+                      const newColours = [...colours];
+                      newColours[index].name = e.target.value;
+                      setColours(newColours);
+                    }} />
+                  </div>
+                  <div className="w-40 shrink-0">
+                    <Input type="select" value={colour.type} onChange={(e) => {
+                      const newColours = [...colours];
+                      newColours[index].type = e.target.value;
+                      setColours(newColours);
+                    }} options={[{label: 'Standard', value: 'STANDARD'}, {label: 'Non-Standard', value: 'NON_STANDARD'}]} hidePlaceholder />
+                  </div>
+                  
+                  {colours.length === 1 ? (
+                    <>
+                      <button type="button" onClick={() => setColours([...colours, { name: '', type: 'STANDARD' }])} className="h-10 w-10 flex-shrink-0 bg-primary hover:bg-primary-dark text-white rounded-md transition-colors flex items-center justify-center">
+                        <Plus className="w-5 h-5" />
+                      </button>
+                      <div className="w-10 flex-shrink-0" />
+                    </>
+                  ) : (
+                    <>
+                      <button type="button" onClick={() => {
+                        const newColours = [...colours];
+                        newColours.splice(index, 1);
+                        setColours(newColours);
+                      }} className="h-10 w-10 flex-shrink-0 bg-danger-main hover:bg-danger-dark text-white rounded-md transition-colors flex items-center justify-center">
+                        <Minus className="w-5 h-5" />
+                      </button>
+
+                      {index === colours.length - 1 ? (
+                        <button type="button" onClick={() => setColours([...colours, { name: '', type: 'STANDARD' }])} className="h-10 w-10 flex-shrink-0 bg-primary hover:bg-primary-dark text-white rounded-md transition-colors flex items-center justify-center">
+                          <Plus className="w-5 h-5" />
+                        </button>
+                      ) : (
+                        <div className="w-10 flex-shrink-0" />
+                      )}
+                    </>
+                  )}
+                </div>
+              ))}
+
+              {colours.length === 0 && (
+                <Button variant="secondary" size="sm" icon={Plus} text="Add Colour" type="button" onClick={() => setColours([{ name: '', type: 'STANDARD' }])} className="self-start" />
+              )}
+            </div>
+
+            <div className="flex items-center justify-between mt-2 border-t border-grey-border pt-4">
               <label htmlFor="add-product-status-toggle" className="text-sm font-medium text-grey-text cursor-pointer">
                 Status: {isActive ? <span className="text-success-main font-semibold">Active</span> : <span className="text-grey-muted">Inactive</span>}
               </label>

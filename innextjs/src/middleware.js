@@ -37,6 +37,16 @@ export async function middleware(req) {
         // jwtVerify throws an error if the signature is invalid or token is expired
         const { payload: decoded } = await jwtVerify(token, secret);
 
+        // Check against the database by calling the verify endpoint
+        const verifyUrl = new URL('/api/v1/auth/verify', req.url);
+        const verifyRes = await fetch(verifyUrl.toString(), {
+            headers: { authorization: authHeader }
+        });
+
+        if (!verifyRes.ok) {
+            return NextResponse.json({ success: false, message: 'Unauthorized: User is inactive or deleted' }, { status: 401 });
+        }
+
         const isSuperAdmin = decoded.role === 'super_admin';
 
         if (!isSuperAdmin) {
