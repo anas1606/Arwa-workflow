@@ -58,10 +58,11 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
                     name: true,
                     shortName: true,
                     quantityUnit: true,
-                  
                     status: true,
                     createdAt: true,
                     updatedAt: true,
+                    createdBy: true,
+                    updatedBy: true,
                 }
             }),
             
@@ -70,10 +71,26 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
             prisma.unit.count({ where: { is_deleted: false, status: false } })
         ]);
 
+        const userIds = [...new Set(data.flatMap(u => [u.createdBy, u.updatedBy]).filter(Boolean))];
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, username: true }
+        });
+        const userMap = {};
+        users.forEach(u => {
+            userMap[u.id] = u.username;
+        });
+
+        const mappedData = data.map(unit => ({
+            ...unit,
+            createdByName: unit.createdBy ? userMap[unit.createdBy] || unit.createdBy : 'Unknown',
+            updatedByName: unit.updatedBy ? userMap[unit.updatedBy] || unit.updatedBy : '-',
+        }));
+
         return { 
             success: true, 
             data: { 
-                data, 
+                data: mappedData, 
                 pagination: { 
                     total, 
                     page: parseInt(page), 

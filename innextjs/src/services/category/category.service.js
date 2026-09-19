@@ -66,6 +66,8 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
             parentId: true,
             createdAt: true,
             updatedAt: true,
+            createdBy: true,
+            updatedBy: true,
             parent: {
                 select: {
                     id: true,
@@ -127,9 +129,21 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
             return sum;
         };
 
+        const userIds = [...new Set(data.flatMap(p => [p.createdBy, p.updatedBy]).filter(Boolean))];
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, username: true }
+        });
+        const userMap = {};
+        users.forEach(u => {
+            userMap[u.id] = u.username;
+        });
+
         const mappedData = data.map(c => ({
             ...c,
-            itemCount: getCumulativeCount(c.id)
+            itemCount: getCumulativeCount(c.id),
+            createdByName: c.createdBy ? userMap[c.createdBy] || c.createdBy : 'Unknown',
+            updatedByName: c.updatedBy ? userMap[c.updatedBy] || c.updatedBy : '-',
         }));
 
         return { 

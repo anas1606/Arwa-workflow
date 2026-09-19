@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react';
 import Head from 'next/head';
 import { Building2, MapPin, Search, Plus, ArrowLeft, ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
@@ -77,31 +77,34 @@ export default function Customers() {
     return () => window.removeEventListener('click', closeDropdown);
   }, [dropdownState]);
 
-  // Fetch customers from API
-  useEffect(() => {
-    const fetchCustomers = async () => {
-      setIsLoading(true);
-      try {
-        const response = await getCustomersApi(pageNo, pageSize, query, regionFilter);
-        if (response.data && response.data.success) {
-          setCustomersData(response.data.data.data || []);
-          setTotalItems(response.data.data.pagination?.total || 0);
-          if (response.data.data.regions) {
-            setGlobalRegions(response.data.data.regions);
-          }
-        } else {
-          setCustomersData([]);
-          setTotalItems(0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch customers:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
 
+  // Fetch customers from API
+  const fetchCustomers = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const response = await getCustomersApi(pageNo, pageSize, query, regionFilter);
+      if (response.data && response.data.success) {
+        setCustomersData(response.data.data.data || []);
+        setTotalItems(response.data.data.pagination?.total || 0);
+        if (response.data.data.regions) {
+          setGlobalRegions(response.data.data.regions);
+        }
+      } else {
+        setCustomersData([]);
+        setTotalItems(0);
+      }
+    } catch (error) {
+      console.error('Failed to fetch customers:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pageNo, pageSize, query, regionFilter, refreshTrigger]);
+
+  useEffect(() => {
     fetchCustomers();
-  }, [pageNo, pageSize, query, regionFilter]);
+  }, [fetchCustomers]);
 
   const paginatedData = customersData;
 
@@ -154,13 +157,13 @@ export default function Customers() {
     },
   ];
 
-  const handleAdd = (customer) => {
-    setCustomersData((list) => [...list, customer]);
+  const handleAdd = () => {
+    triggerRefresh();
     setAddOpen(false);
   };
 
-  const handleEdit = (updatedCustomer) => {
-    setCustomersData((list) => list.map(c => c.id === updatedCustomer.id ? updatedCustomer : c));
+  const handleEdit = () => {
+    triggerRefresh();
     setEditOpen(false);
   };
 
@@ -170,7 +173,7 @@ export default function Customers() {
       if (res.error || (res.data && !res.data.success)) {
         throw new Error(res.error?.message || res.data?.message || 'Failed to delete customer');
       }
-      setCustomersData((list) => list.filter(c => c.id !== deletedCustomer.id));
+      triggerRefresh();
       setDeleteOpen(false);
       toast.success('Customer deleted successfully');
     } catch (err) {
@@ -230,6 +233,32 @@ export default function Customers() {
         );
       },
     },
+    {
+        key: 'createdBy',
+        label: 'Created By',
+        render: (row) => (
+            <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
+                <span className="text-xs text-grey-muted">
+                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
+                </span>
+            </div>
+        ),
+    },
+    {
+        key: 'updatedBy',
+        label: 'Updated By',
+        render: (row) => (
+            <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
+                {row.updatedBy ? (
+                    <span className="text-xs text-grey-muted">
+                        {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                    </span>
+                ) : null}
+            </div>
+        ),
+    }
     ];
 
     if (canUpdate || canDelete) {

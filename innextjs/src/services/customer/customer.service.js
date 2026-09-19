@@ -58,6 +58,8 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
                     region: true,
                     createdAt: true,
                     updatedAt: true,
+                    createdBy: true,
+                    updatedBy: true,
                     _count: {
                         select: {
                             brands: { where: { is_deleted: false } }
@@ -74,6 +76,16 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
 
         const allRegions = regionsData.map(r => r.region).sort();
         
+        const userIds = [...new Set(data.flatMap(c => [c.createdBy, c.updatedBy]).filter(Boolean))];
+        const users = await prisma.user.findMany({
+            where: { id: { in: userIds } },
+            select: { id: true, username: true }
+        });
+        const userMap = {};
+        users.forEach(u => {
+            userMap[u.id] = u.username;
+        });
+
         const formattedData = data.map(customer => ({
             id: customer.id,
             name: customer.name,
@@ -81,6 +93,10 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
             region: customer.region,
             createdAt: customer.createdAt,
             updatedAt: customer.updatedAt,
+            createdBy: customer.createdBy,
+            updatedBy: customer.updatedBy,
+            createdByName: customer.createdBy ? userMap[customer.createdBy] || customer.createdBy : 'Unknown',
+            updatedByName: customer.updatedBy ? userMap[customer.updatedBy] || customer.updatedBy : '-',
             brands: customer._count.brands
         }));
 

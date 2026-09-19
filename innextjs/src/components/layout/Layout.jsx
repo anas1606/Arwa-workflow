@@ -19,6 +19,7 @@ export function Layout({ children }) {
     { path: '/inventory/category', module: 'categories' },
     { path: '/inventory/product', module: 'products' },
     { path: '/inventory/unit', module: 'units' },
+    { path: '/inventory/packaging', module: 'packaging' },
     { path: '/users', module: 'users', fallbackModule: 'security_roles' }
   ];
 

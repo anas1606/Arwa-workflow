@@ -25,6 +25,7 @@ async function main() {
     { module_key: 'orders', name: 'Orders' },
     { module_key: 'production', name: 'Production' },
     { module_key: 'bom', name: 'BOM' },
+    { module_key: 'packaging', name: 'Packaging' },
   ];
 
   for (const mod of modulesToCreate) {
