@@ -256,6 +256,26 @@ export default function Product() {
       render: (row) => <span className="text-sm text-grey-text">{row.unit ? (row.unit.shortName || row.unit.name) : '-'}</span>,
     },
     {
+      key: 'createdBy',
+      label: 'Created By',
+      render: (row) => (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-grey-text-strong">{row.createdByName || '-'}</span>
+          <span className="text-xs text-grey-muted">{row.createdAt ? new Date(row.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric'}) : '-'}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'updatedBy',
+      label: 'Updated By',
+      render: (row) => row.updatedBy || row.updatedByName ? (
+        <div className="flex flex-col">
+          <span className="text-sm font-medium text-grey-text-strong">{row.updatedByName || '-'}</span>
+          <span className="text-xs text-grey-muted">{row.updatedAt ? new Date(row.updatedAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' }) : '-'}</span>
+        </div>
+      ) : <span className="text-sm font-medium text-grey-text-strong">-</span>,
+    },
+    {
       key: 'isActive',
       label: 'Status',
       ...(canUpdate ? {
