@@ -36,7 +36,8 @@ export default function useUser() {
 
     const hasPermission = (moduleKey, action = 'can_read') => {
         if (!user) return false;
-        if (user.role === 'super_admin') return true;
+        if (user.isSuperAdmin) return true;
+        if (user.role && user.role.toLowerCase().replace(/[^a-z0-9]/g, '') === 'superadmin') return true;
 
         const permissions = user.security_role?.permissions || [];
         const modulePerm = permissions.find(p => p.module_key === moduleKey);

@@ -25,6 +25,7 @@ const CATEGORIES = [
   { id: 'priority', label: 'Priority' },
   { id: 'status', label: 'Status' },
   { id: 'product', label: 'Product' },
+  { id: 'orderType', label: 'Order Type' },
 ];
 
 export default function FilterModal({ open, onClose, onApply, ordersData, initialFilters }) {
@@ -95,14 +96,15 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
       else if (activeTab === 'orderDate') values = [order.orderDate || 'N/A'];
       else if (activeTab === 'dueDate') values = [order.dueDate];
       else if (activeTab === 'quantity') {
-        const qty = order.products?.reduce((sum, p) => sum + p.qty, 0) || 0;
+        const qty = (order.orderLines || []).reduce((sum, p) => sum + p.quantity, 0);
         values = [qty.toString()];
       }
-      else if (activeTab === 'customer') values = [order.customerName];
+      else if (activeTab === 'customer') values = [order.customer?.name].filter(Boolean);
       else if (activeTab === 'priority') values = [order.priority];
       else if (activeTab === 'status') values = [order.status];
+      else if (activeTab === 'orderType') values = [order.orderType];
       else if (activeTab === 'product') {
-        values = (order.products || []).map(p => p.name);
+        values = (order.orderLines || []).map(p => p.product?.name).filter(Boolean);
       }
 
       values.forEach(val => {

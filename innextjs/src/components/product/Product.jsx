@@ -8,10 +8,9 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 import { getProductsApi, getCategoriesApi, getUnitsApi, getProductKpisApi, updateProductApi, deleteProductApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
-
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
-import AddProduct from './modal/AddProduct';
-import EditProduct from './modal/EditProduct';
+
+import { useRouter } from 'next/router';
 import DeleteModal from '@/common/modal/DeleteModal';
 
 function productInitials(name) {
@@ -24,6 +23,7 @@ function productInitials(name) {
 }
 
 export default function Product() {
+  const router = useRouter();
   const { canRead, canCreate, canUpdate, canDelete } = usePermission('products');
 
   const [productsData, setProductsData] = useState([]);
@@ -94,11 +94,8 @@ export default function Product() {
   const [isLoading, setIsLoading] = useState(false);
   const [kpiData, setKpiData] = useState({ total: 0, active: 0, inactive: 0, lowStock: 0 });
 
-  const [addOpen, setAddOpen] = useState(false);
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [productToDelete, setProductToDelete] = useState(null);
-  const [selectedProduct, setSelectedProduct] = useState(null);
 
   useEffect(() => {
     const closeDropdown = () => setDropdownState(null);
@@ -352,7 +349,7 @@ export default function Product() {
             <Button
               variant="primary"
               className="w-full sm:w-auto shrink-0"
-              onClick={() => setAddOpen(true)}
+              onClick={() => router.push('/inventory/product/add')}
               icon={Plus}
               text="Add product"
             />
@@ -496,8 +493,7 @@ export default function Product() {
             <button
               className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
               onClick={() => {
-                setSelectedProduct(dropdownState.row);
-                setEditOpen(true);
+                router.push(`/inventory/product/edit/${dropdownState.row.id}`);
                 setDropdownState(null);
               }}
             >
@@ -519,29 +515,7 @@ export default function Product() {
         </div>
       )}
 
-      <AddProduct
-        open={addOpen}
-        onClose={() => setAddOpen(false)}
-        onAdd={() => {
-          fetchProducts();
-          fetchKpis();
-          setAddOpen(false);
-        }}
-      />
 
-      <EditProduct
-        open={editOpen}
-        product={selectedProduct}
-        onClose={() => {
-          setEditOpen(false);
-          setSelectedProduct(null);
-        }}
-        onEdit={() => {
-          fetchProducts();
-          fetchKpis();
-          setEditOpen(false);
-        }}
-      />
 
       <DeleteModal
         open={deleteModalOpen}

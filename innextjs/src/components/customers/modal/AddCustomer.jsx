@@ -24,7 +24,6 @@ export default function AddCustomer({ open, onClose, onAdd }) {
   const [balance, setBalance] = useState('');
   const [code, setCode] = useState('');
   const [region, setRegion] = useState('');
-  const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleId = useId();
@@ -54,7 +53,6 @@ export default function AddCustomer({ open, onClose, onAdd }) {
     setBalance('');
     setCode('');
     setRegion('');
-    setError(null);
   };
 
   const handleClose = () => {
@@ -91,12 +89,11 @@ export default function AddCustomer({ open, onClose, onAdd }) {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Customer name is required.');
+      toast.error('Customer name is required.');
       return;
     }
     
     setIsSubmitting(true);
-    setError(null);
     try {
       const res = await createCustomerApi({
         name: trimmedName,
@@ -109,7 +106,6 @@ export default function AddCustomer({ open, onClose, onAdd }) {
       
       if (res.error || (res.data && !res.data.success)) {
         const errorMsg = res.error?.message || res.data?.message || 'Failed to create customer';
-        setError(errorMsg);
         toast.error(errorMsg);
       } else {
         onAdd(res.data.data); // pass the newly created customer object
@@ -117,7 +113,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
         reset();
       }
     } catch (err) {
-      setError('An unexpected error occurred.');
+      console.error(err);
       toast.error('An unexpected error occurred.');
     } finally {
       setIsSubmitting(false);
@@ -140,7 +136,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
+   className={`app-modal-panel bg-white shadow-2xl rounded-xl sm:rounded-2xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
           <h2 id={titleId} className="text-base font-bold text-grey-text-strong">
@@ -212,11 +208,6 @@ export default function AddCustomer({ open, onClose, onAdd }) {
               onChange={(e) => setRegion(e.target.value)}
               placeholder="e.g. Midwest"
             />
-            {error ? (
-              <p className="text-sm font-medium text-danger-dark" role="alert">
-                {error}
-              </p>
-            ) : null}
           </form>
         </div>
         <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-grey-border px-4 py-3 sm:flex-row sm:justify-end">

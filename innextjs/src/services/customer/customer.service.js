@@ -7,7 +7,7 @@ export const createCustomer = async (data, userId = null) => {
                 name: data.name,
                 email: data.email || null,
                 phone: data.phone || null,
-                balance: data.balance ? parseFloat(data.balance) : 0,
+                balance: data.balance !== undefined ? parseFloat(data.balance) : undefined,
                 code: data.code || null,
                 region: data.region || null,
                 createdBy: userId || data.createdBy || null,

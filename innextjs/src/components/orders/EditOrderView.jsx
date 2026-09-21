@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import { useRouter } from 'next/router';
-import { ArrowLeft, ArrowRight, Check } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Check, Loader2 } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { createOrderApi } from '@/lib/fetcher';
+import { getOrderByIdApi, updateOrderApi } from '@/lib/fetcher';
 import { CUSTOMISATION_SPECS } from '@/common/dummy';
 
 import SetQuantityModal from './modals/SetQuantityModal';
@@ -21,8 +21,9 @@ const WIZARD_STEPS = [
   { id: 'schedule', title: 'Schedule', desc: 'Due date, priority, and review' },
 ];
 
-export default function CreateOrderView() {
+export default function EditOrderView() {
   const router = useRouter();
+  const { id } = router.query;
   const [stepIndex, setStepIndex] = useState(0);
 
   // Draft state
@@ -31,27 +32,68 @@ export default function CreateOrderView() {
   const [dueDate, setDueDate] = useState('');
   const [priority, setPriority] = useState('Normal');
   const [plannerNotes, setPlannerNotes] = useState('');
+  const [status, setStatus] = useState('CONFIRMED');
+  const [orderNumber, setOrderNumber] = useState('');
 
   // UI state for Steps
   const [modalModel, setModalModel] = useState(null);
   const [activeSpecLineIndex, setActiveSpecLineIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (id) {
+      setLoading(true);
+      getOrderByIdApi(id).then((res) => {
+        if (res.data?.success) {
+          const data = res.data.data;
+          setCustomer(data.customer);
+          setOrderNumber(data.orderNumber);
+          setDueDate(data.dueDate ? new Date(data.dueDate).toISOString().split('T')[0] : '');
+          setPriority(data.priority || 'Normal');
+          setPlannerNotes(data.remark || '');
+          setStatus(data.status || 'CONFIRMED');
+          
+          const mappedLines = (data.orderLines || []).map(l => ({
+            model: l.product,
+            quantity: l.quantity,
+            specs: {
+              bodyDesignId: l.bodyDesignId || '',
+              colourId: l.colourId || '',
+              brandId: l.brandId || '',
+              stickerId: l.stickerId || '',
+              accessoriesType: l.accessoriesType || 'STANDARD',
+              accessoriesNote: l.accessoriesNote || '',
+              packingType: l.packingType || 'STANDARD',
+              packingNote: l.packingNote || '',
+              packagingId: l.packagingId || ''
+            }
+          }));
+          setLines(mappedLines);
+        } else {
+          toast.error("Failed to load order");
+          router.push('/orders');
+        }
+        setLoading(false);
+      });
+    }
+  }, [id, router]);
 
   // Keyboard shortcuts for stepper
-  React.useEffect(() => {
+  useEffect(() => {
     const handleKeyDown = (e) => {
       if (e.altKey && e.key === 'ArrowRight') {
         e.preventDefault();
-        if (stepIndex < WIZARD_STEPS.length - 1) setStepIndex(s => s + 1);
+        if (stepIndex < WIZARD_STEPS.length - 1 && !loading) setStepIndex(s => s + 1);
       }
       if (e.altKey && e.key === 'ArrowLeft') {
         e.preventDefault();
-        if (stepIndex > 0) setStepIndex(s => s - 1);
+        if (stepIndex > 0 && !loading) setStepIndex(s => s - 1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stepIndex]);
+  }, [stepIndex, loading]);
 
   // Actions
   const handleModalAdd = (model, qty) => {
@@ -101,9 +143,11 @@ export default function CreateOrderView() {
       setIsSubmitting(true);
       try {
         const payload = {
+          id,
           customerId: customer.id,
           dueDate: new Date(dueDate).toISOString(),
           priority: priority.toUpperCase(),
+          status: status,
           remark: plannerNotes || undefined,
           orderLines: lines.map(l => ({
             productId: l.model.id,
@@ -119,12 +163,12 @@ export default function CreateOrderView() {
             packagingId: l.specs.packagingId || undefined
           }))
         };
-        const res = await createOrderApi(payload);
+        const res = await updateOrderApi(payload);
         if (res.data?.success) {
-          toast.success('Order created successfully!');
+          toast.success('Order updated successfully!');
           router.push('/orders');
         } else {
-          toast.error(res.data?.message || 'Failed to create order');
+          toast.error(res.data?.message || 'Failed to update order');
         }
       } catch (err) {
         console.error(err);
@@ -142,10 +186,10 @@ export default function CreateOrderView() {
 
   return (
     <>
-      <Head><title>Create Order | Arwa Weld</title></Head>
-      <div className="flex flex-col h-[96vh] overflow-hidden ">
+      <Head><title>Edit Order {orderNumber && `- ${orderNumber}`} | Arwa Weld</title></Head>
+      <div className="flex flex-col h-[96vh] overflow-hidden relative">
 
-        <div className="shrink-0  py-1 flex items-start gap-6">
+        <div className="shrink-0 py-1 flex items-start gap-6">
           <Button
             variant="ghost"
             onClick={() => router.push('/orders')}
@@ -154,7 +198,7 @@ export default function CreateOrderView() {
             text="Back to orders"
           />
           <div>
-            <h1 className="text-md font-bold text-grey-text-strong leading-tight">Create new order</h1>
+            <h1 className="text-md font-bold text-grey-text-strong leading-tight">Edit Order {orderNumber && <span className="text-primary">{orderNumber}</span>}</h1>
             <p className="text-sm text-grey-muted mt-1">{WIZARD_STEPS[stepIndex]?.desc}</p>
           </div>
         </div>
@@ -170,7 +214,7 @@ export default function CreateOrderView() {
                   <div
                     key={step.id}
                     className="relative flex-1 px-1 py-2"
-                    onClick={() => { if (isDone || isActive) setStepIndex(idx); }}
+                    onClick={() => { if ((isDone || isActive) && !loading) setStepIndex(idx); }}
                   >
                     {/* Top border indicator */}
                     {(isActive || isDone) && <div className="absolute top-0 inset-x-0 h-[2px] bg-primary rounded-b-sm" />}
@@ -200,50 +244,55 @@ export default function CreateOrderView() {
         {/* MAIN CONTENT */}
         <div className="flex-1 min-h-0 overflow-hidden">
           <div className="w-full mx-auto py-3 h-full">
-            {stepIndex === 0 && (
-              <CustomerStep
-                customer={customer}
-                setCustomer={setCustomer}
-                dueDate={dueDate}
-                setDueDate={setDueDate}
-                priority={priority}
-                setPriority={setPriority}
-                plannerNotes={plannerNotes}
-                setPlannerNotes={setPlannerNotes}
-                isActive={stepIndex === 0}
-              />
-            )}
-            
-            {stepIndex === 1 && (
-              <ModelsStep
-                lines={lines}
-                setLines={setLines}
-                isActive={stepIndex === 1}
-                modalModel={modalModel}
-                onAddLineClick={setModalModel}
-                onUpdateLineQty={handleUpdateLineQty}
-              />
-            )}
+            <>
+              {stepIndex === 0 && (
+                <CustomerStep
+                  customer={customer}
+                  setCustomer={setCustomer}
+                  dueDate={dueDate}
+                  setDueDate={setDueDate}
+                  priority={priority}
+                  setPriority={setPriority}
+                  plannerNotes={plannerNotes}
+                  setPlannerNotes={setPlannerNotes}
+                  isActive={stepIndex === 0}
+                />
+              )}
+                
+                {stepIndex === 1 && (
+                  <ModelsStep
+                    lines={lines}
+                    setLines={setLines}
+                    isActive={stepIndex === 1}
+                    modalModel={modalModel}
+                    onAddLineClick={setModalModel}
+                    onUpdateLineQty={handleUpdateLineQty}
+                  />
+                )}
 
-            {stepIndex === 2 && (
-              <SpecsStep
-                customer={customer}
-                lines={lines}
-                setLines={setLines}
-                isActive={stepIndex === 2}
-                activeSpecLineIndex={activeSpecLineIndex}
-                setActiveSpecLineIndex={setActiveSpecLineIndex}
-              />
-            )}
+                {stepIndex === 2 && (
+                  <SpecsStep
+                    customer={customer}
+                    lines={lines}
+                    setLines={setLines}
+                    isActive={stepIndex === 2}
+                    activeSpecLineIndex={activeSpecLineIndex}
+                    setActiveSpecLineIndex={setActiveSpecLineIndex}
+                  />
+                )}
 
-            {stepIndex === 3 && (
-              <ReviewStep
-                customer={customer}
-                lines={lines}
-                dueDate={dueDate}
-                priority={priority}
-              />
-            )}
+                {stepIndex === 3 && (
+                  <ReviewStep
+                    customer={customer}
+                    lines={lines}
+                    dueDate={dueDate}
+                    priority={priority}
+                    status={status}
+                    setStatus={setStatus}
+                    isEdit={true}
+                  />
+                )}
+              </>
           </div>
         </div>
 
@@ -265,11 +314,11 @@ export default function CreateOrderView() {
             />
             <Button
               variant="primary"
-              text={stepIndex === WIZARD_STEPS.length - 1 ? (isSubmitting ? 'Creating...' : 'Create order') : 'Next'}
+              text={stepIndex === WIZARD_STEPS.length - 1 ? (isSubmitting ? 'Saving...' : 'Save changes') : 'Next'}
               icon={stepIndex === WIZARD_STEPS.length - 1 ? Check : ArrowRight}
               iconPosition="right"
               onClick={handleNext}
-              disabled={!canProceed() || isSubmitting}
+              disabled={!canProceed() || isSubmitting || loading}
             />
           </div>
         </div>

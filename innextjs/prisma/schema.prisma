@@ -24,6 +24,7 @@ model Customer {
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
   brands     Brand[]
+  orders     Order[]
 }
 
 model Brand {
@@ -40,6 +41,7 @@ model Brand {
   deletedBy   String?   @map("deleted_by")
   customer    Customer  @relation(fields: [customer_id], references: [id])
   stickers    Sticker[]
+  orderLines  OrderLine[]
 }
 
 model Sticker {
@@ -54,6 +56,7 @@ model Sticker {
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
   brand      Brand     @relation(fields: [brand_id], references: [id])
+  orderLines OrderLine[]
 }
 
 model Category {
@@ -111,6 +114,7 @@ model Product {
   unit              Unit?               @relation(fields: [unitId], references: [id])
   bodyDesigns       ProductBodyDesign[]
   colours           ProductColour[]
+  orderLines        OrderLine[]
 }
 
 model User {
@@ -120,6 +124,7 @@ model User {
   email            String?       @unique
   password         String
   security_role_id String?
+  isSuperAdmin     Boolean       @default(false)
   isActive         Boolean       @default(true)
   createdAt        DateTime      @default(now()) @map("created_at")
   createdBy        String?       @map("created_by")
@@ -175,6 +180,7 @@ model ProductBodyDesign {
   type      StandardType
   createdAt DateTime     @default(now()) @map("created_at")
   product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderLines OrderLine[]
 }
 
 model ProductColour {
@@ -184,6 +190,7 @@ model ProductColour {
   type      StandardType
   createdAt DateTime     @default(now()) @map("created_at")
   product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  orderLines OrderLine[]
 }
 
 model Packaging {
@@ -198,9 +205,87 @@ model Packaging {
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
   product    Product   @relation(fields: [productId], references: [id])
+  orderLines OrderLine[]
 }
 
 enum StandardType {
   STANDARD
   NON_STANDARD
+}
+
+enum OrderType {
+  STANDARD
+  CUSTOMIZE
+}
+
+enum Priority {
+  LOW
+  NORMAL
+  HIGH
+}
+
+enum CustomisationType {
+  STANDARD
+  CUSTOMIZE
+}
+
+enum OrderStatus {
+  DRAFT
+  CONFIRMED
+  COMPLETED
+  CANCELLED
+}
+
+model Order {
+  id         String   @id @default(uuid())
+  orderNumber String  @unique @default(uuid()) // fallback since we don't have a sequence setup, we can use an auto-increment or similar if needed. For now uuid.
+  customerId String   @map("customer_id")
+  dueDate    DateTime @map("due_date")
+  priority   Priority @default(NORMAL)
+  remark     String?  @db.Text
+  status     OrderStatus @default(DRAFT) 
+  orderType  OrderType   @default(STANDARD) @map("order_type")
+  
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+
+  customer   Customer    @relation(fields: [customerId], references: [id])
+  orderLines OrderLine[]
+}
+
+model OrderLine {
+  id           String @id @default(uuid())
+  orderId      String @map("order_id")
+  productId    String @map("product_id")
+  quantity     Float  @default(1)
+
+  bodyDesignId String? @map("body_design_id")
+  colourId     String? @map("colour_id")
+  brandId      String? @map("brand_id")
+  stickerId    String? @map("sticker_id")
+  
+  accessoriesType CustomisationType @default(STANDARD) @map("accessories_type")
+  accessoriesNote String?           @db.Text @map("accessories_note")
+  
+  packingType     CustomisationType @default(STANDARD) @map("packing_type")
+  packingNote     String?           @db.Text @map("packing_note")
+  packagingId     String?           @map("packaging_id")
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+
+  order      Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product    Product            @relation(fields: [productId], references: [id])
+  bodyDesign ProductBodyDesign? @relation(fields: [bodyDesignId], references: [id])
+  colour     ProductColour?     @relation(fields: [colourId], references: [id])
+  brand      Brand?             @relation(fields: [brandId], references: [id])
+  sticker    Sticker?           @relation(fields: [stickerId], references: [id])
+  packaging  Packaging?         @relation(fields: [packagingId], references: [id])
 }
