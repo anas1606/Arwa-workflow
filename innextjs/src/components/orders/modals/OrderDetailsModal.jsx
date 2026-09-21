@@ -4,6 +4,7 @@ import { X, Printer, Pencil, Box, Package, User, Hash, Calendar, Loader2 } from 
 import Button from '@/common/buttons/Button';
 import { getOrderByIdApi } from '@/lib/fetcher';
 import clsx from 'clsx';
+import { StatusBadge, OrderTypeBadge } from '../badges';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -21,7 +22,6 @@ export default function OrderDetailsModal({
   selectedOrder,
   onClose,
   onEdit,
-  getStatusStyles,
 }) {
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
@@ -81,9 +81,7 @@ export default function OrderDetailsModal({
             <div>
               <h2 className="text-lg font-bold text-grey-text-strong flex items-center gap-2">
                 {displayOrder.orderNumber}
-                <span className={clsx("badge px-2 py-0.5 rounded-md text-2xs font-semibold shadow-sm inline-block whitespace-nowrap", getStatusStyles(displayOrder.status))}>
-                   {displayOrder.status?.toUpperCase().replace('_', ' ')}
-                </span>
+                <StatusBadge status={displayOrder.status} />
               </h2>
               <p className="text-xs text-grey-icon mt-0.5">Order Details</p>
             </div>
@@ -119,9 +117,7 @@ export default function OrderDetailsModal({
             <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
               <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Box size={14}/> Order Type</p>
               <div className="mt-1">
-                <span className="badge border border-primary-subtle text-primary-dark bg-primary-bg inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold shadow-sm whitespace-nowrap">
-                   {displayOrder.orderType}
-                </span>
+                <OrderTypeBadge orderType={displayOrder.orderType} />
               </div>
             </div>
           </div>

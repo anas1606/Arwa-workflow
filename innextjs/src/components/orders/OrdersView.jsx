@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Head from 'next/head';
-import { Search, Plus, Filter, Printer, Pencil, Eye, Trash2, RefreshCw } from 'lucide-react';
+import { Search, Plus, Filter, Printer, Pencil, Eye, Trash2, RefreshCw, LayoutList, Package, Tags, Factory } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
-import { dueDaysLabel } from '@/common/dummy';
+import { dueDaysLabel, MACHINES } from '@/common/dummy';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import clsx from 'clsx';
@@ -12,6 +12,7 @@ import OrderDetailsModal from './modals/OrderDetailsModal';
 import FilterModal from './modals/FilterModal';
 import DeleteModal from '@/common/modal/DeleteModal';
 import { getOrdersApi } from '@/lib/fetcher';
+import { StatusBadge, OrderTypeBadge, MachineStatusBadge } from './badges';
 
 export default function OrdersView() {
   const router = useRouter();
@@ -22,6 +23,44 @@ export default function OrdersView() {
   const [isLoading, setIsLoading] = useState(true);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
+  const [viewMode, setViewMode] = useState('orders');
+
+  const productGrouped = useMemo(() => {
+    const map = {};
+    ordersData.forEach(order => {
+      (order.orderLines || []).forEach(line => {
+        const prod = line.product?.name || 'Unknown Product';
+        if (!map[prod]) map[prod] = { product: prod, qty: 0, orders: [] };
+        map[prod].qty += line.quantity;
+        if (!map[prod].orders.find(o => o.id === order.id)) {
+          map[prod].orders.push(order);
+        }
+      });
+    });
+    return Object.values(map);
+  }, [ordersData]);
+
+  const machineTypeGroups = useMemo(() => {
+    // We deterministically assign orders to a machine to simulate the old layout
+    const groups = MACHINES.map(m => ({ machine: m, orders: [], standard: 0, customised: 0 }));
+    
+    ordersData.forEach(order => {
+      // hash order id to 0-3
+      let hash = 0;
+      for (let i = 0; i < order.id.length; i++) hash += order.id.charCodeAt(i);
+      const mIdx = hash % MACHINES.length;
+      
+      groups[mIdx].orders.push(order);
+      if (order.orderType?.toUpperCase() === 'CUSTOMIZE' || order.orderType?.toUpperCase() === 'CUSTOMISED') {
+        groups[mIdx].customised++;
+      } else {
+        groups[mIdx].standard++;
+      }
+    });
+    
+    return groups;
+  }, [ordersData]);
+  
   
   // Table state
   const [query, setQuery] = useState('');
@@ -49,6 +88,9 @@ export default function OrdersView() {
       if (activeFilters.orderType) filters.orderType = activeFilters.orderType;
       if (activeFilters.priority) filters.priority = activeFilters.priority;
       if (activeFilters.status) filters.status = activeFilters.status;
+      if (activeFilters.orderNumber) filters.orderNumber = activeFilters.orderNumber;
+      if (activeFilters.customer) filters.customerId = activeFilters.customer;
+      if (activeFilters.product) filters.productId = activeFilters.product;
 
       const res = await getOrdersApi(pageNo, pageSize, query, filters);
       
@@ -82,9 +124,9 @@ export default function OrdersView() {
 
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.altKey && e.key === '1') { e.preventDefault(); setActiveTab('order_list'); }
-      if (e.altKey && e.key === '2') { e.preventDefault(); setActiveTab('by_product'); }
-      if (e.altKey && e.key === '3') { e.preventDefault(); setActiveTab('by_order_type'); }
+      if (e.altKey && e.key === '1') { e.preventDefault(); setViewMode('orders'); }
+      if (e.altKey && e.key === '2') { e.preventDefault(); setViewMode('productGrouped'); }
+      if (e.altKey && e.key === '3') { e.preventDefault(); setViewMode('orderTypeGrouped'); }
       if (e.altKey && (e.key === 's' || e.key === 'S')) {
         e.preventDefault();
         document.getElementById('search-orders')?.focus();
@@ -108,13 +150,7 @@ export default function OrdersView() {
     setPageNo(1);
   }, [query, activeTab]);
 
-  const getStatusStyles = (status) => {
-    const s = status.toUpperCase().replace('_', ' ');
-    if (s === 'CANCELLED') return 'border-danger-subtle text-danger-dark bg-danger-bg';
-    if (s === 'IN PRODUCTION') return 'border-grey-border text-primary-dark bg-white';
-    if (s === 'CONFIRMED') return 'border-grey-border text-primary-dark bg-white';
-    return 'border-grey-border text-grey-text bg-white';
-  };
+
 
   const columns = [
     {
@@ -122,10 +158,7 @@ export default function OrdersView() {
       label: 'Order',
       render: (row) => (
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => { setSelectedOrder(row); setIsDetailsModalOpen(true); }}>
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-2xs font-bold text-primary-dark">
-            {row.orderNumber.replace(/[^0-9]/g, '').slice(-3) || 'ORD'}
-          </span>
-          <p className="font-semibold text-grey-text-strong truncate hover:text-primary transition-colors">{row.orderNumber}</p>
+          <span className="font-bold text-primary hover:text-primary-dark transition-colors">{row.orderNumber}</span>
         </div>
       ),
     },
@@ -138,19 +171,40 @@ export default function OrdersView() {
       key: 'orderType',
       label: 'Order Type',
       render: (row) => (
-        <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark whitespace-nowrap">
-          {row.orderType}
-        </span>
+        <OrderTypeBadge orderType={row.orderType} />
       ),
     },
     {
       key: 'dueDate',
       label: 'Due',
       render: (row) => {
-        const dateStr = new Date(row.dueDate).toLocaleDateString();
+        const dueDate = new Date(row.dueDate);
+        const today = new Date();
+        // Zero out time
+        dueDate.setHours(0,0,0,0);
+        today.setHours(0,0,0,0);
+        
+        const diffTime = dueDate.getTime() - today.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        const dateStr = dueDate.toISOString().split('T')[0];
+        
+        let dueText = '';
+        let dueColor = 'text-grey-text-strong';
+        if (diffDays < 0) {
+          dueText = `${Math.abs(diffDays)} days overdue`;
+          dueColor = 'text-danger-main font-bold';
+        } else if (diffDays === 0) {
+          dueText = 'Due today';
+          dueColor = 'text-warning-dark font-bold';
+        } else {
+          dueText = `In ${diffDays} days`;
+          dueColor = 'text-grey-text-strong font-semibold';
+        }
+
         return (
-          <div className="max-w-[140px]">
-            <p className="mt-0.5 text-2xs text-grey-icon truncate ">{dateStr}</p>
+          <div className="flex flex-col">
+            <span className={clsx("text-sm", dueColor)}>{dueText}</span>
+            <span className="text-xs text-grey-icon mt-0.5 font-mono">{dateStr}</span>
           </div>
         );
       },
@@ -159,36 +213,20 @@ export default function OrdersView() {
       key: 'products',
       label: 'Products',
       render: (row) => {
-        // Aggregate quantities by product name
-        const productMap = (row.orderLines || []).reduce((acc, line) => {
-          const name = line.product?.name;
-          if (name) {
-            acc[name] = (acc[name] || 0) + line.quantity;
-          }
-          return acc;
-        }, {});
+        const lines = row.orderLines || [];
+        if (lines.length === 0) return <span className="text-grey-muted">-</span>;
         
-        const aggregatedOptions = Object.entries(productMap).map(([name, qty]) => `${name} (${qty})`);
-        const MAX_VISIBLE = 1;
-        const overflow = aggregatedOptions.length - MAX_VISIBLE;
-        const visible = aggregatedOptions.slice(0, MAX_VISIBLE);
+        const firstLine = lines[0];
+        const extraCount = lines.length - 1;
         
         return (
-          <div className="flex items-center gap-1">
-            {visible.map((opt, idx) => (
-              <span key={idx} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark max-w-[120px] truncate">{opt}</span>
-            ))}
-            {overflow > 0 && (
-              <span className="relative inline-block">d
-                <span className="peer inline-flex rounded-md bg-grey-bg px-1.5 py-0.5 text-2xs font-semibold text-grey-text-light cursor-help whitespace-nowrap">+{overflow} more</span>
-                <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-grey-text-strong px-2 py-1.5 text-xs text-white shadow-lg">
-                  <div className="flex flex-col gap-1">
-                    {aggregatedOptions.slice(MAX_VISIBLE).map((opt, i) => (
-                       <span key={i}>{opt}</span>
-                    ))}
-                  </div>
-                  <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-grey-text-strong"></div>
-                </div>
+          <div className="flex flex-col text-sm font-semibold text-grey-text-strong">
+            <span className="truncate max-w-[200px]">{firstLine.product?.name || 'Unknown Product'}</span>
+            {extraCount > 0 && (
+              <span className="text-xs text-grey-icon mt-0.5 flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-grey-icon inline-block" />
+                <span className="truncate max-w-[150px]">{lines[1]?.product?.name || 'Unknown Product'}</span> 
+                {extraCount > 1 && <span className="text-primary font-bold">+{extraCount - 1}</span>}
               </span>
             )}
           </div>
@@ -208,44 +246,34 @@ export default function OrdersView() {
     {
       key: 'priority',
       label: 'Priority',
-      render: (row) => (
-        <span className={clsx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-semibold whitespace-nowrap",
-          row.priority === 'High' ? "bg-danger-subtle text-danger-dark" :
-          row.priority === 'Medium' ? "bg-warning-subtle text-warning-dark" : "bg-success-subtle text-success-dark"
-        )}>
-          {row.priority}
-        </span>
-      ),
-    },
-    {
-      key: 'status',
-      label: 'Status',
       render: (row) => {
+        const p = row.priority?.toUpperCase();
         return (
-          <span className={clsx("badge px-2 py-1 rounded-md text-xs font-semibold shadow-sm whitespace-nowrap", getStatusStyles(row.status))}>
-            {row.status.toUpperCase().replace('_', ' ')}
+          <span className={clsx("text-sm font-bold",
+            p === 'HIGH' ? "text-danger-main" :
+            p === 'MEDIUM' ? "text-warning-dark" : "text-success-main"
+          )}>
+            {row.priority ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1).toLowerCase() : 'Low'}
           </span>
         );
       },
     },
     {
+      key: 'status',
+      label: 'Status',
+      render: (row) => (
+        <StatusBadge status={row.status} />
+      ),
+    },
+    {
       key: 'actions',
       label: 'Actions',
-      type: 'action',
-      align: 'center',
-      onClick: (row, e) => {
-        if (e) {
-          const rect = e.currentTarget.getBoundingClientRect();
-          setActionMenu({
-            row,
-            top: rect.bottom + window.scrollY + 4,
-            left: rect.right + window.scrollX - 160
-          });
-        } else {
-          setSelectedOrder(row);
-          setIsDetailsModalOpen(true);
-        }
-      }
+      render: (row) => (
+        <div className="flex items-center justify-end gap-3 text-grey-icon">
+          <button onClick={(e) => { e.stopPropagation(); window.print(); }} className="hover:text-grey-text-strong transition-colors"><Printer size={18} /></button>
+          <button onClick={(e) => { e.stopPropagation(); router.push(`/orders/${row.id}/edit`); }} className="hover:text-grey-text-strong transition-colors"><Pencil size={18} /></button>
+        </div>
+      ),
     }
   ];
 
@@ -310,27 +338,54 @@ export default function OrdersView() {
         <div className="card-panel flex w-full flex-col gap-4 border-none !p-4 bg-white/40 backdrop-blur-md rounded-md shadow-sm">
           {/* Tabs */}
           <div className="flex items-center gap-2">
-            {[
-              { id: 'order_list', label: 'Order list', count: totalItems, shortcut: '1' },
-            ].map((t) => {
-              const active = activeTab === t.id;
-              return (
-                <button
-                  key={t.id}
-                  onClick={() => setActiveTab(t.id)}
-                  className={clsx(
-                    "flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-semibold transition-colors border",
-                    active ? "bg-white text-grey-text-strong border-grey-border shadow-sm" : "bg-transparent text-grey-text-light border-transparent hover:bg-white/50"
-                  )}
-                >
-                  {t.label}
-                  <span className={clsx(
-                    "px-1.5 py-0.5 rounded-md text-xs tabular-nums font-mono",
-                    active ? "bg-grey-surface text-grey-text" : "bg-white/60 text-grey-muted"
-                  )}>{t.count}</span>
-                </button>
-              )
-            })}
+            <button
+              onClick={() => setViewMode('orders')}
+              title="Alt+1"
+              className={clsx(
+                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus:outline-none',
+                viewMode === 'orders'
+                  ? 'bg-white/90 text-grey-text-strong shadow-sm border border-grey-border'
+                  : 'text-grey-icon hover:text-grey-text-strong bg-transparent',
+              )}
+            >
+              <LayoutList className="h-3.5 w-3.5" aria-hidden />
+              Order list
+              <kbd className="ml-0.5 hidden rounded border border-grey-border/80 bg-white/80 px-1 font-mono text-[10px] font-semibold text-grey-muted lg:inline">
+                1
+              </kbd>
+            </button>
+            <button
+              onClick={() => setViewMode('product')}
+              title="Alt+2"
+              className={clsx(
+                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus:outline-none',
+                viewMode === 'product'
+                  ? 'bg-white/90 text-grey-text-strong shadow-sm border border-grey-border'
+                  : 'text-grey-icon hover:text-grey-text-strong bg-transparent',
+              )}
+            >
+              <Package className="h-3.5 w-3.5" aria-hidden />
+              By product
+              <kbd className="ml-0.5 hidden rounded border border-grey-border/80 bg-white/80 px-1 font-mono text-[10px] font-semibold text-grey-muted lg:inline">
+                2
+              </kbd>
+            </button>
+            <button
+              onClick={() => setViewMode('orderType')}
+              title="Alt+3"
+              className={clsx(
+                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus:outline-none',
+                viewMode === 'orderType'
+                  ? 'bg-white/90 text-grey-text-strong shadow-sm border border-grey-border'
+                  : 'text-grey-icon hover:text-grey-text-strong bg-transparent',
+              )}
+            >
+              <Tags className="h-3.5 w-3.5" aria-hidden />
+              By order type
+              <kbd className="ml-0.5 hidden rounded border border-grey-border/80 bg-white/80 px-1 font-mono text-[10px] font-semibold text-grey-muted lg:inline">
+                3
+              </kbd>
+            </button>
           </div>
 
           {/* Search & Filters */}
@@ -372,30 +427,132 @@ export default function OrdersView() {
             <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">Alt</span>
             <span>+</span>
             <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">1</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">2</span>
+            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">3</span>
             <span>switch views ·</span>
             <Filter size={12} className="inline ml-1" />
             <span>Filters — order, order date, due date, quantity, customer, priority, status, product</span>
           </div>
         </div>
 
-        {/* Table */}
-        <CommonTable
-          columns={columns}
-          data={ordersData}
-          isLoading={isLoading}
-          emptyState="No orders found."
-          pagination={{
-            totalItems,
-            pageSize,
-            pageNo,
-            totalPages,
-          }}
-          onPageChange={setPageNo}
-          onPageSizeChange={(size) => {
-            setPageSize(size);
-            setPageNo(1);
-          }}
-        />
+        {/* Views */}
+        {viewMode === 'orders' && (
+          <CommonTable
+            columns={columns}
+            data={ordersData}
+            isLoading={isLoading}
+            emptyState="No orders found."
+            pagination={{
+              totalItems,
+              pageSize,
+              pageNo,
+              totalPages,
+            }}
+            onPageChange={setPageNo}
+            onPageSizeChange={(size) => {
+              setPageSize(size);
+              setPageNo(1);
+            }}
+          />
+        )}
+
+        {viewMode === 'product' && (
+          <div className="w-full space-y-4">
+            {productGrouped.map((group) => (
+              <section key={group.product} className="card-panel !p-0 w-full overflow-hidden bg-white shadow-sm border border-grey-border rounded-lg">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-grey-border/60 bg-grey-bg/50 px-4 py-3">
+                  <div className="flex min-w-0 items-center gap-2.5">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-dark">
+                      <Package className="h-4 w-4" aria-hidden />
+                    </span>
+                    <div className="min-w-0">
+                      <h2 className="truncate text-sm font-bold text-grey-text-strong">
+                        {group.product}
+                      </h2>
+                      <p className="text-2xs font-medium text-grey-muted">
+                        Total quantity: {group.qty}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <CommonTable
+                  columns={columns}
+                  data={group.orders}
+                  isLoading={isLoading}
+                  emptyState="No orders for this product."
+                />
+              </section>
+            ))}
+            {productGrouped.length === 0 && !isLoading && (
+              <div className="text-center py-10 text-sm text-grey-muted bg-white rounded-lg border border-grey-border">
+                No orders match your search or filter.
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* By Machine / Order Type view */}
+        <div className={clsx("transition-opacity duration-300", viewMode === 'orderType' ? 'opacity-100 block' : 'opacity-0 hidden')}>
+          {viewMode === 'orderType' && (
+            <div className="w-full space-y-4">
+              {machineTypeGroups.map((group) => (
+                <section key={group.machine.id} className="card-panel !p-0 w-full overflow-hidden bg-white shadow-sm border border-grey-border rounded-lg">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-grey-border/60 bg-grey-bg/50 px-4 py-3">
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-dark">
+                        <Factory className="h-4 w-4" aria-hidden />
+                      </span>
+                      <div className="min-w-0">
+                        <h2 className="truncate text-sm font-bold text-grey-text-strong">
+                          {group.machine.name}
+                        </h2>
+                        <p className="text-2xs font-medium text-grey-muted">
+                          {group.machine.station} · {group.machine.job}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <MachineStatusBadge status={group.machine.status} />
+                      <div className="flex flex-wrap gap-1.5">
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-grey-surface px-2 py-1 text-2xs font-semibold text-grey-text-strong border border-grey-border">
+                          Company standard
+                          <span className="font-mono text-sm font-bold text-grey-text-strong">
+                            {group.standard}
+                          </span>
+                        </span>
+                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-2xs font-semibold text-primary-dark border border-primary/20">
+                          Customised
+                          <span className="font-mono text-sm font-bold">
+                            {group.customised}
+                          </span>
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {group.orders.length === 0 ? (
+                    <p className="px-3 py-6 text-center text-sm text-grey-muted">
+                      No orders assigned to this machine for the current filters.
+                    </p>
+                  ) : (
+                    <CommonTable
+                      columns={columns}
+                      data={group.orders}
+                      isLoading={isLoading}
+                      emptyState="No orders for this machine."
+                    />
+                  )}
+                </section>
+              ))}
+              
+              <p className="text-xs text-grey-muted px-1">
+                {machineTypeGroups.length} machines · {ordersData.length} orders · 
+                Company standard {machineTypeGroups.reduce((s, g) => s + g.standard, 0)} · 
+                Customised {machineTypeGroups.reduce((s, g) => s + g.customised, 0)}
+              </p>
+            </div>
+          )}
+        </div>
       </div>
 
       <OrderDetailsModal
@@ -403,7 +560,6 @@ export default function OrdersView() {
         selectedOrder={selectedOrder}
         onClose={() => setIsDetailsModalOpen(false)}
         onEdit={() => { setIsDetailsModalOpen(false); router.push(`/orders/${selectedOrder?.id}/edit`); }}
-        getStatusStyles={getStatusStyles}
       />
 
       <DeleteModal
