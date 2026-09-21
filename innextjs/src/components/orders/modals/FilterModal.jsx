@@ -202,7 +202,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
         </div>
 
         {/* Body */}
-        <div className="flex flex-1 min-h-[400px] overflow-hidden px-2 pb-2">
+        <div className="flex flex-1 h-[500px] min-h-0 overflow-hidden px-2 pb-2">
           
           {/* Left Sidebar (Categories) */}
           <div className="w-[180px] shrink-0 flex flex-col gap-1 p-2 overflow-y-auto">

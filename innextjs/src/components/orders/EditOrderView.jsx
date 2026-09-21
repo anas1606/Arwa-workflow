@@ -59,9 +59,13 @@ export default function EditOrderView() {
             quantity: l.quantity,
             specs: {
               bodyDesignId: l.bodyDesignId || '',
+              bodyDesignIdName: l.bodyDesign?.name || '',
               colourId: l.colourId || '',
+              colourIdName: l.colour?.name || '',
               brandId: l.brandId || '',
+              brandIdName: l.brand?.brandname || l.brand?.name || '',
               stickerId: l.stickerId || '',
+              stickerIdName: l.sticker?.name || '',
               accessoriesType: l.accessoriesType || 'STANDARD',
               accessoriesNote: l.accessoriesNote || '',
               packingType: l.packingType || 'STANDARD',
@@ -163,7 +167,7 @@ export default function EditOrderView() {
             packagingId: l.specs.packagingId || undefined
           }))
         };
-        const res = await updateOrderApi(payload);
+        const res = await updateOrderApi(id, payload);
         if (res.data?.success) {
           toast.success('Order updated successfully!');
           router.push('/orders');

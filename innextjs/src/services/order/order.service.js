@@ -102,12 +102,23 @@ export const getAllOrders = async (page = 1, limit = 10, search = '', filters = 
             ];
         }
         
-        if (filters.orderType) where.orderType = filters.orderType;
-        if (filters.priority) where.priority = filters.priority;
-        if (filters.status) where.status = filters.status;
-        if (filters.customerId) where.customerId = filters.customerId;
+        if (filters.orderType) {
+            where.orderType = Array.isArray(filters.orderType) ? { in: filters.orderType } : filters.orderType;
+        }
+        if (filters.priority) {
+            where.priority = Array.isArray(filters.priority) ? { in: filters.priority } : filters.priority;
+        }
+        if (filters.status) {
+            where.status = Array.isArray(filters.status) ? { in: filters.status } : filters.status;
+        }
+        if (filters.customerId) {
+            where.customerId = Array.isArray(filters.customerId) ? { in: filters.customerId } : filters.customerId;
+        }
         if (filters.productId) {
-            where.orderLines = { some: { productId: filters.productId } };
+            where.orderLines = { some: { productId: Array.isArray(filters.productId) ? { in: filters.productId } : filters.productId } };
+        }
+        if (filters.orderNumber) {
+            where.orderNumber = Array.isArray(filters.orderNumber) ? { in: filters.orderNumber } : filters.orderNumber;
         }
 
         const [data, total, totalOrders, totalCustomized, totalProducts] = await Promise.all([
@@ -173,7 +184,12 @@ export const getOrderById = async (id) => {
                 customer: true,
                 orderLines: {
                     include: {
-                        product: true,
+                        product: {
+                            include: {
+                                bodyDesigns: true,
+                                colours: true
+                            }
+                        },
                         bodyDesign: true,
                         colour: true,
                         brand: true,
