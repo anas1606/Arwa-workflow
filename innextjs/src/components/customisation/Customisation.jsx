@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
 import { Plus, X, Pencil, Search, Package, Settings2, Tags, Trash2, MoreVertical, ArrowLeft, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import Button from '@/common/buttons/Button';
@@ -8,8 +9,6 @@ import CommonTable from '@/common/table/CommonTable';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 
 import { PRODUCT_MODELS, CUSTOMISATION_SPECS, MODEL_OPTION_KEYS, MODEL_CATEGORIES } from '@/common/dummy';
-import AddProduct from '../product/modal/AddProduct';
-import EditProduct from '../product/modal/EditProduct';
 import AddCustomer from '../customers/modal/AddCustomer';
 import AddBrandModal from './modal/AddBrandModal';
 import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi, createStickerApi, deleteStickerApi, getCustomisationsApi, getCustomisationKpisApi, deleteProductApi, getCategoriesApi } from '@/lib/fetcher';
@@ -17,9 +16,7 @@ import DeleteModal from '@/common/modal/DeleteModal';
 import { toast } from 'sonner';
 import { usePermission } from '@/hooks/usePermission';
 
-/* ════════════════════════════════════════════════════════════════════
-   Constants
-   ════════════════════════════════════════════════════════════════════ */
+
 const TABLE_SPEC_KEYS = ['body_design', 'body_color', 'brand_name', 'panel_sticker', 'accessories', 'packing'];
 const FIXED_CUSTOMISE_OPTIONS = ['Regular', 'Customise'];
 const MAX_VISIBLE_OPTIONS = 3;
@@ -27,19 +24,12 @@ const MODEL_OPTION_KEY_SET = new Set(MODEL_OPTION_KEYS);
 
 const toneBar = { neutral: 'bg-grey-text-light', info: 'bg-primary', warning: 'bg-warning-dark', success: 'bg-success-dark' };
 
-/* ════════════════════════════════════════════════════════════════════
-   Utility helpers
-   ════════════════════════════════════════════════════════════════════ */
+
 
 function cloneSpecs(specs) {
   return specs.map((f) => ({ ...f, options: f.options ? [...f.options] : undefined }));
 }
-function cloneModels(models) {
-  return models.map((m) => ({ ...m, specs: cloneSpecs(m.specs) }));
-}
-function cloneCustomers(customers) {
-  return customers.map((c) => ({ ...c, brands: c.brands.map((b) => ({ ...b, panelStickers: [...b.panelStickers] })) }));
-}
+
 function isModelConfigured(model) {
   return MODEL_OPTION_KEYS.every((key) => { const f = model.specs.find((s) => s.key === key); return (f?.options?.length ?? 0) > 0; });
 }
@@ -49,16 +39,7 @@ function modelInitials(code) {
 function blankSpecsFromTemplate() {
   return CUSTOMISATION_SPECS.map((f) => ({ ...f, options: f.options ? [...f.options] : [] }));
 }
-function toFormState(model) {
-  const specs = model?.specs ?? blankSpecsFromTemplate();
-  const options = {};
-  for (const key of MODEL_OPTION_KEYS) {
-    const mf = specs.find((s) => s.key === key);
-    const tf = CUSTOMISATION_SPECS.find((s) => s.key === key);
-    options[key] = [...(mf?.options ?? tf?.options ?? [])];
-  }
-  return { name: model?.name ?? '', code: model?.code ?? '', category: model?.category ?? MODEL_CATEGORIES[0] ?? '', options };
-}
+
 
 function formatProductModel(fm) {
   const baseModel = PRODUCT_MODELS[0] || {};
@@ -82,9 +63,6 @@ function formatProductModel(fm) {
   };
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   Small presentational components
-   ════════════════════════════════════════════════════════════════════ */
 
 function OptionsCell({ field }) {
   const options = field.options ?? [];
@@ -135,65 +113,6 @@ function ChipRemoveButton({ onClick }) {
     />
   );
 }
-
-function OptionChipsEditor({ label, values, onChange, emptyHint }) {
-  const [draft, setDraft] = useState('');
-  const [localError, setLocalError] = useState(null);
-  const addOption = () => {
-    const value = draft.trim();
-    if (!value) return;
-    if (values.some((v) => v.toLowerCase() === value.toLowerCase())) { setLocalError('Option already exists.'); return; }
-    onChange([...values, value]); setDraft(''); setLocalError(null);
-  };
-  const onKeyDown = (e) => { if (e.key === 'Enter') { e.preventDefault(); addOption(); } };
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-2 mb-1">
-        <label className="text-xs font-semibold text-grey-text">{label}</label>
-        <span className="text-2xs tabular-nums text-grey-icon">{values.length} option{values.length === 1 ? '' : 's'}</span>
-      </div>
-      <div className="rounded-md border border-grey-border/70 bg-grey-bg/40 p-2">
-        {values.length > 0 ? (
-          <div className="flex flex-wrap gap-1.5 mb-2">
-            {values.map((opt) => (
-              <span key={opt} className="inline-flex max-w-full items-center gap-1 rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">
-                <span className="truncate">{opt}</span>
-                <ChipRemoveButton onClick={() => { onChange(values.filter((v) => v !== opt)); setLocalError(null); }} />
-              </span>
-            ))}
-          </div>
-        ) : (
-          <p className="text-2xs text-grey-icon mb-2">{emptyHint ?? 'No options yet — add one below.'}</p>
-        )}
-        <div className="flex gap-1.5">
-          <Input type="text" value={draft}
-            onChange={(e) => { setDraft(e.target.value); if (localError) setLocalError(null); }}
-            onKeyDown={onKeyDown} placeholder="Type option, press Enter"
-            className="flex-1 min-w-0 [&_input]:!h-8 [&_input]:!min-h-0" />
-          <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim()} icon={Plus} />
-        </div>
-        {localError && <p className="mt-1 text-2xs text-danger-dark">{localError}</p>}
-      </div>
-    </div>
-  );
-}
-
-function FixedCustomiseField({ label }) {
-  return (
-    <div>
-      <p className="text-xs font-semibold text-grey-text mb-1">{label}</p>
-      <div className="rounded-md border border-grey-border/70 bg-grey-bg/40 p-2">
-        <div className="mb-1.5 flex flex-wrap gap-1.5">
-          {FIXED_CUSTOMISE_OPTIONS.map((opt) => (
-            <span key={opt} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">{opt}</span>
-          ))}
-        </div>
-        <p className="text-2xs text-grey-muted">Fixed choices. Customise opens a detail field on the order Specs step.</p>
-      </div>
-    </div>
-  );
-}
-
 
 function StickerEditor({ brand, onChange, canCreate, canDelete }) {
   const [draft, setDraft] = useState('');
@@ -284,15 +203,9 @@ function StickerEditor({ brand, onChange, canCreate, canDelete }) {
   );
 }
 
-/* ════════════════════════════════════════════════════════════════════
-   Modals
-   ════════════════════════════════════════════════════════════════════ */
-
-/* ════════════════════════════════════════════════════════════════════
-   Main Page Component
-   ════════════════════════════════════════════════════════════════════ */
 
 export default function Customisation() {
+  const router = useRouter();
   const { canCreate: canCreateCustomer } = usePermission('customers');
   const { canCreate: canCreateProduct } = usePermission('products');
   const { canCreate: canCreateCustomisation, canUpdate: canUpdateCustomisation, canDelete: canDeleteCustomisation } = usePermission('customisation');
@@ -319,10 +232,6 @@ export default function Customisation() {
   // ── Product models state ──
   const [query, setQuery] = useState('');
   const [categoryFilter, setCategoryFilter] = useState({ label: 'All categories', value: 'ALL' });
-  const [addModelOpen, setAddModelOpen] = useState(false);
-  const [editingModel, setEditingModel] = useState(null);
-  const [modelToDelete, setModelToDelete] = useState(null);
-  
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
@@ -492,7 +401,6 @@ export default function Customisation() {
   }, [currentBrands, activeBrandId]);
 
   const activeBrand = currentBrands.find((b) => b.id === activeBrandId) ?? currentBrands[0];
-  const ownerCustomer = customers.find(c => c.id === activeBrand?.customer_id) ?? null;
 
   const removeBrand = (brandId) => {
     const brand = currentBrands.find((b) => b.id === brandId);
@@ -504,7 +412,6 @@ export default function Customisation() {
   const confirmDeleteBrand = async () => {
     if (!brandToDelete) return;
     try {
-      // In case it's a locally added dummy brand without a real db id yet, though AddBrandModal returns real IDs now
       if (brandToDelete.id.startsWith('b-')) {
         removeBrand(brandToDelete.id);
         setBrandToDelete(null);
@@ -610,24 +517,6 @@ export default function Customisation() {
     return <OptionsCell field={model.specs.find((s) => s.key === field.key) ?? field} />;
   };
 
-  const handleAddModel = (model) => { setModels([formatProductModel(model), ...models]); setAddModelOpen(false); };
-  const handleEditModel = (model) => { 
-    const formatted = formatProductModel(model);
-    setModels(models.map((m) => (m.id === formatted.id ? formatted : m))); 
-    setEditingModel(null); 
-  };
-  const handleDeleteModel = async (model) => { 
-    if (!model) return; 
-    const res = await deleteProductApi(model.id);
-    if(res.data?.success) {
-      setModels(models.filter((m) => m.id !== model.id)); 
-      setModelToDelete(null); 
-      toast.success('Product deleted successfully');
-    } else {
-      throw new Error(res.data?.message || 'Failed to delete product');
-    }
-  };
-
   // ── CommonTable columns for product models ──
   const tableColumns = useMemo(() => {
     const specFields = TABLE_SPEC_KEYS.map((key) => CUSTOMISATION_SPECS.find((f) => f.key === key)).filter(Boolean);
@@ -676,7 +565,7 @@ export default function Customisation() {
    
   }, [models, canUpdateCustomisation, canDeleteCustomisation]);
 
-  /* ──────────── RENDER ──────────── */
+
   return (
     <>
       <Head>
@@ -691,7 +580,7 @@ export default function Customisation() {
             <p className="mt-1 text-sm leading-snug text-grey-muted">Customer brands, panel stickers, and product model options for order specs.</p>
           </div>
           {canCreateProduct && (
-            <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add Product" onClick={() => setAddModelOpen(true)} />
+            <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add Product" onClick={() => router.push('/inventory/product/add')} />
           )}
         </div>
 
@@ -926,42 +815,8 @@ export default function Customisation() {
           item={brandToDelete}
           itemType="brand"
         />
-        <AddProduct open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
-        <EditProduct open={!!editingModel} product={editingModel} onClose={() => setEditingModel(null)} onEdit={handleEditModel} />
-        <DeleteModal open={!!modelToDelete} onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}
-          item={modelToDelete} title="Delete product" itemType="product" />
       </div>
-      {/* Action Dropdown Menu */}
-      {dropdownState && (
-        <div
-          className="fixed bg-white border border-grey-border rounded-lg shadow-xl z-50 flex flex-col py-1 min-w-[120px]"
-          style={{ top: dropdownState.y, left: dropdownState.x }}
-          onClick={(e) => e.stopPropagation()}
-        >
-          {canUpdateCustomisation && (
-            <button
-              className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg transition-colors flex items-center gap-2"
-              onClick={() => {
-                setEditingModel(dropdownState.row);
-                setDropdownState(null);
-              }}
-            >
-              <Pencil size={14} /> Edit
-            </button>
-          )}
-          {canDeleteCustomisation && (
-            <button
-              className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
-              onClick={() => {
-                setModelToDelete(dropdownState.row);
-                setDropdownState(null);
-              }}
-            >
-              <Trash2 size={14} /> Delete
-            </button>
-          )}
-        </div>
-      )}
+    
     </>
   );
 }
