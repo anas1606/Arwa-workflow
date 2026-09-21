@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Printer, Pencil } from 'lucide-react';
+import { X, Printer, Pencil, Box, Package, User, Hash, Calendar, Loader2 } from 'lucide-react';
 import Button from '@/common/buttons/Button';
-import { dueDaysLabel, orderTotalQty } from '@/common/dummy';
+import { getOrderByIdApi } from '@/lib/fetcher';
 import clsx from 'clsx';
 
 function getModalRoot() {
@@ -26,57 +26,39 @@ export default function OrderDetailsModal({
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
+  const [fullOrder, setFullOrder] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     let timer;
     if (open) {
       setShouldRender(true);
       setIsAnimatingOut(false);
+      if (selectedOrder?.id) {
+        setLoading(true);
+        getOrderByIdApi(selectedOrder.id).then((res) => {
+          if (res.data?.success) {
+            setFullOrder(res.data.data);
+          }
+          setLoading(false);
+        });
+      }
     } else if (shouldRender) {
       setIsAnimatingOut(true);
-      timer = setTimeout(() => { setShouldRender(false); }, 200);
+      timer = setTimeout(() => { setShouldRender(false); setFullOrder(null); }, 200);
     }
     return () => { if (timer) clearTimeout(timer); };
-  }, [open, shouldRender]);
-
-  useEffect(() => {
-    if (!shouldRender) return;
-    
-    const hasLock = document.body.dataset.modalLock === 'true';
-    if (!hasLock) {
-      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
-      document.body.dataset.prevOverflow = document.body.style.overflow;
-      document.body.dataset.prevPadding = document.body.style.paddingRight;
-      document.body.dataset.modalLock = 'true';
-      
-      document.body.style.overflow = 'hidden';
-      document.body.style.paddingRight = `${scrollbarWidth}px`;
-    }
-
-    const onKeyDown = (e) => { if (e.key === 'Escape') { e.preventDefault(); onClose(); } };
-    document.addEventListener('keydown', onKeyDown);
-    
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      setTimeout(() => {
-        const remainingModals = document.querySelectorAll('.app-modal-layer').length;
-        if (remainingModals === 0) {
-          document.body.style.overflow = document.body.dataset.prevOverflow || '';
-          document.body.style.paddingRight = document.body.dataset.prevPadding || '';
-          delete document.body.dataset.modalLock;
-          delete document.body.dataset.prevOverflow;
-          delete document.body.dataset.prevPadding;
-        }
-      }, 0);
-    };
-  }, [shouldRender, onClose]);
+  }, [open, shouldRender, selectedOrder]);
 
   if (!shouldRender || !selectedOrder) return null;
   const root = getModalRoot();
   if (!root) return null;
+  
+  const displayOrder = fullOrder || selectedOrder;
+  const totalQty = (displayOrder.orderLines || []).reduce((sum, line) => sum + (line.quantity || 0), 0);
 
   return createPortal(
-    <div className="app-modal-layer" role="presentation">
+    <div className="app-modal-layer z-[999]" role="presentation">
       <button
         type="button"
         className={`app-modal-backdrop ${isAnimatingOut ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'}`}
@@ -87,75 +69,135 @@ export default function OrderDetailsModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-[#f4f7fb] shadow-2xl rounded-md border border-white/50 ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full max-h-[90vh] overflow-hidden flex flex-col`}
+        className={`app-modal-panel bg-[#f4f7fb] shadow-2xl rounded-xl border border-white/50 ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col`}
       >
         
         {/* Header - Fixed */}
-        <div className="flex-none flex items-center justify-between p-5 border-b border-grey-surface bg-white/50">
-          <h2 className="text-lg font-bold text-grey-text-strong">Order {selectedOrder.orderNumber}</h2>
-          <button onClick={onClose} className="text-grey-muted hover:text-grey-text transition-colors">
+        <div className="flex-none flex items-center justify-between p-5 border-b border-grey-surface bg-white">
+          <div className="flex items-center gap-3">
+            <div className="h-10 w-10 bg-primary-bg rounded-lg flex items-center justify-center">
+              <Package className="text-primary-dark" size={20} />
+            </div>
+            <div>
+              <h2 className="text-lg font-bold text-grey-text-strong flex items-center gap-2">
+                {displayOrder.orderNumber}
+                <span className={clsx("badge px-2 py-0.5 rounded-md text-2xs font-semibold shadow-sm inline-block whitespace-nowrap", getStatusStyles(displayOrder.status))}>
+                   {displayOrder.status?.toUpperCase().replace('_', ' ')}
+                </span>
+              </h2>
+              <p className="text-xs text-grey-icon mt-0.5">Order Details</p>
+            </div>
+          </div>
+          <button onClick={onClose} className="text-grey-muted hover:text-grey-text transition-colors bg-grey-bg p-2 rounded-full hover:bg-grey-surface">
             <X size={20} />
           </button>
         </div>
         
         {/* Body - Scrollable */}
-        <div className="flex-1 overflow-y-auto p-5 grid grid-cols-2 gap-y-6 gap-x-4">
-          <div>
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Customer</p>
-            <p className="text-sm font-semibold text-grey-text-strong">{selectedOrder.customerName}</p>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Order Type</p>
-            <span className="badge border border-primary-subtle text-primary-dark bg-primary-bg inline-flex items-center gap-1 rounded-md px-2 py-1 text-xs font-semibold shadow-sm whitespace-nowrap">
-               {selectedOrder.orderType}
-            </span>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Status</p>
-            <span className={clsx("badge px-2 py-1 rounded-md text-xs font-semibold shadow-sm inline-block whitespace-nowrap", getStatusStyles(selectedOrder.status))}>
-               {selectedOrder.status.toUpperCase().replace('_', ' ')}
-            </span>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Due</p>
-            <div className="flex flex-col">
-              <span className={clsx("text-sm font-bold whitespace-nowrap", dueDaysLabel(selectedOrder.dueDate).tone === 'danger' ? 'text-danger-dark' : 'text-grey-text-strong')}>
-                 {dueDaysLabel(selectedOrder.dueDate).text}
-              </span>
-              <span className="text-xs text-grey-icon whitespace-nowrap">{selectedOrder.dueDate}</span>
+        <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 relative">
+          {loading && (
+             <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
+               <Loader2 className="animate-spin text-primary" size={32} />
+             </div>
+          )}
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
+              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><User size={14}/> Customer</p>
+              <p className="text-sm font-bold text-grey-text-strong mt-1">{displayOrder.customer?.name || displayOrder.customerName || '-'}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
+              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Calendar size={14}/> Due Date</p>
+              <p className="text-sm font-bold text-grey-text-strong mt-1">
+                {new Date(displayOrder.dueDate).toLocaleDateString()}
+              </p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
+              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Hash size={14}/> Total Qty</p>
+              <p className="text-sm font-bold text-grey-text-strong mt-1">{totalQty}</p>
+            </div>
+            <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
+              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Box size={14}/> Order Type</p>
+              <div className="mt-1">
+                <span className="badge border border-primary-subtle text-primary-dark bg-primary-bg inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-xs font-semibold shadow-sm whitespace-nowrap">
+                   {displayOrder.orderType}
+                </span>
+              </div>
             </div>
           </div>
-          <div>
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Priority</p>
-            <span className={clsx("text-sm font-semibold", 
-               selectedOrder.priority === 'High' ? "text-danger-dark" :
-               selectedOrder.priority === 'Medium' ? "text-warning-dark" : "text-success-dark"
-            )}>{selectedOrder.priority}</span>
-          </div>
-          <div>
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Total Qty</p>
-            <p className="text-sm font-semibold text-grey-text-strong">{orderTotalQty(selectedOrder)}</p>
-          </div>
-          <div className="col-span-2">
-            <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-1">Lines</p>
-            <p className="text-sm font-semibold text-grey-text-strong mb-2">{selectedOrder.products?.length || 0} product(s)</p>
-            <div className="space-y-2">
-               {selectedOrder.products?.map((p, i) => (
-                  <div key={i} className="flex justify-between items-center bg-white p-3 rounded-md border border-grey-surface shadow-sm">
-                     <span className="text-sm font-medium text-grey-text-dark">{p.name}</span>
-                     <button className="text-grey-icon hover:text-grey-text-strong transition-colors p-1 rounded-md hover:bg-grey-surface">
-                         <X size={16} />
-                     </button>
-                  </div>
-               ))}
+          
+          {displayOrder.remark && (
+            <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm">
+              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide mb-2">Remarks</p>
+              <p className="text-sm text-grey-text-dark whitespace-pre-wrap">{displayOrder.remark}</p>
+            </div>
+          )}
+
+          <div className="bg-white rounded-xl border border-grey-surface/60 shadow-sm overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-grey-surface/60 bg-grey-bg/30">
+               <p className="text-sm font-bold text-grey-text-strong">Order Lines</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-sm border-collapse">
+                <thead>
+                  <tr className="bg-grey-bg/50 text-grey-icon text-xs font-bold border-b border-grey-surface">
+                    <th className="py-2.5 px-4 font-semibold uppercase tracking-wider">Product</th>
+                    <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-right">Qty</th>
+                    <th className="py-2.5 px-4 font-semibold uppercase tracking-wider">Specs</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-grey-surface">
+                  {(displayOrder.orderLines || []).map((line, idx) => (
+                    <tr key={idx} className="hover:bg-grey-bg/30 transition-colors">
+                      <td className="py-3 px-4 font-medium text-grey-text-strong align-top">
+                        {line.product?.name || '-'}
+                        <div className="text-xs text-grey-muted font-normal mt-0.5">{line.product?.code || ''}</div>
+                      </td>
+                      <td className="py-3 px-4 text-right font-bold tabular-nums text-grey-text-dark align-top">{line.quantity}</td>
+                      <td className="py-3 px-4 align-top">
+                        <div className="flex flex-col gap-2">
+                          <div className="flex flex-wrap gap-2 text-xs">
+                             {line.bodyDesign && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Design:</span>{line.bodyDesign.name}</span>}
+                             {line.colour && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Color:</span>{line.colour.name}</span>}
+                             {line.brand && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Brand:</span>{line.brand.name}</span>}
+                             {line.sticker && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{line.sticker.name}</span>}
+                          </div>
+                          
+                          {(line.accessoriesType === 'CUSTOMIZE' || line.packingType === 'CUSTOMIZE') && (
+                            <div className="mt-1 flex flex-col gap-1">
+                              {line.accessoriesType === 'CUSTOMIZE' && (
+                                <div className="text-xs border-l-2 border-primary-subtle pl-2">
+                                  <span className="font-semibold text-grey-text-dark">Custom Accessories:</span>
+                                  <p className="text-grey-text mt-0.5" dangerouslySetInnerHTML={{__html: line.accessoriesNote}} />
+                                </div>
+                              )}
+                              {line.packingType === 'CUSTOMIZE' && (
+                                <div className="text-xs border-l-2 border-primary-subtle pl-2">
+                                  <span className="font-semibold text-grey-text-dark">Custom Packing:</span>
+                                  <p className="text-grey-text mt-0.5" dangerouslySetInnerHTML={{__html: line.packingNote}} />
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                  {(!displayOrder.orderLines || displayOrder.orderLines.length === 0) && (
+                    <tr>
+                      <td colSpan="3" className="py-8 text-center text-grey-muted text-sm">No products found for this order.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
         
         {/* Footer - Fixed */}
-        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-grey-bg/50 border-t border-grey-surface">
-          <Button variant="secondary" text="Close" onClick={onClose} className="bg-white rounded-md shadow-sm" />
-          <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-md shadow-sm" />
+        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-white border-t border-grey-surface">
+          <Button variant="secondary" text="Close" onClick={onClose} className="bg-grey-bg rounded-md shadow-sm border-0" />
+          <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-md shadow-sm border border-grey-border" />
           <Button variant="primary" text="Edit order" icon={Pencil} onClick={onEdit} className="rounded-md shadow-sm" />
         </div>
         

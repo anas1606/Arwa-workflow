@@ -1,7 +1,8 @@
 export const ORDER_TYPES = ['Standard', 'Customised'];
 
 export function orderTotalQty(order) {
-  return order.products.reduce((sum, line) => sum + line.quantity, 0);
+  const lines = order.orderLines || order.products || [];
+  return lines.reduce((sum, line) => sum + (line.quantity || 0), 0);
 }
 
 export function dueDaysLabel(dueDate, now = new Date()) {

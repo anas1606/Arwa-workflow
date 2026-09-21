@@ -50,11 +50,11 @@ export const createProduct = async (data, userId = null) => {
                 data: {
                     name: data.name,
                     code: data.code || null,
-                    stockQuantity: data.stockQuantity || 0,
-                    lowStockThreshold: data.lowStockThreshold !== undefined ? data.lowStockThreshold : 10,
+                    stockQuantity: data.stockQuantity !== undefined ? data.stockQuantity : undefined,
+                    lowStockThreshold: data.lowStockThreshold !== undefined ? data.lowStockThreshold : undefined,
                     categoryId: data.categoryId || null,
                     unitId: data.unitId || null,
-                    isActive: data.isActive !== undefined ? data.isActive : true,
+                    isActive: data.isActive !== undefined ? data.isActive : undefined,
                     createdBy: userId || data.createdBy || null,
                     bodyDesigns: data.bodyDesigns && data.bodyDesigns.length > 0 ? {
                         create: data.bodyDesigns.map(design => ({
@@ -79,7 +79,7 @@ export const createProduct = async (data, userId = null) => {
         return { success: true, data: result };
     } catch (error) {
         console.error('Error in createProduct service:', error);
-        return { success: false, message: 'An internal server error occurred while creating product.', error: error.message };
+        return { success: false, message: error.message || 'An internal server error occurred while creating product.', error: error.message };
     }
 };
 

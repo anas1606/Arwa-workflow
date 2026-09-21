@@ -41,13 +41,17 @@ async function main() {
   const encryptedPassword = encryptString('admin123'); // Default password for super admin
   await prisma.user.upsert({
     where: { username: 'admin' },
-    update: {},
+    update: {
+      isSuperAdmin: true,
+    },
     create: {
       username: 'admin',
       email: 'admin@arwa.com',
       password: encryptedPassword,
       // No security_role_id provided means they are super admin
       isActive: true,
+      isSuperAdmin: true,
+      createdBy: 'SYSTEM',
     },
   });
   console.log('Super Admin user created.');

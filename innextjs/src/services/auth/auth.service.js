@@ -58,7 +58,8 @@ export const loginUser = async (identifier, password) => {
             username: user.username,
             phone: user.phone,
             email: user.email,
-            role: user.security_role?.role_name || 'super_admin',
+            isSuperAdmin: user.isSuperAdmin,
+            role: user.security_role?.role_name || undefined,
             security_role_id: user.security_role_id,
             security_role: user.security_role ? {
                 id: user.security_role.id,

@@ -26,7 +26,7 @@ export const createCategory = async (data, userId = null) => {
             data: {
                 name: data.name,
                 parentId: data.parentId || null,
-                isActive: data.isActive !== undefined ? data.isActive : true,
+                isActive: data.isActive !== undefined ? data.isActive : undefined,
                 createdBy: userId || data.createdBy || null,
             }
         });

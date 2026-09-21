@@ -1,34 +1,73 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Head from 'next/head';
-import { Search, Plus, Filter, Printer, Pencil, X, Eye, Trash2 } from 'lucide-react';
+import { Search, Plus, Filter, Printer, Pencil, Eye, Trash2, RefreshCw } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
-import { DUMMY_ORDERS, ORDER_KPIS, dueDaysLabel, orderTotalQty } from '@/common/dummy';
+import { dueDaysLabel } from '@/common/dummy';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import clsx from 'clsx';
-import Link from 'next/link';
 import { useRouter } from 'next/router';
 import OrderDetailsModal from './modals/OrderDetailsModal';
-import EditOrderModal from './modals/EditOrderModal';
 import FilterModal from './modals/FilterModal';
 import DeleteModal from '@/common/modal/DeleteModal';
+import { getOrdersApi } from '@/lib/fetcher';
 
 export default function OrdersView() {
   const router = useRouter();
-  const [ordersData] = useState(DUMMY_ORDERS);
+  
+  // Data state
+  const [ordersData, setOrdersData] = useState([]);
+  const [kpis, setKpis] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  // Table state
   const [query, setQuery] = useState('');
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
-
   const [activeTab, setActiveTab] = useState('order_list');
+  const [activeFilters, setActiveFilters] = useState({});
+
+  // Modals state
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [actionMenu, setActionMenu] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
-  const [activeFilters, setActiveFilters] = useState({});
+
+  const fetchOrders = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const queryParams = new URLSearchParams({
+        page: pageNo,
+        limit: pageSize,
+        search: query,
+      });
+      const filters = {};
+      if (activeFilters.orderType) filters.orderType = activeFilters.orderType;
+      if (activeFilters.priority) filters.priority = activeFilters.priority;
+      if (activeFilters.status) filters.status = activeFilters.status;
+
+      const res = await getOrdersApi(pageNo, pageSize, query, filters);
+      
+      if (res.data?.success) {
+        setOrdersData(res.data.data.data);
+        setKpis(res.data.data.kpis);
+        setTotalItems(res.data.data.pagination.total);
+        setTotalPages(res.data.data.pagination.totalPages);
+      }
+    } catch (error) {
+      console.error('Failed to fetch orders', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [pageNo, pageSize, query, activeFilters]);
+
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
 
   useEffect(() => {
     if (!actionMenu) return;
@@ -55,60 +94,6 @@ export default function OrdersView() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  const filteredData = useMemo(() => {
-    let data = [...ordersData];
-
-    // Apply active filters
-    if (activeFilters && Object.keys(activeFilters).length > 0) {
-      if (activeFilters.orderNumber?.length) data = data.filter(d => activeFilters.orderNumber.includes(d.orderNumber));
-      
-      if (activeFilters.orderDate) {
-        const { from, to } = activeFilters.orderDate;
-        if (from) data = data.filter(d => new Date(d.orderDate || 'N/A') >= new Date(from));
-        if (to) data = data.filter(d => new Date(d.orderDate || 'N/A') <= new Date(to));
-      }
-      
-      if (activeFilters.dueDate) {
-        const { from, to } = activeFilters.dueDate;
-        if (from) data = data.filter(d => new Date(d.dueDate) >= new Date(from));
-        if (to) data = data.filter(d => new Date(d.dueDate) <= new Date(to));
-      }
-      
-      if (activeFilters.quantity) {
-        const { min, max } = activeFilters.quantity;
-        data = data.filter(d => {
-          const qty = d.products?.reduce((sum, p) => sum + p.qty, 0) || 0;
-          if (min && qty < parseInt(min, 10)) return false;
-          if (max && qty > parseInt(max, 10)) return false;
-          return true;
-        });
-      }
-      
-      if (activeFilters.customer?.length) data = data.filter(d => activeFilters.customer.includes(d.customerName));
-      if (activeFilters.priority?.length) data = data.filter(d => activeFilters.priority.includes(d.priority));
-      if (activeFilters.status?.length) data = data.filter(d => activeFilters.status.includes(d.status));
-      if (activeFilters.product?.length) data = data.filter(d => {
-        return d.products?.some(p => activeFilters.product.includes(p.name));
-      });
-    }
-
-    // Add data according to tabs change
-    if (activeTab === 'by_product') {
-      data.sort((a, b) => (b.products?.length || 0) - (a.products?.length || 0));
-    } else if (activeTab === 'by_order_type') {
-      data.sort((a, b) => a.orderType.localeCompare(b.orderType));
-    }
-
-    const q = query.trim().toLowerCase();
-    return data.filter((o) => {
-      if (!q) return true;
-      return (
-        o.orderNumber.toLowerCase().includes(q) ||
-        o.customerName.toLowerCase().includes(q)
-      );
-    });
-  }, [ordersData, activeFilters, activeTab]);
-
   const totalFilters = useMemo(() => {
     return Object.values(activeFilters).reduce((sum, filter) => {
       if (Array.isArray(filter)) return sum + filter.length;
@@ -122,14 +107,6 @@ export default function OrdersView() {
   React.useEffect(() => {
     setPageNo(1);
   }, [query, activeTab]);
-
-  const totalItems = filteredData.length;
-  const totalPages = Math.ceil(totalItems / pageSize);
-
-  const paginatedData = useMemo(() => {
-    const start = (pageNo - 1) * pageSize;
-    return filteredData.slice(start, start + pageSize);
-  }, [filteredData, pageNo, pageSize]);
 
   const getStatusStyles = (status) => {
     const s = status.toUpperCase().replace('_', ' ');
@@ -155,7 +132,7 @@ export default function OrdersView() {
     {
       key: 'customerName',
       label: 'Customer',
-      render: (row) => <span className="text-sm font-semibold text-grey-text-strong whitespace-nowrap">{row.customerName}</span>,
+      render: (row) => <span className="text-sm font-semibold text-grey-text-strong whitespace-nowrap">{row.customer?.name || '-'}</span>,
     },
     {
       key: 'orderType',
@@ -170,16 +147,10 @@ export default function OrdersView() {
       key: 'dueDate',
       label: 'Due',
       render: (row) => {
-        const due = dueDaysLabel(row.dueDate);
-        const toneBg = due.tone === 'danger' ? 'bg-danger-subtle text-danger-dark' :
-                       due.tone === 'warning' ? 'bg-warning-subtle text-warning-dark' :
-                       due.tone === 'info' ? 'bg-primary-subtle text-primary-dark' : 'bg-grey-surface text-grey-text-dark';
+        const dateStr = new Date(row.dueDate).toLocaleDateString();
         return (
           <div className="max-w-[140px]">
-            <span className={clsx("inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-2xs font-semibold whitespace-nowrap", toneBg)}>
-              {due.text}
-            </span>
-            <p className="mt-0.5 text-2xs text-grey-icon truncate ">{row.dueDate}</p>
+            <p className="mt-0.5 text-2xs text-grey-icon truncate ">{dateStr}</p>
           </div>
         );
       },
@@ -188,20 +159,34 @@ export default function OrdersView() {
       key: 'products',
       label: 'Products',
       render: (row) => {
-        const options = row.products.map(p => p.name);
+        // Aggregate quantities by product name
+        const productMap = (row.orderLines || []).reduce((acc, line) => {
+          const name = line.product?.name;
+          if (name) {
+            acc[name] = (acc[name] || 0) + line.quantity;
+          }
+          return acc;
+        }, {});
+        
+        const aggregatedOptions = Object.entries(productMap).map(([name, qty]) => `${name} (${qty})`);
         const MAX_VISIBLE = 1;
-        const overflow = options.length - MAX_VISIBLE;
-        const visible = options.slice(0, MAX_VISIBLE);
+        const overflow = aggregatedOptions.length - MAX_VISIBLE;
+        const visible = aggregatedOptions.slice(0, MAX_VISIBLE);
+        
         return (
           <div className="flex items-center gap-1">
             {visible.map((opt, idx) => (
               <span key={idx} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark max-w-[120px] truncate">{opt}</span>
             ))}
             {overflow > 0 && (
-              <span className="relative inline-block">
+              <span className="relative inline-block">d
                 <span className="peer inline-flex rounded-md bg-grey-bg px-1.5 py-0.5 text-2xs font-semibold text-grey-text-light cursor-help whitespace-nowrap">+{overflow} more</span>
                 <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-grey-text-strong px-2 py-1.5 text-xs text-white shadow-lg">
-                  {options.slice(MAX_VISIBLE).join(', ')}
+                  <div className="flex flex-col gap-1">
+                    {aggregatedOptions.slice(MAX_VISIBLE).map((opt, i) => (
+                       <span key={i}>{opt}</span>
+                    ))}
+                  </div>
                   <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-grey-text-strong"></div>
                 </div>
               </span>
@@ -216,7 +201,7 @@ export default function OrdersView() {
       align: 'right',
       render: (row) => (
         <span className="text-sm font-semibold tabular-nums text-grey-text-dark">
-          {orderTotalQty(row)}
+          {(row.orderLines || []).reduce((sum, line) => sum + line.quantity, 0)}
         </span>
       ),
     },
@@ -295,8 +280,13 @@ export default function OrdersView() {
 
         {/* KPIs */}
         <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4">
-          {ORDER_KPIS.map((kpi, i) => (
-            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
+          {[
+            { label: "OPEN ORDERS", value: isLoading ? "..." : ordersData.filter(o => o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length, hint: "Not completed or cancelled" },
+            { label: "IN PRODUCTION", value: isLoading ? "..." : ordersData.filter(o => o.status === 'IN_PRODUCTION').length, hint: "Active on the floor" },
+            { label: "DUE THIS WEEK", value: isLoading ? "..." : ordersData.filter(o => new Date(o.dueDate) >= new Date() && new Date(o.dueDate) <= new Date(new Date().setDate(new Date().getDate() + 7))).length, hint: "Risk of delay" },
+            { label: "LATE / BLOCKED", value: isLoading ? "..." : ordersData.filter(o => new Date(o.dueDate) < new Date() && o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length, hint: "Needs attention" },
+          ].map((kpi, i) => (
+            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md h-[90px]">
               <div
                 className={clsx('absolute inset-y-0 left-0 w-1',
                   i === 0 ? 'bg-primary' :
@@ -321,9 +311,7 @@ export default function OrdersView() {
           {/* Tabs */}
           <div className="flex items-center gap-2">
             {[
-              { id: 'order_list', label: 'Order list', count: 18, shortcut: '1' },
-              { id: 'by_product', label: 'By product', count: 2, shortcut: '2' },
-              { id: 'by_order_type', label: 'By order type', count: 3, shortcut: '3' },
+              { id: 'order_list', label: 'Order list', count: totalItems, shortcut: '1' },
             ].map((t) => {
               const active = activeTab === t.id;
               return (
@@ -384,8 +372,6 @@ export default function OrdersView() {
             <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">Alt</span>
             <span>+</span>
             <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">1</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">2</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">3</span>
             <span>switch views ·</span>
             <Filter size={12} className="inline ml-1" />
             <span>Filters — order, order date, due date, quantity, customer, priority, status, product</span>
@@ -395,7 +381,8 @@ export default function OrdersView() {
         {/* Table */}
         <CommonTable
           columns={columns}
-          data={paginatedData}
+          data={ordersData}
+          isLoading={isLoading}
           emptyState="No orders found."
           pagination={{
             totalItems,
@@ -415,16 +402,10 @@ export default function OrdersView() {
         open={isDetailsModalOpen}
         selectedOrder={selectedOrder}
         onClose={() => setIsDetailsModalOpen(false)}
-        onEdit={() => { setIsDetailsModalOpen(false); setIsEditModalOpen(true); }}
+        onEdit={() => { setIsDetailsModalOpen(false); router.push(`/orders/${selectedOrder?.id}/edit`); }}
         getStatusStyles={getStatusStyles}
       />
 
-      <EditOrderModal
-        open={isEditModalOpen}
-        selectedOrder={selectedOrder}
-        onClose={() => setIsEditModalOpen(false)}
-        onSave={() => setIsEditModalOpen(false)}
-      />
       <DeleteModal
         open={isDeleteModalOpen}
         onClose={() => setIsDeleteModalOpen(false)}
@@ -444,7 +425,7 @@ export default function OrdersView() {
       />
       {actionMenu && typeof document !== 'undefined' && createPortal(
         <div
-          className="absolute z-[9999] bg-white rounded-lg shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-grey-surface py-1.5 w-40 flex flex-col"
+          className="absolute z-[9999] bg-white rounded-md shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-grey-surface py-1.5 w-40 flex flex-col"
           style={{ top: actionMenu.top, left: actionMenu.left }}
           onClick={(e) => e.stopPropagation()}
         >
@@ -458,7 +439,7 @@ export default function OrdersView() {
           <Button
             variant="ghost"
             className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-grey-bg !text-grey-text !min-h-0 !h-auto !font-medium border-0"
-            onClick={() => { setSelectedOrder(actionMenu.row); setIsEditModalOpen(true); setActionMenu(null); }}
+            onClick={() => { setSelectedOrder(actionMenu.row); router.push(`/orders/${actionMenu.row.id}/edit`); setActionMenu(null); }}
             icon={() => <Pencil size={16} className="text-grey-icon" />}
             text="Edit"
           />
