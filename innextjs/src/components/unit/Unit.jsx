@@ -301,7 +301,7 @@ export default function Unit() {
               info: 'bg-primary-dark',
             };
             return (
-              <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
+              <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none">
                 <div
                   className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])}
                   aria-hidden
@@ -319,7 +319,7 @@ export default function Unit() {
         </section>
 
         {/* Toolbar */}
-        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3 rounded-md">
+        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
               type="text"

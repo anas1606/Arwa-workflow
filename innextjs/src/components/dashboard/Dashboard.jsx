@@ -85,7 +85,7 @@ export default function Dashboard() {
             <div
               key={alert.id}
               className={clsx(
-                'flex gap-3 rounded-md border px-3 py-2.5 shadow-sm',
+                'flex gap-3 rounded-xl sm:rounded-2xl border px-3 py-2.5 shadow-sm',
                 alertStyles[alert.severity]
               )}
               role={alert.severity === 'critical' ? 'alert' : 'status'}
@@ -119,11 +119,18 @@ export default function Dashboard() {
         {FACTORY_KPIS.map((kpi) => (
           <div 
             key={kpi.label} 
-            className={clsx(
-              "rounded-md border border-white/50 border-l-[4px] bg-white/60 p-3 sm:p-4 backdrop-blur-md relative overflow-hidden shadow-sm", 
-              toneBorder[kpi.tone || 'neutral']
-            )}
+            className="card-panel relative overflow-hidden"
           >
+            <div
+              className={clsx('absolute inset-y-0 left-0 w-1', {
+                'bg-primary': (kpi.tone || 'neutral') === 'neutral',
+                'bg-success-dark': kpi.tone === 'success',
+                'bg-warning-dark': kpi.tone === 'warning',
+                'bg-danger-dark': kpi.tone === 'danger',
+                'bg-primary-dark': kpi.tone === 'info',
+              })}
+              aria-hidden
+            />
             <p className="text-2xs font-semibold uppercase tracking-wide text-grey-muted">
               {kpi.label}
             </p>
@@ -155,7 +162,7 @@ export default function Dashboard() {
               return (
                 <article
                   key={m.id}
-                  className="rounded-md border border-white/45 bg-white/35 p-3 backdrop-blur-sm"
+                  className="card-panel !p-3"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div>

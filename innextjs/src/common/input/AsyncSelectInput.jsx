@@ -38,7 +38,7 @@ export default function AsyncSelectInput({
     control: (base, state) => ({
       ...base,
       minHeight: '44px',
-      borderRadius: '0.375rem',
+      borderRadius: '0.67rem',
       backgroundColor: state.isFocused ? '#ffffff' : 'rgba(255, 255, 255, 0.6)',
       backdropFilter: 'blur(12px)',
       border: state.isFocused ? '1px solid var(--color-primary-muted)' : '1px solid #e5e7eb',
@@ -75,20 +75,22 @@ export default function AsyncSelectInput({
     }),
     menu: (base) => ({
       ...base,
-      borderRadius: '0.375rem',
-      boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)',
-      border: '1px solid #e5e7eb',
+      borderRadius: '0px', // Sharp corners as seen in the image
+      boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+      border: '1px solid var(--color-primary-muted)', // Blue border to match the focused input
+      marginTop: '-1px', // Pull it up slightly so the borders merge nicely
       overflow: 'hidden',
       zIndex: 50,
     }),
     option: (base, state) => ({
       ...base,
       fontSize: '0.875rem',
-      backgroundColor: state.isSelected ? 'rgba(var(--color-primary), 0.1)' : state.isFocused ? '#f4f7fb' : 'white',
-      color: state.isSelected ? 'var(--color-primary-dark)' : '#475569',
+      padding: '8px 12px',
+      backgroundColor: state.isSelected ? 'var(--color-primary)' : state.isFocused ? '#f1f5f9' : 'white',
+      color: state.isSelected ? 'white' : '#1e293b',
       cursor: 'pointer',
       '&:active': {
-        backgroundColor: '#e2e8f0',
+        backgroundColor: state.isSelected ? 'var(--color-primary)' : '#e2e8f0',
       },
     }),
     menuPortal: (base) => ({

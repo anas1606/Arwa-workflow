@@ -112,7 +112,7 @@ export default function DeleteModal({ open, onClose, onConfirm, item, itemNameKe
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-md w-full`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-xl sm:rounded-2xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-md w-full`}
       >
         <div className="flex shrink-0 items-center justify-between px-6 py-5">
           <h2 id={titleId} className="text-lg font-bold text-grey-text-strong">

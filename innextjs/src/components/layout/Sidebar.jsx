@@ -30,7 +30,6 @@ const operationsNav = [
     icon: ClipboardList,
     children: [
       { to: '/orders', label: 'All orders', icon: LayoutList, end: true, moduleKey: 'orders' },
-      { to: '/orders/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'customisation' },
     ],
   },
   { to: '/production', label: 'Production', icon: Factory, moduleKey: 'production' },
@@ -43,6 +42,7 @@ const operationsNav = [
       { to: '/inventory/category', label: 'Category', icon: Tags, moduleKey: 'categories' },
       { to: '/inventory/unit', label: 'Unit', icon: Ruler, moduleKey: 'units' },
       { to: '/inventory/packaging', label: 'Packaging', icon: Package, moduleKey: 'packaging' },
+      { to: '/inventory/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'customisation' },
     ],
   },
 ];
@@ -169,7 +169,6 @@ function NestedNavItem({ item, pathname }) {
                 pathname.startsWith('/orders') &&
                 !pathname.startsWith('/orders/by-product') &&
                 !pathname.startsWith('/orders/by-order-type') &&
-                !pathname.startsWith('/orders/customisation') &&
                 !pathname.startsWith('/orders/config');
 
               const isActive = child.end ? pathname === child.to : pathname.startsWith(child.to);

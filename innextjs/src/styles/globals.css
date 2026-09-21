@@ -178,7 +178,7 @@ body {
   /* Core Panels */
 
   .card-panel {
-    @apply rounded-md p-3 sm:p-4;
+    @apply rounded-xl p-3 sm:rounded-2xl sm:p-4;
     background: var(--glass-bg);
     border: 1px solid var(--glass-border-edge);
     backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));

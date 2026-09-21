@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Head from 'next/head';
-import { Plus, X, Pencil, Search, Package, Settings2, Tags, Trash2, MoreVertical } from 'lucide-react';
+import { Plus, X, Pencil, Search, Package, Settings2, Tags, Trash2, MoreVertical, ArrowLeft, ArrowRight } from 'lucide-react';
 import clsx from 'clsx';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import CommonTable from '@/common/table/CommonTable';
-import ConfirmModal from '@/common/modal/ConfirmModal';
-import { CUSTOMERS } from '@/common/dummy';
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
+
 import { PRODUCT_MODELS, CUSTOMISATION_SPECS, MODEL_OPTION_KEYS, MODEL_CATEGORIES } from '@/common/dummy';
-import AddCustomisation from './modal/AddCustomisation';
-import EditCustomisation from './modal/EditCustomisation';
+import AddProduct from '../product/modal/AddProduct';
+import EditProduct from '../product/modal/EditProduct';
 import AddCustomer from '../customers/modal/AddCustomer';
 import AddBrandModal from './modal/AddBrandModal';
-import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi, createStickerApi, deleteStickerApi } from '@/lib/fetcher';
+import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi, createStickerApi, deleteStickerApi, getCustomisationsApi, getCustomisationKpisApi, deleteProductApi, getCategoriesApi } from '@/lib/fetcher';
 import DeleteModal from '@/common/modal/DeleteModal';
 import { toast } from 'sonner';
 import { usePermission } from '@/hooks/usePermission';
@@ -60,81 +60,68 @@ function toFormState(model) {
   return { name: model?.name ?? '', code: model?.code ?? '', category: model?.category ?? MODEL_CATEGORIES[0] ?? '', options };
 }
 
+function formatProductModel(fm) {
+  const baseModel = PRODUCT_MODELS[0] || {};
+  const dynamicSpecs = JSON.parse(JSON.stringify(baseModel.specs || []));
+  
+  const bodyDesignSpec = dynamicSpecs.find(s => s.key === 'body_design');
+  if (bodyDesignSpec && fm.bodyDesigns) {
+      bodyDesignSpec.options = fm.bodyDesigns.map(bd => bd.name);
+  }
+  
+  const bodyColorSpec = dynamicSpecs.find(s => s.key === 'body_color');
+  if (bodyColorSpec && fm.colours) {
+      bodyColorSpec.options = fm.colours.map(c => c.name);
+  }
+
+  return {
+      ...baseModel, 
+      ...fm,
+      category: typeof fm.category === 'object' && fm.category !== null ? fm.category.name : fm.category,
+      specs: dynamicSpecs
+  };
+}
+
 /* ════════════════════════════════════════════════════════════════════
    Small presentational components
    ════════════════════════════════════════════════════════════════════ */
 
-function ActionMenu({ onEdit, onDelete }) {
-  const [open, setOpen] = useState(false);
-  const menuRef = useRef(null);
-
-  useEffect(() => {
-    const handleClickOutside = (e) => {
-      if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
-
-  return (
-    <div className="relative inline-block text-left" ref={menuRef}>
-      <button onClick={(e) => { e.stopPropagation(); setOpen(!open); }} className="p-1.5 text-grey-icon hover:text-grey-text-strong rounded-full hover:bg-grey-bg transition-colors">
-        <MoreVertical className="h-4 w-4" />
-      </button>
-      {open && (
-        <div className="absolute right-6 top-0 z-50 mt-1 w-32 origin-top-right rounded-md bg-white shadow-lg ring-1 ring-black/5 focus:outline-none">
-          <div className="py-1">
-            <button
-              onClick={(e) => { e.stopPropagation(); setOpen(false); onEdit(); }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-grey-text hover:bg-grey-bg"
-            >
-              <Pencil className="h-4 w-4" /> Edit
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setOpen(false); onDelete(); }}
-              className="flex w-full items-center gap-2 px-4 py-2 text-sm text-danger-600 hover:bg-danger-50"
-            >
-              <Trash2 className="h-4 w-4" /> Delete
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
 function OptionsCell({ field }) {
   const options = field.options ?? [];
   if (options.length === 0) return <span className="text-grey-icon">—</span>;
-  const MAX_VISIBLE = 1;
-  const overflow = options.length - MAX_VISIBLE;
-  const visible = options.slice(0, MAX_VISIBLE);
+  const overflow = options.length - MAX_VISIBLE_OPTIONS;
+  const visible = options.slice(0, MAX_VISIBLE_OPTIONS);
 
   return (
-    <div className="flex items-center gap-1">
-      {visible.map((opt) => (
-        <span key={opt} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">{opt}</span>
+    <div className="flex flex-wrap items-center gap-1.5">
+      {visible.slice(0, -1).map((opt) => (
+        <span key={opt} className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark whitespace-nowrap">{opt}</span>
       ))}
-      {overflow > 0 && (
-        <span className="relative inline-block">
-          <span className="peer inline-flex rounded-md bg-grey-bg px-1.5 py-0.5 text-2xs font-semibold text-grey-text-light cursor-help whitespace-nowrap">+{overflow} more</span>
-          <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-grey-text-strong px-2 py-1.5 text-xs text-white shadow-lg">
-            {options.slice(MAX_VISIBLE).join(', ')}
-            <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-ink-900"></div>
-          </div>
-        </span>
-      )}
+      <div className="flex items-center gap-1.5 flex-nowrap">
+        {visible.length > 0 && (
+          <span className="inline-flex rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark whitespace-nowrap">
+            {visible[visible.length - 1]}
+          </span>
+        )}
+        {overflow > 0 && (
+          <span className="relative inline-block">
+            <span className="peer inline-flex rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark cursor-help whitespace-nowrap">+{overflow}</span>
+            <div className="pointer-events-none absolute bottom-full left-1/2 z-10 mb-2 -translate-x-1/2 opacity-0 transition-opacity peer-hover:opacity-100 whitespace-nowrap rounded-md bg-grey-text-strong px-2 py-1.5 text-xs text-white shadow-lg">
+              {options.slice(MAX_VISIBLE_OPTIONS).join(', ')}
+              <div className="absolute left-1/2 top-full -translate-x-1/2 border-4 border-transparent border-t-ink-900"></div>
+            </div>
+          </span>
+        )}
+      </div>
     </div>
   );
 }
 
 function LinkedSpecCell({ label, detail }) {
   return (
-    <div className="max-w-[140px]">
+    <div className="min-w-[150px] max-w-[200px]">
       <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark whitespace-nowrap">{label}</span>
-      <p className="mt-0.5 text-2xs text-grey-icon truncate" title={detail}>{detail}</p>
+      <p className="mt-1 text-xs text-grey-icon leading-snug">{detail}</p>
     </div>
   );
 }
@@ -208,7 +195,7 @@ function FixedCustomiseField({ label }) {
 }
 
 
-function StickerEditor({ brand, onChange }) {
+function StickerEditor({ brand, onChange, canCreate, canDelete }) {
   const [draft, setDraft] = useState('');
   const [localError, setLocalError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -276,20 +263,22 @@ function StickerEditor({ brand, onChange }) {
           {brand.panelStickers.map((opt) => (
             <span key={opt.id} className="inline-flex max-w-full items-center gap-1 rounded-md border border-grey-border/70 bg-white px-1.5 py-0.5 text-2xs font-medium text-grey-text-dark">
               <span className="truncate">{opt.name}</span>
-              <ChipRemoveButton onClick={() => removeOption(opt)} />
+              {canDelete && <ChipRemoveButton onClick={() => removeOption(opt)} />}
             </span>
           ))}
         </div>
       ) : (
         <p className="text-2xs text-grey-icon mb-1.5 mt-1">Add at least one panel sticker for this brand.</p>
       )}
-      <div className="flex gap-1.5 mt-auto">
-        <Input type="text" value={draft}
-          onChange={(e) => { setDraft(e.target.value); if (localError) setLocalError(null); }}
-          onKeyDown={onKeyDown} placeholder="Type option, press Enter" disabled={isSubmitting}
-          className="flex-1 min-w-0 [&_input]:!h-8 [&_input]:!min-h-0" />
-        <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim() || isSubmitting} icon={Plus} />
-      </div>
+      {canCreate && (
+        <div className="flex gap-1.5 mt-auto">
+          <Input type="text" value={draft}
+            onChange={(e) => { setDraft(e.target.value); if (localError) setLocalError(null); }}
+            onKeyDown={onKeyDown} placeholder="Type option, press Enter" disabled={isSubmitting}
+            className="flex-1 min-w-0 [&_input]:!h-8 [&_input]:!min-h-0" />
+          <Button variant="secondary" size="sm" className="shrink-0 px-2.5 !min-h-8" onClick={addOption} disabled={!draft.trim() || isSubmitting} icon={Plus} />
+        </div>
+      )}
       {localError && <p className="mt-1 text-2xs text-danger-dark">{localError}</p>}
     </div>
   );
@@ -305,8 +294,11 @@ function StickerEditor({ brand, onChange }) {
 
 export default function Customisation() {
   const { canCreate: canCreateCustomer } = usePermission('customers');
+  const { canCreate: canCreateProduct } = usePermission('products');
+  const { canCreate: canCreateCustomisation, canUpdate: canUpdateCustomisation, canDelete: canDeleteCustomisation } = usePermission('customisation');
   // ── Data state ──
-  const [models, setModels] = useState(() => cloneModels(PRODUCT_MODELS));
+  const [models, setModels] = useState([]);
+  const [kpiData, setKpiData] = useState(null);
   const [customers, setCustomers] = useState([]);
   const [currentBrands, setCurrentBrands] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -326,20 +318,83 @@ export default function Customisation() {
 
   // ── Product models state ──
   const [query, setQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('ALL');
+  const [categoryFilter, setCategoryFilter] = useState({ label: 'All categories', value: 'ALL' });
   const [addModelOpen, setAddModelOpen] = useState(false);
   const [editingModel, setEditingModel] = useState(null);
   const [modelToDelete, setModelToDelete] = useState(null);
+  
+  const [pageNo, setPageNo] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalItems, setTotalItems] = useState(0);
+  const [totalPages, setTotalPages] = useState(1);
+  
+  const [dropdownState, setDropdownState] = useState(null);
+
+  useEffect(() => {
+    const closeDropdown = () => setDropdownState(null);
+    if (dropdownState) {
+      window.addEventListener('click', closeDropdown);
+    }
+    return () => window.removeEventListener('click', closeDropdown);
+  }, [dropdownState]);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+       setIsLoading(true);
+       try {
+         const res = await getCustomisationsApi(pageNo, pageSize, query, categoryFilter?.value || 'ALL');
+         if (res.data && res.data.success) {
+            const fetchedModels = res.data.data.data || [];
+            const mergedModels = fetchedModels.map(formatProductModel);
+            setModels(mergedModels);
+            setTotalItems(res.data.data.pagination?.totalItems || 0);
+            setTotalPages(res.data.data.pagination?.totalPages || 1);
+         }
+       } catch (error) {
+         console.error("Error fetching customisation models", error);
+       } finally {
+         setIsLoading(false);
+       }
+    };
+    fetchModels();
+  }, [query, categoryFilter, pageNo, pageSize]);
+  
+  const loadCategories = async (input) => {
+    try {
+      const response = await getCategoriesApi(1, 10, input, 'ACTIVE');
+      if (response.data && response.data.success) {
+        const options = response.data.data.data.map(c => ({ label: c.name, value: c.id }));
+        return [{ label: 'All categories', value: 'ALL' }, ...options];
+      }
+    } catch (error) {
+      console.error('Failed to load categories', error);
+    }
+    return [];
+  };
+
+  useEffect(() => {
+    const fetchKpis = async () => {
+       try {
+         const res = await getCustomisationKpisApi();
+         if (res.data && res.data.success) {
+            setKpiData(res.data.data);
+         }
+       } catch (error) {
+         console.error("Error fetching customisation kpis", error);
+       }
+    };
+    fetchKpis();
+  }, []);
 
   // ── KPI computations ──
   const configuredCount = useMemo(() => models.filter(isModelConfigured).length, [models]);
   const totalBrands = useMemo(() => customers.reduce((sum, c) => sum + (typeof c.brands === 'number' ? c.brands : 0), 0), [customers]);
   const totalStickers = useMemo(() => currentBrands.reduce((s, b) => s + (b.stickerCount ?? b.panelStickers?.length ?? 0), 0), [currentBrands]);
   const kpis = [
-    { label: 'Total products', value: isLoading ? '...' : String(models.length), hint: 'Models in catalog', tone: 'neutral' },
-    { label: 'Configured products', value: isLoading ? '...' : String(configuredCount), hint: 'With design & color options', tone: 'info' },
-    { label: 'Customer brands', value: isLoading ? '...' : String(totalBrands), hint: `Across ${customers.length} customers`, tone: 'neutral' },
-    { label: 'Panel stickers', value: isLoading ? '...' : String(totalStickers), hint: 'Options linked to brands', tone: 'warning' },
+    { label: 'Total products', value: kpiData?.totalProducts ?? (isLoading ? '...' : String(models.length)), hint: 'Models in catalog', tone: 'neutral' },
+    { label: 'Configured products', value: kpiData?.configuredProducts ?? (isLoading ? '...' : String(configuredCount)), hint: 'With design & color options', tone: 'info' },
+    { label: 'Customer brands', value: kpiData?.customerBrands ?? (isLoading ? '...' : String(totalBrands)), hint: `Across ${customers.length} customers`, tone: 'neutral' },
+    { label: 'Panel stickers', value: kpiData?.panelStickers ?? (isLoading ? '...' : String(totalStickers)), hint: 'Options linked to brands', tone: 'warning' },
   ];
 
   // ── Customer brands logic ──
@@ -501,7 +556,28 @@ export default function Customisation() {
       if (e.metaKey || e.ctrlKey) return;
       if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
       if (e.altKey) {
-        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { e.preventDefault(); e.stopPropagation(); e.code === 'ArrowLeft' ? focusBrandsPane() : focusStickersInput(); }
+        if (e.code === 'KeyS') { e.preventDefault(); document.getElementById('customisation-search')?.focus(); return; }
+        if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { 
+          e.preventDefault(); 
+          e.stopPropagation(); 
+          
+          const isProductModelsFocused = document.activeElement?.closest('#product-models-section');
+          if (isProductModelsFocused) {
+            const focusable = Array.from(isProductModelsFocused.querySelectorAll('input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled && el.type !== 'hidden' && el.offsetParent !== null);
+            const currentIndex = focusable.indexOf(document.activeElement);
+            if (e.code === 'ArrowRight') {
+               const next = currentIndex === -1 ? 0 : (currentIndex + 1) % focusable.length;
+               focusable[next]?.focus();
+            } else {
+               const prev = currentIndex === -1 ? focusable.length - 1 : (currentIndex - 1 + focusable.length) % focusable.length;
+               focusable[prev]?.focus();
+            }
+            return;
+          }
+
+          e.code === 'ArrowLeft' ? focusBrandsPane() : focusStickersInput(); 
+          return; 
+        }
         return;
       }
       const target = e.target;
@@ -527,15 +603,6 @@ export default function Customisation() {
   };
 
   // ── Product models logic ──
-  const categories = useMemo(() => [...new Set(models.map((m) => m.category))].sort(), [models]);
-  const filtered = useMemo(() => {
-    const q = query.trim().toLowerCase();
-    return models.filter((m) => {
-      const matchCat = categoryFilter === 'ALL' || m.category === categoryFilter;
-      const matchQ = !q || m.name.toLowerCase().includes(q) || m.code.toLowerCase().includes(q) || m.category.toLowerCase().includes(q);
-      return matchCat && matchQ;
-    });
-  }, [models, query, categoryFilter]);
 
   const renderSpecCell = (model, field) => {
     if (field.key === 'brand_name') return <LinkedSpecCell label="Per customer" detail="Brands assigned on the customer account" />;
@@ -543,9 +610,23 @@ export default function Customisation() {
     return <OptionsCell field={model.specs.find((s) => s.key === field.key) ?? field} />;
   };
 
-  const handleAddModel = (model) => { setModels([...models, model]); setAddModelOpen(false); };
-  const handleEditModel = (model) => { setModels(models.map((m) => (m.id === model.id ? model : m))); setEditingModel(null); };
-  const handleDeleteModel = () => { if (!modelToDelete) return; setModels(models.filter((m) => m.id !== modelToDelete.id)); setModelToDelete(null); };
+  const handleAddModel = (model) => { setModels([formatProductModel(model), ...models]); setAddModelOpen(false); };
+  const handleEditModel = (model) => { 
+    const formatted = formatProductModel(model);
+    setModels(models.map((m) => (m.id === formatted.id ? formatted : m))); 
+    setEditingModel(null); 
+  };
+  const handleDeleteModel = async (model) => { 
+    if (!model) return; 
+    const res = await deleteProductApi(model.id);
+    if(res.data?.success) {
+      setModels(models.filter((m) => m.id !== model.id)); 
+      setModelToDelete(null); 
+      toast.success('Product deleted successfully');
+    } else {
+      throw new Error(res.data?.message || 'Failed to delete product');
+    }
+  };
 
   // ── CommonTable columns for product models ──
   const tableColumns = useMemo(() => {
@@ -553,7 +634,7 @@ export default function Customisation() {
     return [
       {
         key: 'model',
-        label: 'Model',
+        label: 'Product',
         render: (row) => (
           <div className="flex items-center gap-2.5">
             <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-2xs font-bold text-primary-dark">{modelInitials(row.code)}</span>
@@ -570,17 +651,30 @@ export default function Customisation() {
         render: (row) => renderSpecCell(row, field),
       })),
       {
-        key: 'actions',
-        label: 'Actions',
-        align: 'center',
+        key: 'created_by',
+        label: 'CREATED BY',
         render: (row) => (
-          <div className="flex items-center justify-center">
-            <ActionMenu onEdit={() => setEditingModel(row)} onDelete={() => setModelToDelete(row)} />
+          <div>
+            <p className="font-semibold text-grey-text-strong">{row.created_by?.name || 'admin'}</p>
+            <p className="text-2xs text-grey-muted">{row.created_at ? new Date(row.created_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '19 Sept 2026'}</p>
+          </div>
+        ),
+      },
+      {
+        key: 'updated_by',
+        label: 'UPDATED BY',
+        render: (row) => (
+          <div>
+            <p className="font-semibold text-grey-text-strong">{row.updated_by?.name || 'admin'}</p>
+            <p className="text-2xs text-grey-muted">{row.updated_at ? new Date(row.updated_at).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : '19 Sept 2026'}</p>
           </div>
         ),
       },
     ];
-  }, [models]);
+
+
+   
+  }, [models, canUpdateCustomisation, canDeleteCustomisation]);
 
   /* ──────────── RENDER ──────────── */
   return (
@@ -596,13 +690,15 @@ export default function Customisation() {
             <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">Customisation</h1>
             <p className="mt-1 text-sm leading-snug text-grey-muted">Customer brands, panel stickers, and product model options for order specs.</p>
           </div>
-          <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add model" onClick={() => setAddModelOpen(true)} />
+          {canCreateProduct && (
+            <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add Product" onClick={() => setAddModelOpen(true)} />
+          )}
         </div>
 
         {/* ─── KPIs ─── */}
         <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Customisation KPIs">
           {kpis.map((kpi) => (
-            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md">
+            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none">
               <div className={clsx('absolute inset-y-0 left-0 w-1', toneBar[kpi.tone])} aria-hidden />
               <p className="pl-2 text-2xs font-semibold uppercase tracking-wide text-grey-muted">{kpi.label}</p>
               <p className="mt-1 pl-2 font-mono text-xl font-semibold tabular-nums text-grey-text-strong sm:text-2xl">{kpi.value}</p>
@@ -612,7 +708,7 @@ export default function Customisation() {
         </section>
 
         {/* ─── Customer Brands Panel ─── */}
-        <div className="card-panel !p-3 space-y-2.5 rounded-md">
+        <div className="card-panel !p-3 space-y-2.5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -682,23 +778,27 @@ export default function Customisation() {
                                 <span className="block truncate text-sm font-semibold text-grey-text-strong">{brand.name}</span>
                                 <span className="block text-2xs text-grey-muted">{brand.stickerCount ?? brand.panelStickers.length} sticker{(brand.stickerCount ?? brand.panelStickers.length) === 1 ? '' : 's'}</span>
                               </button>
-                              <Button variant="ghost" size="square" data-remove-brand
-                                className="!h-7 !w-7 shrink-0 text-grey-icon hover:text-grey-text-dark"
-                                aria-label={`Remove brand ${brand.name}`}
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  e.preventDefault();
-                                  setBrandToDelete(brand);
-                                }}
-                                icon={() => <X className="h-3.5 w-3.5" />}
-                              />
+                              {canDeleteCustomisation && (
+                                <Button variant="ghost" size="square" data-remove-brand
+                                  className="!h-7 !w-7 shrink-0 text-grey-icon hover:text-grey-text-dark"
+                                  aria-label={`Remove brand ${brand.name}`}
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    e.preventDefault();
+                                    setBrandToDelete(brand);
+                                  }}
+                                  icon={() => <X className="h-3.5 w-3.5" />}
+                                />
+                              )}
                             </div>
                           </li>
                         );
                       })}
                     </ul>
                   )}
-                  <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading || isFetchingBrands} />
+                  {canCreateCustomisation && (
+                    <Button variant="secondary" size="sm" data-add-brand className="!min-h-8 w-full !text-xs !h-8 shrink-0 mt-auto" icon={Plus} text="Add brand" onClick={() => setAddBrandOpen(true)} disabled={isLoading || isFetchingBrands} />
+                  )}
                 </div>
               </div>
 
@@ -721,7 +821,7 @@ export default function Customisation() {
                       <div className="h-8 w-10 animate-pulse rounded bg-grey-border/60 shrink-0"></div>
                     </div>
                   </div>
-                ) : activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} /> : (
+                ) : activeBrand ? <StickerEditor brand={activeBrand} onChange={setPanelStickers} canCreate={canCreateCustomisation} canDelete={canDeleteCustomisation} /> : (
                   <p className="px-1 py-4 text-center text-2xs text-grey-muted">Select or add a brand to manage panel stickers.</p>
                 )}
               </div>
@@ -730,31 +830,59 @@ export default function Customisation() {
         </div>
 
         {/* ─── Product Models Section ─── */}
-        <div className="card-panel flex w-full flex-col gap-3 rounded-md !p-3">
+        <div id="product-models-section" className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex items-center gap-2">
             <Tags className="h-4 w-4 text-grey-muted" aria-hidden />
             <h2 className="text-sm font-bold text-grey-text-strong">Product models</h2>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-            <Input type="text" startIcon={Search} placeholder="Search model name or code…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0" />
-            <Input type="select" className="shrink-0 sm:w-48" value={categoryFilter} onChange={(e) => setCategoryFilter(e.target.value)}
-              options={[{ label: 'All categories', value: 'ALL' }, ...categories.map((cat) => ({ label: cat, value: cat }))]} />
+            <Input type="text" id="customisation-search" startIcon={Search} placeholder="Search product name or code…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0" />
+            <div className="shrink-0 sm:w-48 z-20">
+              <AsyncSelectInput
+                value={categoryFilter}
+                onChange={(option) => setCategoryFilter(option || { label: 'All categories', value: 'ALL' })}
+                defaultOptions={true}
+                loadOptions={loadCategories}
+                placeholder="All categories"
+              />
+            </div>
+          </div>
+          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
+                <span className="text-grey-icon">+</span>
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">S</kbd>
+              </span>
+              Focus search
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1">
+                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
+                <span className="text-grey-icon">+</span>
+                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
+                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
+              </span>
+              Switch focus
+            </span>
           </div>
         </div>
 
         {/* ─── Product Models Table (CommonTable) ─── */}
         <CommonTable
           columns={tableColumns}
-          data={filtered}
+          data={models}
           isLoading={isLoading}
           emptyState="No products match your search or filter."
-          pagination={{ totalItems: filtered.length, pageSize: filtered.length, pageNo: 1, totalPages: 1 }}
+          pagination={{ totalItems, pageSize, pageNo, totalPages }}
+          onPageChange={setPageNo}
+          onPageSizeChange={setPageSize}
         />
 
         {/* Mobile cards */}
         <ul className="space-y-2 lg:hidden">
-          {filtered.map((model) => (
-            <li key={model.id} className="card-panel !p-3 rounded-md">
+          {models.map((model) => (
+            <li key={model.id} className="card-panel !p-3">
               <div className="mb-3 flex items-start gap-2.5 border-b border-grey-border/40 pb-2.5">
                 <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-xs font-bold text-primary-dark">{modelInitials(model.code)}</span>
                 <div className="min-w-0 flex-1">
@@ -798,14 +926,42 @@ export default function Customisation() {
           item={brandToDelete}
           itemType="brand"
         />
-        <AddCustomisation open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
-        <EditCustomisation open={!!editingModel} model={editingModel} onClose={() => setEditingModel(null)} onSave={handleEditModel} />
-        <ConfirmModal open={!!modelToDelete} title="Delete model" onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}>
-          <p className="text-sm text-grey-text">
-            Are you sure you want to delete <strong className="font-semibold text-grey-text-strong">{modelToDelete?.name}</strong>? This action cannot be undone.
-          </p>
-        </ConfirmModal>
+        <AddProduct open={addModelOpen} onClose={() => setAddModelOpen(false)} onAdd={handleAddModel} />
+        <EditProduct open={!!editingModel} product={editingModel} onClose={() => setEditingModel(null)} onEdit={handleEditModel} />
+        <DeleteModal open={!!modelToDelete} onClose={() => setModelToDelete(null)} onConfirm={handleDeleteModel}
+          item={modelToDelete} title="Delete product" itemType="product" />
       </div>
+      {/* Action Dropdown Menu */}
+      {dropdownState && (
+        <div
+          className="fixed bg-white border border-grey-border rounded-lg shadow-xl z-50 flex flex-col py-1 min-w-[120px]"
+          style={{ top: dropdownState.y, left: dropdownState.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {canUpdateCustomisation && (
+            <button
+              className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg transition-colors flex items-center gap-2"
+              onClick={() => {
+                setEditingModel(dropdownState.row);
+                setDropdownState(null);
+              }}
+            >
+              <Pencil size={14} /> Edit
+            </button>
+          )}
+          {canDeleteCustomisation && (
+            <button
+              className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
+              onClick={() => {
+                setModelToDelete(dropdownState.row);
+                setDropdownState(null);
+              }}
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+          )}
+        </div>
+      )}
     </>
   );
 }
