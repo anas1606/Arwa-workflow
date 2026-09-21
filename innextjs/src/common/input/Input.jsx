@@ -49,7 +49,7 @@ const Input = forwardRef(({
                     onDrop={(e) => { e.preventDefault(); setIsDragging(false); addFiles(e.dataTransfer.files); }}
                     onClick={() => fileRef.current?.click()}
                     className={clsx(
-                        "flex flex-col items-center justify-center cursor-pointer rounded-md border-2 border-dashed p-8 transition-all",
+                        "flex flex-col items-center justify-center cursor-pointer rounded-xl border-2 border-dashed p-8 transition-all",
                         isDragging ? 'border-primary bg-primary-bg/50' : (error ? 'border-danger-main bg-danger-bg/30' : 'border-black hover:border-black bg-white/30 backdrop-blur-md')
                     )}
                 >
@@ -90,7 +90,7 @@ const Input = forwardRef(({
                         id={id}
                         ref={ref}
                         className={clsx(
-                            "h-11 w-full appearance-none rounded-md border px-3 text-sm outline-none transition-all",
+                            "h-11 w-full appearance-none rounded-xl border px-3 text-sm outline-none transition-all",
                             "border-grey-border bg-white/60 text-grey-text-strong placeholder:text-grey-icon backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
                             "focus:border-primary-muted focus:bg-white focus:ring-4 focus:ring-primary-muted/10",
                             error ? "border-danger-muted" : "",
@@ -149,7 +149,7 @@ const Input = forwardRef(({
                     ref={ref}
                     placeholder={placeholder}
                     className={clsx(
-                        "h-11 w-full rounded-md border px-3 text-sm outline-none transition-all",
+                        "h-11 w-full rounded-xl border px-3 text-sm outline-none transition-all",
                         "border-grey-border bg-white/60 text-grey-text-strong placeholder:text-grey-icon backdrop-blur-md shadow-[inset_0_2px_4px_rgba(15,23,42,0.04)]",
                         "focus:border-primary-muted focus:bg-white focus:ring-4 focus:ring-primary-muted/10",
                         error ? "border-danger-muted" : "",

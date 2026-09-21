@@ -167,7 +167,7 @@ export default function EditCustomer({ open, onClose, onEdit, customer }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-xl sm:rounded-2xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
           <h2 id={titleId} className="text-base font-bold text-grey-text-strong">

@@ -177,3 +177,37 @@ export const updatePackagingApi = async (id, payload) => {
 };
 
 export const deletePackagingApi = (id, deletedBy = null) => deleteData(`packaging/${id}`, { data: { deletedBy } });
+
+// customisation
+export const getCustomisationsApi = async (page = 1, limit = 10, search = '', category = 'ALL') => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (category && category !== 'ALL') params.category = category;
+  return await fetchDataWithParams('customisation', params);
+};
+
+export const getCustomisationByIdApi = async (id) => {
+  return await fetchData(`customisation/${id}`);
+};
+
+export const getCustomisationKpisApi = async () => {
+  return await fetchData('customisation/kpi');
+};
+
+
+// order
+export const getOrdersApi = async (page = 1, limit = 10, search = '', filters = {}) => {
+  return await fetchDataWithParams('order', { page, limit, search, ...filters });
+};
+
+export const getOrderByIdApi = async (id) => {
+  return await fetchData(`order/${id}`);
+};
+
+export const createOrderApi = (payload) => postData("order", payload);
+
+export const updateOrderApi = async (id, payload) => {
+  return await putData(`order/${id}`, { id, ...payload });
+};
+
+export const deleteOrderApi = (id, deletedBy = null) => deleteData(`order/${id}`, { data: { deletedBy } });

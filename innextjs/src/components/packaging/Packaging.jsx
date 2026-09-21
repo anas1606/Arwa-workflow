@@ -224,7 +224,7 @@ export default function Packaging() {
         </div>
 
         {/* Toolbar */}
-        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3 rounded-md">
+        <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
               type="text"
