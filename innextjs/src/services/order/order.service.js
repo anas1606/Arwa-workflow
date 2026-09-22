@@ -41,8 +41,20 @@ export const createOrder = async (data, userId = null) => {
             if (hasStandard && hasCustomize) orderType = 'HYBRID';
             else if (hasCustomize) orderType = 'CUSTOMIZE';
 
-            const orderCount = await tx.order.count();
-            const orderNumber = `ORD-${(orderCount + 1).toString().padStart(5, '0')}`;
+            const lastOrder = await tx.order.findFirst({
+                orderBy: { createdAt: 'desc' }
+            });
+            
+            let nextSeq = 1;
+            if (lastOrder && lastOrder.orderNumber) {
+                const match = lastOrder.orderNumber.match(/ORD-(\d+)/);
+                if (match) {
+                    nextSeq = parseInt(match[1], 10) + 1;
+                } else {
+                    nextSeq = (await tx.order.count()) + 1;
+                }
+            }
+            const orderNumber = `ORD-${nextSeq.toString().padStart(5, '0')}`;
 
             // 1. Create the Order
             const order = await tx.order.create({
@@ -130,6 +142,59 @@ export const getAllOrders = async (page = 1, limit = 10, search = '', filters = 
             where.orderNumber = Array.isArray(filters.orderNumber) ? { in: filters.orderNumber } : filters.orderNumber;
         }
 
+        if (filters.orderDate) {
+            const { from, to } = filters.orderDate;
+            if (from || to) {
+                where.createdAt = {};
+                if (from) where.createdAt.gte = new Date(from);
+                if (to) {
+                    const toDate = new Date(to);
+                    toDate.setHours(23, 59, 59, 999);
+                    where.createdAt.lte = toDate;
+                }
+            }
+        }
+
+        if (filters.dueDate) {
+            const { from, to } = filters.dueDate;
+            if (from || to) {
+                where.dueDate = {};
+                if (from) where.dueDate.gte = new Date(from);
+                if (to) {
+                    const toDate = new Date(to);
+                    toDate.setHours(23, 59, 59, 999);
+                    where.dueDate.lte = toDate;
+                }
+            }
+        }
+
+        if (filters.quantity) {
+            const { min, max } = filters.quantity;
+            if (min || max) {
+                const havingQuantitySum = {};
+                if (min) havingQuantitySum.gte = parseInt(min, 10);
+                if (max) havingQuantitySum.lte = parseInt(max, 10);
+
+                const grouped = await prisma.orderLine.groupBy({
+                    by: ['orderId'],
+                    _sum: { quantity: true },
+                    having: {
+                        quantity: {
+                            _sum: havingQuantitySum
+                        }
+                    }
+                });
+                
+                const validOrderIds = grouped.map(g => g.orderId);
+                
+                if (where.id && where.id.in) {
+                    where.id.in = where.id.in.filter(id => validOrderIds.includes(id));
+                } else {
+                    where.id = { in: validOrderIds };
+                }
+            }
+        }
+
         const [data, total, totalOrders, totalCustomized, totalProducts] = await Promise.all([
             prisma.order.findMany({
                 where,
@@ -138,13 +203,30 @@ export const getAllOrders = async (page = 1, limit = 10, search = '', filters = 
                 orderBy: {
                     createdAt: 'desc'
                 },
-                include: {
+                select: {
+                    id: true,
+                    orderNumber: true,
+                    customerId: true,
+                    dueDate: true,
+                    priority: true,
+                    remark: true,
+                    status: true,
+                    orderType: true,
+                    createdAt: true,
                     customer: {
                         select: { name: true, code: true }
                     },
                     orderLines: {
-                        include: {
-                            product: { select: { name: true, code: true } }
+                        ...(filters.productId ? { 
+                            where: { 
+                                productId: Array.isArray(filters.productId) ? { in: filters.productId } : filters.productId 
+                            } 
+                        } : {}),
+                        select: {
+                            id: true,
+                            quantity: true,
+                            orderType: true,
+                            product: { select: { id: true, name: true, code: true } }
                         }
                     }
                 }
@@ -358,6 +440,59 @@ export const getOrdersByProduct = async (page = 1, limit = 10, search = '', filt
             orderWhere.orderNumber = Array.isArray(filters.orderNumber) ? { in: filters.orderNumber } : filters.orderNumber;
         }
 
+        if (filters.orderDate) {
+            const { from, to } = filters.orderDate;
+            if (from || to) {
+                orderWhere.createdAt = {};
+                if (from) orderWhere.createdAt.gte = new Date(from);
+                if (to) {
+                    const toDate = new Date(to);
+                    toDate.setHours(23, 59, 59, 999);
+                    orderWhere.createdAt.lte = toDate;
+                }
+            }
+        }
+
+        if (filters.dueDate) {
+            const { from, to } = filters.dueDate;
+            if (from || to) {
+                orderWhere.dueDate = {};
+                if (from) orderWhere.dueDate.gte = new Date(from);
+                if (to) {
+                    const toDate = new Date(to);
+                    toDate.setHours(23, 59, 59, 999);
+                    orderWhere.dueDate.lte = toDate;
+                }
+            }
+        }
+
+        if (filters.quantity) {
+            const { min, max } = filters.quantity;
+            if (min || max) {
+                const havingQuantitySum = {};
+                if (min) havingQuantitySum.gte = parseInt(min, 10);
+                if (max) havingQuantitySum.lte = parseInt(max, 10);
+
+                const grouped = await prisma.orderLine.groupBy({
+                    by: ['orderId'],
+                    _sum: { quantity: true },
+                    having: {
+                        quantity: {
+                            _sum: havingQuantitySum
+                        }
+                    }
+                });
+                
+                const validOrderIds = grouped.map(g => g.orderId);
+                
+                if (orderWhere.id && orderWhere.id.in) {
+                    orderWhere.id.in = orderWhere.id.in.filter(id => validOrderIds.includes(id));
+                } else {
+                    orderWhere.id = { in: validOrderIds };
+                }
+            }
+        }
+
         const productWhere = {
             orderLines: {
                 some: {
@@ -378,20 +513,22 @@ export const getOrdersByProduct = async (page = 1, limit = 10, search = '', filt
                 orderBy: {
                     name: 'asc'
                 },
-                include: {
+                select: {
+                    id: true,
+                    name: true,
                     orderLines: {
                         where: {
                             order: orderWhere
                         },
-                        include: {
+                        select: {
+                            quantity: true,
+                            orderType: true,
                             order: {
-                                include: {
-                                    customer: {
-                                        select: { name: true, code: true }
-                                    }
+                                select: {
+                                    id: true,
+                                    orderType: true
                                 }
-                            },
-                            product: true
+                            }
                         }
                     }
                 }
@@ -399,12 +536,38 @@ export const getOrdersByProduct = async (page = 1, limit = 10, search = '', filt
             prisma.product.count({ where: productWhere })
         ]);
 
+        const processedProducts = products.map(prod => {
+            let qty = 0;
+            let standard = 0;
+            let customized = 0;
+            const ordersSet = new Set();
+            
+            prod.orderLines.forEach(line => {
+                qty += line.quantity;
+                if (line.order && !ordersSet.has(line.order.id)) {
+                    ordersSet.add(line.order.id);
+                    const oType = line.orderType || line.order.orderType;
+                    if (oType?.toUpperCase() === 'CUSTOMIZE') customized++;
+                    else standard++;
+                }
+            });
+            
+            return {
+                id: prod.id,
+                product: prod.name,
+                qty,
+                ordersCount: ordersSet.size,
+                standard,
+                customized
+            };
+        });
+
         const totalPages = Math.ceil(total / take);
 
         return {
             success: true,
             data: {
-                data: products,
+                data: processedProducts,
                 pagination: {
                     total,
                     page: parseInt(page),

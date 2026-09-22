@@ -5,6 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import { getCustomersApi } from '@/lib/fetcher';
 import AddCustomer from '../../customers/modal/AddCustomer';
+import { usePermission } from '@/hooks/usePermission';
 
 const DUE_PRESETS = [
   { label: '1 week', days: 7 },
@@ -42,6 +43,7 @@ export default function CustomerStep({
   setPlannerNotes,
   isActive
 }) {
+  const { canCreate: canCreateCustomer } = usePermission('customers');
   const [customerQuery, setCustomerQuery] = useState('');
   const [focusedCustomerIndex, setFocusedCustomerIndex] = useState(-1);
 
@@ -137,7 +139,9 @@ export default function CustomerStep({
                 }}
               />
             </div>
-            <Button variant="secondary" icon={Plus} text="Add customer" onClick={() => setIsAddOpen(true)} className="!h-10 !rounded-md !text-sm" />
+            {canCreateCustomer && (
+              <Button variant="secondary" icon={Plus} text="Add customer" onClick={() => setIsAddOpen(true)} className="!h-10 !rounded-md !text-sm" />
+            )}
           </div>
 
           <AddCustomer 

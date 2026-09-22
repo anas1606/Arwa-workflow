@@ -13,13 +13,22 @@ export default async function handler(req, res) {
             case 'GET': {
                 const { page = 1, limit = 10, search = '' } = req.query;
                 const extractValue = (key) => req.query[key] || req.query[`${key}[]`];
+                const extractJson = (key) => {
+                    const val = extractValue(key);
+                    if (!val) return undefined;
+                    try { return JSON.parse(val); } catch (e) { return undefined; }
+                };
+                
                 const filters = {
                     orderType: extractValue('orderType'),
                     priority: extractValue('priority'),
                     status: extractValue('status'),
                     customerId: extractValue('customerId'),
                     productId: extractValue('productId'),
-                    orderNumber: extractValue('orderNumber')
+                    orderNumber: extractValue('orderNumber'),
+                    orderDate: extractJson('orderDate'),
+                    dueDate: extractJson('dueDate'),
+                    quantity: extractJson('quantity')
                 };
                 const result = await getAllOrders(page, limit, search, filters);
                 if (result.success) return successResponse(res, 'Orders fetched successfully', result.data);

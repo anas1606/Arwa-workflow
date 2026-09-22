@@ -130,17 +130,16 @@ export default function CommonTable({
                                 <tr
                                     key={index}
                                     onClick={() => onRowClick && onRowClick(row)}
-                                    className={`transition-colors group ${
-                                        selectedRowIndex === index 
-                                            ? 'bg-primary/5 shadow-[inset_2px_0_0_0_var(--color-primary)]' 
-                                            : onRowClick ? 'cursor-pointer hover:bg-white/40' : 'hover:bg-white/30'
-                                    }`}
+                                    className={`transition-colors group ${selectedRowIndex === index
+                                            ? 'bg-primary/5 shadow-[inset_2px_0_0_0_var(--color-primary)]'
+                                            : onRowClick ? 'cursor-pointer hover:bg-grey-bg/30 bg-white' : 'hover:bg-grey-bg/30 bg-white'
+                                        }`}
                                 >
                                     {columns.map((col) => (
                                         <td
                                             key={col.key}
                                             className={`px-5 py-4 overflow-visible ${col.className || ""} ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"}
-                                                ${col.key === "actions" ? "sticky right-0 z-10 bg-[#f4f7fb] group-hover:bg-[#fafbfc]" : ""}`}
+                                                ${col.key === "actions" ? `sticky right-0 z-10 ${selectedRowIndex === index ? 'bg-[#f4f7fd]' : 'bg-white group-hover:bg-[#f8f9fc]'}` : ""}`}
                                         >
                                             {renderCell(col, row, index)}
                                         </td>
@@ -168,6 +167,7 @@ export default function CommonTable({
                                 onChange={(e) => onPageSizeChange && onPageSizeChange(Number(e.target.value))}
                                 className="appearance-none bg-white border border-grey-border text-grey-text-strong rounded-md px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-muted disabled:opacity-50 cursor-pointer shadow-sm transition-all hover:bg-white"
                             >
+                                <option value={1}>1</option>
                                 <option value={2}>2</option>
                                 <option value={5}>5</option>
                                 <option value={10}>10</option>
