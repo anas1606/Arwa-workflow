@@ -12,6 +12,7 @@ import { PRODUCT_MODELS, CUSTOMISATION_SPECS, MODEL_OPTION_KEYS, MODEL_CATEGORIE
 import AddCustomer from '../customers/modal/AddCustomer';
 import AddBrandModal from './modal/AddBrandModal';
 import { getCustomersApi, deleteBrandApi, getBrandsByCustomerIdApi, getBrandsApi, getStickersByBrandIdApi, createStickerApi, deleteStickerApi, getCustomisationsApi, getCustomisationKpisApi, deleteProductApi, getCategoriesApi } from '@/lib/fetcher';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 import DeleteModal from '@/common/modal/DeleteModal';
 import { toast } from 'sonner';
 import { usePermission } from '@/hooks/usePermission';
@@ -457,19 +458,40 @@ export default function Customisation() {
     requestAnimationFrame(() => { brandsPaneRef.current?.querySelectorAll('[data-brand-select]')?.[next]?.focus(); });
   }, [currentBrands, activeBrandId]);
 
+  // Focus tracking
+  useEffect(() => {
+    const updateFocus = (e) => {
+      const target = e.target;
+      if (target.closest('[data-pane="stickers"]')) setFocusPane('stickers');
+      else if (target.closest('#brands-panel')) setFocusPane('brands');
+      else if (target.closest('#product-models-section')) setFocusPane('table');
+    };
+    document.addEventListener('mousedown', updateFocus);
+    document.addEventListener('focusin', updateFocus);
+    return () => {
+      document.removeEventListener('mousedown', updateFocus);
+      document.removeEventListener('focusin', updateFocus);
+    };
+  }, []);
+
   // Keyboard navigation
   useEffect(() => {
     const onKeyDown = (e) => {
       if (e.metaKey || e.ctrlKey) return;
       if (document.querySelector('[role="dialog"][aria-modal="true"]')) return;
+      
+      // Shortcuts to switch panes
       if (e.altKey) {
-        if (e.code === 'KeyS') { e.preventDefault(); document.getElementById('customisation-search')?.focus(); return; }
+        if (e.code === 'KeyB') { e.preventDefault(); e.stopPropagation(); focusBrandsPane(); return; }
+        if (e.code === 'KeyS') { e.preventDefault(); e.stopPropagation(); focusStickersInput(); return; }
+        if (e.code === 'KeyT') { e.preventDefault(); e.stopPropagation(); setFocusPane('table'); document.getElementById('customisation-search')?.focus(); return; }
+
         if (e.code === 'ArrowLeft' || e.code === 'ArrowRight') { 
-          e.preventDefault(); 
-          e.stopPropagation(); 
-          
           const isProductModelsFocused = document.activeElement?.closest('#product-models-section');
-          if (isProductModelsFocused) {
+          const isInputActive = ['INPUT', 'SELECT', 'TEXTAREA'].includes(document.activeElement?.tagName);
+          
+          if (isProductModelsFocused && isInputActive) {
+            e.preventDefault(); e.stopPropagation();
             const focusable = Array.from(isProductModelsFocused.querySelectorAll('input, select, textarea, [tabindex]:not([tabindex="-1"])')).filter(el => !el.disabled && el.type !== 'hidden' && el.offsetParent !== null);
             const currentIndex = focusable.indexOf(document.activeElement);
             if (e.code === 'ArrowRight') {
@@ -482,23 +504,60 @@ export default function Customisation() {
             return;
           }
 
-          e.code === 'ArrowLeft' ? focusBrandsPane() : focusStickersInput(); 
+          if (focusPane === 'brands') {
+              e.preventDefault(); e.stopPropagation();
+              if (e.code === 'ArrowRight') focusStickersInput();
+              else { setFocusPane('table'); document.getElementById('customisation-search')?.focus(); }
+              return;
+          } else if (focusPane === 'stickers') {
+              e.preventDefault(); e.stopPropagation();
+              if (e.code === 'ArrowLeft') focusBrandsPane();
+              else { setFocusPane('table'); document.getElementById('customisation-search')?.focus(); }
+              return;
+          }
+          
+          // If focusPane === 'table' and not in an input, let it bubble for pagination!
           return; 
         }
         return;
       }
+      
       const target = e.target;
-      if (focusPane !== 'brands') { if (!(target && brandsPaneRef.current?.contains(target))) return; setFocusPane('brands'); }
-      if (target?.closest('[data-pane="stickers"]') || target?.tagName === 'SELECT' || target?.tagName === 'TEXTAREA') return;
-      if (target?.closest('[data-add-brand]') && e.code === 'Enter') return;
-      if (target?.closest('[data-remove-brand]')) return;
-      if (e.code === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); moveBrandHighlight(1); return; }
-      if (e.code === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); moveBrandHighlight(-1); return; }
-      if (e.code === 'Enter') { if (!activeBrandId && !currentBrands.length) return; e.preventDefault(); e.stopPropagation(); focusStickersInput(); }
+      if (target?.tagName === 'TEXTAREA' || target?.tagName === 'SELECT' || target?.closest('[data-add-brand]') || target?.closest('[data-remove-brand]')) return;
+
+      if (e.code === 'ArrowDown' || e.code === 'ArrowUp') {
+         if (focusPane === 'brands') { 
+             e.preventDefault(); e.stopPropagation(); 
+             moveBrandHighlight(e.code === 'ArrowDown' ? 1 : -1); 
+             return; 
+         }
+         // If table or stickers, let it bubble (useKeyboardShortcuts will handle table navigation)
+         return;
+      }
+      
+      if (e.code === 'Enter' && focusPane === 'brands') { 
+         if (!activeBrandId && !currentBrands.length) return; 
+         e.preventDefault(); e.stopPropagation(); 
+         focusStickersInput(); 
+      }
     };
     document.addEventListener('keydown', onKeyDown, true);
     return () => document.removeEventListener('keydown', onKeyDown, true);
   }, [focusPane, focusBrandsPane, focusStickersInput, moveBrandHighlight, activeBrandId, currentBrands.length]);
+
+  const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+
+  useKeyboardShortcuts({
+      onAdd: canCreateProduct ? () => router.push('/inventory/product/add') : undefined,
+      searchId: "customisation-search",
+      setPageNo,
+      pageNo,
+      totalPages,
+      items: models,
+      selectedRowIndex,
+      setSelectedRowIndex,
+      isModalOpen: addCustomerOpen || addBrandOpen || !!brandToDelete,
+  });
 
   const handleAddCustomer = (c) => { setCustomers([...customers, { ...c, brands: 0 }]); setCustomerId(c.id); setActiveBrandId(null); setAddCustomerOpen(false); };
   const handleAddBrand = (targetId, brand) => {
@@ -597,7 +656,7 @@ export default function Customisation() {
         </section>
 
         {/* ─── Customer Brands Panel ─── */}
-        <div className="card-panel !p-3 space-y-2.5">
+        <div id="brands-panel" className="card-panel !p-3 space-y-2.5">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
@@ -719,10 +778,11 @@ export default function Customisation() {
         </div>
 
         {/* ─── Product Models Section ─── */}
-        <div id="product-models-section" className="card-panel flex w-full flex-col gap-3 border-none !p-3">
-          <div className="flex items-center gap-2">
-            <Tags className="h-4 w-4 text-grey-muted" aria-hidden />
-            <h2 className="text-sm font-bold text-grey-text-strong">Product models</h2>
+        <div id="product-models-section" className="flex flex-col gap-5 w-full">
+          <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
+            <div className="flex items-center gap-2">
+              <Tags className="h-4 w-4 text-grey-muted" aria-hidden />
+              <h2 className="text-sm font-bold text-grey-text-strong">Product models</h2>
           </div>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input type="text" id="customisation-search" startIcon={Search} placeholder="Search product name or code…" value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0" />
@@ -736,25 +796,18 @@ export default function Customisation() {
               />
             </div>
           </div>
-          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">S</kbd>
-              </span>
-              Focus search
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
-              </span>
-              Switch focus
-            </span>
-          </div>
+          <KeyboardShortcutBar
+            onAdd={canCreateProduct ? () => router.push('/inventory/product/add') : undefined}
+            searchId="customisation-search"
+            pageNo={pageNo}
+            totalPages={totalPages}
+            selectedItem={models[selectedRowIndex]}
+            selectedRowIndex={selectedRowIndex}
+            addLabel="Add Product"
+            customActions={[
+                { label: 'Panes', keyCombo: ['Alt', '←/→'], onClick: focusBrandsPane }
+            ]}
+          />
         </div>
 
         {/* ─── Product Models Table (CommonTable) ─── */}
@@ -766,7 +819,9 @@ export default function Customisation() {
           pagination={{ totalItems, pageSize, pageNo, totalPages }}
           onPageChange={setPageNo}
           onPageSizeChange={setPageSize}
+          selectedRowIndex={selectedRowIndex}
         />
+        </div>
 
         {/* Mobile cards */}
         <ul className="space-y-2 lg:hidden">

@@ -12,6 +12,7 @@ import Input from '@/common/input/Input';
 import { toast } from 'sonner';
 import { getCategoriesApi, deleteCategoryApi, updateCategoryApi, getCategoryKpisApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 export default function Category() {
     const { canRead, canCreate, canUpdate, canDelete } = usePermission('categories');
@@ -94,24 +95,6 @@ export default function Category() {
     }, []);
 
     useEffect(() => {
-        const handleKeyDown = (e) => {
-            if (e.altKey && e.key.toLowerCase() === 's') {
-                e.preventDefault();
-                searchInputRef.current?.focus();
-            } else if (e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft')) {
-                e.preventDefault();
-                if (document.activeElement === searchInputRef.current) {
-                    statusSelectRef.current?.focus();
-                } else {
-                    searchInputRef.current?.focus();
-                }
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, []);
-
-    useEffect(() => {
         const timer = setTimeout(() => {
             setQuery(inputValue);
         }, 500);
@@ -129,6 +112,8 @@ export default function Category() {
 
     const [dropdownState, setDropdownState] = useState(null);
     const [expandedCategories, setExpandedCategories] = useState(new Set());
+    
+    const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
     useEffect(() => {
         const closeDropdown = () => setDropdownState(null);
@@ -197,6 +182,21 @@ export default function Category() {
     useEffect(() => {
         setPageNo(1);
     }, [query]);
+
+    useKeyboardShortcuts({
+        onAdd: canCreate ? () => setAddOpen(true) : undefined,
+        onEdit: canUpdate ? (item) => { setSelectedCategory(item); setEditOpen(true); } : undefined,
+        onDelete: canDelete ? (item) => { setSelectedCategory(item); setDeleteOpen(true); } : undefined,
+        onRefresh: refreshData,
+        searchId: "category-search-input",
+        setPageNo,
+        pageNo,
+        totalPages: Math.ceil(totalItems / pageSize) || 1,
+        items: paginatedData,
+        selectedRowIndex,
+        setSelectedRowIndex,
+        isModalOpen: addOpen || editOpen || transferOpen || deleteOpen,
+    });
 
     const kpis = [
         {
@@ -469,9 +469,10 @@ export default function Category() {
                 <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <Input
+                            id="category-search-input"
                             type="text"
                             startIcon={Search}
-                            placeholder="Search categories (Alt+S)"
+                            placeholder="Search categories (Ctrl+K or /)..."
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             className="flex-1 min-w-0"
@@ -491,25 +492,18 @@ export default function Category() {
                             ]}
                         />
                     </div>
-                    <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
-                        <span className="flex items-center gap-1.5">
-                            <span className="flex items-center gap-1">
-                                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                                <span className="text-grey-icon">+</span>
-                                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
-                            </span>
-                            Focus search
-                        </span>
-                        <span className="flex items-center gap-1.5">
-                            <span className="flex items-center gap-1">
-                                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                                <span className="text-grey-icon">+</span>
-                                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
-                                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
-                            </span>
-                            Switch focus
-                        </span>
-                    </div>
+                    <KeyboardShortcutBar
+                        onAdd={canCreate ? () => setAddOpen(true) : undefined}
+                        onEdit={canUpdate ? (item) => { setSelectedCategory(item); setEditOpen(true); } : undefined}
+                        onDelete={canDelete ? (item) => { setSelectedCategory(item); setDeleteOpen(true); } : undefined}
+                        onRefresh={refreshData}
+                        searchId="category-search-input"
+                        pageNo={pageNo}
+                        totalPages={Math.ceil(totalItems / pageSize) || 1}
+                        selectedItem={paginatedData[selectedRowIndex]}
+                        selectedRowIndex={selectedRowIndex}
+                        addLabel="Add Category"
+                    />
                 </div>
 
                 {/* DATA TABLE */}
@@ -530,6 +524,7 @@ export default function Category() {
                             setPageSize(size);
                             setPageNo(1);
                         }}
+                        selectedRowIndex={selectedRowIndex}
                     />
 
                 </div>
