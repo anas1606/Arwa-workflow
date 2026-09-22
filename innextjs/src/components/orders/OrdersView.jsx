@@ -207,7 +207,7 @@ useKeyboardShortcuts({
         }
 
         return (
-          <div className="flex flex-col">
+          <div className="flex flex-col whitespace-nowrap">
             <span className={clsx("text-sm", dueColor)}>{dueText}</span>
             <span className="text-xs text-grey-icon mt-0.5 font-mono">{dateStr}</span>
           </div>
@@ -225,8 +225,8 @@ useKeyboardShortcuts({
         const extraCount = lines.length - 1;
         
         return (
-          <div className="flex flex-col text-sm font-semibold text-grey-text-strong">
-            <span className="truncate max-w-[200px]">{firstLine.product?.name || 'Unknown Product'}</span>
+          <div className="flex flex-col text-sm font-semibold text-grey-text-strong max-w-[180px]">
+            <span className="truncate">{firstLine.product?.name || 'Unknown Product'}</span>
             {extraCount > 0 && (
               <span className="text-xs text-grey-icon mt-0.5 flex items-center gap-1">
                 <span className="w-1 h-1 rounded-full bg-grey-icon inline-block" />
