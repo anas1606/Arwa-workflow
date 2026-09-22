@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
-import { X, Printer, Pencil, Box, Package, User, Hash, Calendar, Loader2 } from 'lucide-react';
+import { X, Printer, Pencil, Box, Package, User, Hash, Calendar, Loader2, Layers, Sparkles, AlertTriangle } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import { getOrderByIdApi } from '@/lib/fetcher';
 import clsx from 'clsx';
@@ -57,6 +57,32 @@ export default function OrderDetailsModal({
   const displayOrder = fullOrder || selectedOrder;
   const totalQty = (displayOrder.orderLines || []).reduce((sum, line) => sum + (line.quantity || 0), 0);
 
+  // Due date color logic
+  const dueDate = new Date(displayOrder.dueDate);
+  const today = new Date();
+  dueDate.setHours(0,0,0,0);
+  today.setHours(0,0,0,0);
+  const diffTime = dueDate.getTime() - today.getTime();
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  let dueBorderClass = 'border-grey-surface/60';
+  let dueBgClass = 'bg-white';
+  let dueTextClass = 'text-grey-text-strong';
+  let dueSubText = '';
+  if (diffDays < 0) {
+    dueBorderClass = 'border-red-300';
+    dueBgClass = 'bg-red-50';
+    dueTextClass = 'text-red-700 font-bold';
+    dueSubText = `${Math.abs(diffDays)} days overdue`;
+  } else if (diffDays <= 3) {
+    dueBorderClass = 'border-yellow-300';
+    dueBgClass = 'bg-yellow-50';
+    dueTextClass = 'text-yellow-700 font-bold';
+    dueSubText = diffDays === 0 ? 'Due today!' : `Due in ${diffDays} day${diffDays > 1 ? 's' : ''}`;
+  } else {
+    dueSubText = `In ${diffDays} days`;
+  }
+
   return createPortal(
     <div className="app-modal-layer z-[999]" role="presentation">
       <button
@@ -104,11 +130,14 @@ export default function OrderDetailsModal({
               <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><User size={14}/> Customer</p>
               <p className="text-sm font-bold text-grey-text-strong mt-1">{displayOrder.customer?.name || displayOrder.customerName || '-'}</p>
             </div>
-            <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
-              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Calendar size={14}/> Due Date</p>
-              <p className="text-sm font-bold text-grey-text-strong mt-1">
-                {new Date(displayOrder.dueDate).toLocaleDateString()}
+            <div className={clsx('p-4 rounded-xl border shadow-sm flex flex-col gap-1', dueBgClass, dueBorderClass)}>
+              <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5">
+                {diffDays < 0 ? <AlertTriangle size={14} className="text-red-500"/> : diffDays <= 3 ? <AlertTriangle size={14} className="text-yellow-500"/> : <Calendar size={14}/>} Due Date
               </p>
+              <p className={clsx('text-sm mt-1', dueTextClass)}>
+                {dueDate.toLocaleDateString()}
+              </p>
+              {dueSubText && <p className={clsx('text-[10px] mt-0.5', diffDays < 0 ? 'text-red-600' : diffDays <= 3 ? 'text-yellow-600' : 'text-grey-muted')}>{dueSubText}</p>}
             </div>
             <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
               <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Hash size={14}/> Total Qty</p>
@@ -129,7 +158,7 @@ export default function OrderDetailsModal({
             </div>
           )}
 
-          <div className="bg-white rounded-xl border border-grey-surface/60 shadow-sm overflow-hidden flex flex-col">
+          <div className="bg-white rounded-xl border border-grey-surface/60 shadow-sm">
             <div className="p-4 border-b border-grey-surface/60 bg-grey-bg/30">
                <p className="text-sm font-bold text-grey-text-strong">Order Lines</p>
             </div>
@@ -155,26 +184,54 @@ export default function OrderDetailsModal({
                           <div className="flex flex-wrap gap-2 text-xs">
                              {line.bodyDesign && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Design:</span>{line.bodyDesign.name}</span>}
                              {line.colour && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Color:</span>{line.colour.name}</span>}
-                             {line.brand && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Brand:</span>{line.brand.name}</span>}
-                             {line.sticker && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{line.sticker.name}</span>}
+                             {line.brand && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Brand:</span>{line.brand.brandname || line.brand.name}</span>}
+                             {line.sticker
+                               ? <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{line.sticker.name}</span>
+                               : <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>Arwa Default Sticker</span>
+                             }
                           </div>
                           
-                          {(line.accessoriesType === 'CUSTOMIZE' || line.packingType === 'CUSTOMIZE') && (
-                            <div className="mt-1 flex flex-col gap-1">
-                              {line.accessoriesType === 'CUSTOMIZE' && (
-                                <div className="text-xs border-l-2 border-primary-subtle pl-2">
-                                  <span className="font-semibold text-grey-text-dark">Custom Accessories:</span>
-                                  <p className="text-grey-text mt-0.5" dangerouslySetInnerHTML={{__html: line.accessoriesNote}} />
-                                </div>
+                          <div className="mt-2 flex flex-wrap gap-2">
+                              {/* Accessories Badge */}
+                              {line.accessoriesType === 'CUSTOMIZE' ? (
+                                <span className="badge bg-primary/10 text-primary-dark border border-primary/20">
+                                  <Sparkles className="h-3 w-3 shrink-0" aria-hidden /> Custom Accessories
+                                </span>
+                              ) : (
+                                <span className="badge bg-grey-surface text-grey-text-strong border border-grey-border">
+                                  <Layers className="h-3 w-3 shrink-0" aria-hidden /> Accessories: Standard
+                                </span>
                               )}
-                              {line.packingType === 'CUSTOMIZE' && (
-                                <div className="text-xs border-l-2 border-primary-subtle pl-2">
-                                  <span className="font-semibold text-grey-text-dark">Custom Packing:</span>
-                                  <p className="text-grey-text mt-0.5" dangerouslySetInnerHTML={{__html: line.packingNote}} />
-                                </div>
+
+                              {/* Packing Badge */}
+                              {line.packingType === 'CUSTOMIZE' ? (
+                                <span className="badge bg-primary/10 text-primary-dark border border-primary/20">
+                                  <Sparkles className="h-3 w-3 shrink-0" aria-hidden /> Custom Packing
+                                </span>
+                              ) : (
+                                <span className="badge bg-grey-surface text-grey-text-strong border border-grey-border">
+                                  <Layers className="h-3 w-3 shrink-0" aria-hidden /> Packing: {line.packaging?.name || 'Standard'}
+                                </span>
                               )}
                             </div>
-                          )}
+
+                            {/* Custom notes below badges */}
+                            {(line.accessoriesType === 'CUSTOMIZE' || line.packingType === 'CUSTOMIZE') && (
+                              <div className="mt-2 flex flex-col gap-2">
+                                {line.accessoriesType === 'CUSTOMIZE' && line.accessoriesNote && (
+                                  <div className="text-xs border border-primary/15 bg-primary/5 rounded-md p-2.5">
+                                    <span className="font-bold text-primary-dark text-[10px] uppercase tracking-wider">Accessories Note</span>
+                                    <div className="text-grey-text-dark mt-1 leading-relaxed [&>p]:m-0" dangerouslySetInnerHTML={{__html: line.accessoriesNote}} />
+                                  </div>
+                                )}
+                                {line.packingType === 'CUSTOMIZE' && line.packingNote && (
+                                  <div className="text-xs border border-primary/15 bg-primary/5 rounded-md p-2.5">
+                                    <span className="font-bold text-primary-dark text-[10px] uppercase tracking-wider">Packing Note</span>
+                                    <div className="text-grey-text-dark mt-1 leading-relaxed [&>p]:m-0" dangerouslySetInnerHTML={{__html: line.packingNote}} />
+                                  </div>
+                                )}
+                              </div>
+                            )}
                         </div>
                       </td>
                     </tr>

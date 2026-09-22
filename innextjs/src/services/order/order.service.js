@@ -271,20 +271,52 @@ export const getOrderById = async (id) => {
     try {
         const result = await prisma.order.findUnique({
             where: { id, is_deleted: false },
-            include: {
-                customer: true,
+            select: {
+                id: true,
+                orderNumber: true,
+                dueDate: true,
+                priority: true,
+                remark: true,
+                status: true,
+                orderType: true,
+                customer: {
+                    select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        phone: true,
+                        code: true,
+                        balance: true,
+                        region: true,
+                    }
+                },
                 orderLines: {
-                    include: {
+                    select: {
+                        id: true,
+                        quantity: true,
+                        accessoriesType: true,
+                        accessoriesNote: true,
+                        packingType: true,
+                        packingNote: true,
+                        packagingId: true,
+                        bodyDesignId: true,
+                        colourId: true,
+                        brandId: true,
+                        stickerId: true,
                         product: {
-                            include: {
-                                bodyDesigns: true,
-                                colours: true
+                            select: {
+                                id: true,
+                                name: true,
+                                code: true,
+                                bodyDesigns: { select: { id: true, name: true, type: true } },
+                                colours: { select: { id: true, name: true, type: true } },
                             }
                         },
-                        bodyDesign: true,
-                        colour: true,
-                        brand: true,
-                        sticker: true,
+                        bodyDesign: { select: { id: true, name: true } },
+                        colour: { select: { id: true, name: true } },
+                        brand: { select: { id: true, brandname: true } },
+                        sticker: { select: { id: true, name: true } },
+                        packaging: { select: { id: true, name: true } },
                     }
                 }
             }
@@ -578,6 +610,75 @@ export const getOrdersByProduct = async (page = 1, limit = 10, search = '', filt
         };
     } catch (error) {
         console.error('Error in getOrdersByProduct service:', error);
+        return { success: false, message: error.message };
+    }
+};
+
+export const getOrderFilters = async (type = null, search = '') => {
+    try {
+        let customers = [];
+        let products = [];
+        let orderNumbers = [];
+        let priorities = [];
+        let statuses = [];
+        let orderTypes = [];
+
+        // Always fetch enums (they are small) or if requested
+        if (!type || type === 'priority' || type === 'status' || type === 'orderType') {
+            const orders = await prisma.order.findMany({
+                select: { priority: true, status: true, orderType: true },
+                distinct: ['priority', 'status', 'orderType']
+            });
+            priorities = [...new Set(orders.map(o => o.priority).filter(Boolean))];
+            statuses = [...new Set(orders.map(o => o.status).filter(Boolean))];
+            orderTypes = [...new Set(orders.map(o => o.orderType).filter(Boolean))];
+        }
+
+        if (!type || type === 'customer') {
+            customers = await prisma.customer.findMany({
+                where: { 
+                    orders: { some: {} },
+                    ...(search ? { name: { contains: search, mode: 'insensitive' } } : {})
+                },
+                select: { id: true, name: true, code: true },
+                take: 10
+            });
+        }
+
+        if (!type || type === 'product') {
+            products = await prisma.product.findMany({
+                where: { 
+                    orderLines: { some: {} },
+                    ...(search ? { name: { contains: search, mode: 'insensitive' } } : {})
+                },
+                select: { id: true, name: true, code: true },
+                take: 10
+            });
+        }
+
+        if (!type || type === 'orderNumber') {
+            const allOrders = await prisma.order.findMany({
+                where: search ? { orderNumber: { contains: search, mode: 'insensitive' } } : {},
+                select: { orderNumber: true },
+                orderBy: { createdAt: 'desc' },
+                take: 10
+            });
+            orderNumbers = allOrders.map(o => o.orderNumber).filter(Boolean);
+        }
+
+        return {
+            success: true,
+            data: {
+                customers,
+                products,
+                priorities,
+                statuses,
+                orderTypes,
+                orderNumbers
+            }
+        };
+    } catch (error) {
+        console.error('Error fetching order filters:', error);
         return { success: false, message: error.message };
     }
 };
