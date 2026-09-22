@@ -11,7 +11,7 @@ import { useRouter } from 'next/router';
 import OrderDetailsModal from './modals/OrderDetailsModal';
 import FilterModal from './modals/FilterModal';
 import DeleteModal from '@/common/modal/DeleteModal';
-import { getOrdersApi, getOrdersByProductApi } from '@/lib/fetcher';
+import { getOrdersApi, getOrdersByProductApi, getOrderFiltersApi } from '@/lib/fetcher';
 import { StatusBadge, OrderTypeBadge } from './badges';
 import OrdersListTab from './tabs/OrdersListTab';
 import ByProductTab from './tabs/ByProductTab';
@@ -111,16 +111,33 @@ useKeyboardShortcuts({
       onDelete: (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); },
       onRefresh: fetchOrders,
       searchId: "search-orders",
-      pageNo,
-      setPageNo,
-      totalPages,
-      items: ordersData,
+      pageNo: viewMode === 'orders' ? pageNo : productPageNo,
+      setPageNo: viewMode === 'orders' ? setPageNo : setProductPageNo,
+      totalPages: viewMode === 'orders' ? totalPages : productTotalPages,
+      items: viewMode === 'orders' ? ordersData : productData,
       selectedRowIndex,
       setSelectedRowIndex,
       isModalOpen: isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen,
       customShortcuts: [
           { key: '1', altKey: true, action: () => setViewMode('orders') },
           { key: '2', altKey: true, action: () => setViewMode('product') },
+          { key: 'ArrowRight', altKey: true, action: () => {
+              if (viewMode === 'orders' && pageNo < totalPages) setPageNo(p => p + 1);
+              else if (viewMode === 'product' && productPageNo < productTotalPages) setProductPageNo(p => p + 1);
+          } },
+          { key: 'ArrowLeft', altKey: true, action: () => {
+              if (viewMode === 'orders' && pageNo > 1) setPageNo(p => p - 1);
+              else if (viewMode === 'product' && productPageNo > 1) setProductPageNo(p => p - 1);
+          } },
+          { key: 'ArrowDown', action: () => {
+              if (isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen) return;
+              const max = viewMode === 'orders' ? ordersData.length - 1 : productData.length - 1;
+              if (max >= 0) setSelectedRowIndex(prev => Math.min(prev + 1, max));
+          } },
+          { key: 'ArrowUp', action: () => {
+              if (isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen) return;
+              setSelectedRowIndex(prev => Math.max(prev - 1, 0));
+          } }
       ]
   });
 
@@ -414,12 +431,11 @@ useKeyboardShortcuts({
          <KeyboardShortcutBar
             onAdd={canCreate ? () => router.push('/orders/new') : undefined}
             onEdit={canUpdate ? (item) => router.push(`/orders/${item.id}/edit`) : undefined}
-            onDelete={canDelete ? (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); } : undefined}
             onRefresh={fetchOrders}
             searchId="search-orders"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={ordersData[selectedRowIndex]}
+            pageNo={viewMode === 'orders' ? pageNo : productPageNo}
+            totalPages={viewMode === 'orders' ? totalPages : productTotalPages}
+            selectedItem={viewMode === 'orders' ? ordersData[selectedRowIndex] : productData[selectedRowIndex]}
             selectedRowIndex={selectedRowIndex}
             addLabel="Add Order"
             customActions={[
@@ -458,6 +474,7 @@ useKeyboardShortcuts({
             setPageSize={setPageSize}
             query={query}
             activeFilters={activeFilters}
+            selectedRowIndex={selectedRowIndex}
           />
         )}
       </div>
@@ -479,7 +496,6 @@ useKeyboardShortcuts({
       <FilterModal
         open={isFilterModalOpen}
         onClose={() => setIsFilterModalOpen(false)}
-        ordersData={ordersData}
         initialFilters={activeFilters}
         onApply={(filters) => {
           setActiveFilters(filters);

@@ -10,7 +10,8 @@ export default function OrdersListTab({
   pageNo,
   totalPages,
   setPageNo,
-  setPageSize
+  setPageSize,
+  selectedRowIndex
 }) {
   return (
     <CommonTable
@@ -29,6 +30,7 @@ export default function OrdersListTab({
         setPageSize(size);
         setPageNo(1);
       }}
+      selectedRowIndex={selectedRowIndex}
     />
   );
 }

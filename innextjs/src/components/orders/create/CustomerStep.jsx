@@ -5,6 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import { getCustomersApi } from '@/lib/fetcher';
 import AddCustomer from '../../customers/modal/AddCustomer';
+import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 import { usePermission } from '@/hooks/usePermission';
 
 const DUE_PRESETS = [
@@ -84,28 +85,16 @@ export default function CustomerStep({
 
   const filteredCustomers = customers;
 
-  useEffect(() => {
-    if (!isActive) return;
-    const handleKeyDown = (e) => {
-      if (e.altKey && e.key.toLowerCase() === 's') {
-        e.preventDefault();
-        customerSearchRef.current?.focus();
-      }
-
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        setFocusedCustomerIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1));
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        setFocusedCustomerIndex(prev => Math.max(prev - 1, 0));
-      } else if (e.key === 'Enter' && focusedCustomerIndex >= 0) {
-        e.preventDefault();
-        setCustomer(filteredCustomers[focusedCustomerIndex]);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, filteredCustomers, focusedCustomerIndex, setCustomer]);
+  useKeyboardShortcuts({
+    searchId: 'customer-search',
+    customShortcuts: [
+      { key: 'ArrowRight', altKey: true, ignoreInInput: true, action: () => { document.getElementById('due-date')?.focus(); } },
+      { key: 'ArrowLeft', altKey: true, ignoreInInput: true, action: () => { document.getElementById('customer-search')?.focus(); } },
+      { key: 'ArrowDown', action: () => setFocusedCustomerIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1)) },
+      { key: 'ArrowUp', action: () => setFocusedCustomerIndex(prev => Math.max(prev - 1, 0)) },
+      { key: 'Enter', action: () => { if (focusedCustomerIndex >= 0) setCustomer(filteredCustomers[focusedCustomerIndex]); } }
+    ]
+  });
 
   useEffect(() => {
     if (focusedCustomerIndex >= 0 && customerListRef.current) {
@@ -127,6 +116,7 @@ export default function CustomerStep({
           <div className="px-5 pb-3 flex items-center gap-3 shrink-0">
             <div className="flex-1">
               <Input
+                id="customer-search"
                 ref={customerSearchRef}
                 type="text"
                 startIcon={Search}
@@ -153,12 +143,15 @@ export default function CustomerStep({
             }} 
           />
 
-          {/* Shortcuts */}
-          <div className="px-5 pb-3 flex items-center gap-4 flex-wrap shrink-0">
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">S</span> Search</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">↓</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">↑</span> Move list</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ENTER</span> Select</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">←</span><span className="px-1.5 py-0.5 border border-grey-border rounded-md text-[10px] font-bold bg-white text-grey-text shadow-sm">→</span> Switch sections</span>
+          <div className="px-5 pb-3 shrink-0">
+            <KeyboardShortcutBar 
+              searchId="customer-search"
+              customActions={[
+                { label: 'Move list', keyCombo: ['↓', '↑'] },
+                { label: 'Select', keyCombo: ['Enter'] },
+                { label: 'Sections', keyCombo: ['Alt', '←', '→'] }
+              ]}
+            />
           </div>
 
           {/* List */}
@@ -244,6 +237,7 @@ export default function CustomerStep({
               {dueDate && <span className="text-xs font-bold text-primary">{formatDueLabel(dueDate)}</span>}
             </div>
             <Input
+              id="due-date"
               type="date"
               className="!text-sm"
               value={dueDate}
