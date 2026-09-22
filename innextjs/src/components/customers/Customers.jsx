@@ -8,6 +8,7 @@ import EditCustomer from './modal/EditCustomer';
 import DeleteModal from '@/common/modal/DeleteModal';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 
@@ -40,26 +41,10 @@ export default function Customers() {
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      } else if (e.altKey && (e.key === 'ArrowRight' || e.code === 'ArrowRight')) {
-        e.preventDefault();
-        regionSelectRef.current?.focus();
-      } else if (e.altKey && (e.key === 'ArrowLeft' || e.code === 'ArrowLeft')) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   
   const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
@@ -109,6 +94,21 @@ export default function Customers() {
   const paginatedData = customersData;
 
   const totalPages = Math.ceil(totalItems / pageSize);
+
+  useKeyboardShortcuts({
+      onAdd: canCreate ? () => setAddOpen(true) : undefined,
+      onEdit: canUpdate ? (item) => { setSelectedCustomer(item); setEditOpen(true); } : undefined,
+      onDelete: canDelete ? (item) => { setSelectedCustomer(item); setDeleteOpen(true); } : undefined,
+      onRefresh: triggerRefresh,
+      searchId: "customer-search-input",
+      setPageNo,
+      pageNo,
+      totalPages,
+      items: paginatedData,
+      selectedRowIndex,
+      setSelectedRowIndex,
+      isModalOpen: addOpen || editOpen || deleteOpen,
+  });
 
   // Reset page when filter changes
   useEffect(() => {
@@ -345,6 +345,7 @@ export default function Customers() {
         <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
+              id="customer-search-input"
               type="text"
               startIcon={Search}
               placeholder="Search name, code, or region…"
@@ -366,25 +367,18 @@ export default function Customers() {
               ]}
             />
           </div>
-          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
-              </span>
-              Focus search
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
-              </span>
-              Switch focus
-            </span>
-          </div>
+          <KeyboardShortcutBar
+            onAdd={canCreate ? () => setAddOpen(true) : undefined}
+            onEdit={canUpdate ? (item) => { setSelectedCustomer(item); setEditOpen(true); } : undefined}
+            onDelete={canDelete ? (item) => { setSelectedCustomer(item); setDeleteOpen(true); } : undefined}
+            onRefresh={triggerRefresh}
+            searchId="customer-search-input"
+            pageNo={pageNo}
+            totalPages={totalPages}
+            selectedItem={paginatedData[selectedRowIndex]}
+            selectedRowIndex={selectedRowIndex}
+            addLabel="Add Customer"
+          />
         </div>
 
         {/* Table */}
@@ -404,6 +398,7 @@ export default function Customers() {
             setPageSize(size);
             setPageNo(1);
           }}
+          selectedRowIndex={selectedRowIndex}
         />
       </div>
 

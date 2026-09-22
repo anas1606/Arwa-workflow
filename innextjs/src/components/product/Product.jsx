@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import { getProductsApi, getCategoriesApi, getUnitsApi, getProductKpisApi, updateProductApi, deleteProductApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 import { useRouter } from 'next/router';
 import DeleteModal from '@/common/modal/DeleteModal';
@@ -47,43 +48,7 @@ export default function Product() {
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-        return;
-      }
-
-      if (e.altKey && (e.key === 'ArrowRight' || e.code === 'ArrowRight' || e.key === 'ArrowLeft' || e.code === 'ArrowLeft')) {
-        e.preventDefault();
-        const refs = [searchInputRef, categoryRef, stockRef, unitRef, statusRef];
-        
-        // Find which ref currently contains the active element
-        const currentIndex = refs.findIndex(ref => {
-          if (!ref.current) return false;
-          if (ref.current === document.activeElement) return true;
-          // For react-select, check if activeElement is inside its container
-          if (ref.current.state && ref.current.controlRef && ref.current.controlRef.contains(document.activeElement)) return true;
-          if (ref.current.contains && ref.current.contains(document.activeElement)) return true;
-          return false;
-        });
-
-        if (e.key === 'ArrowRight' || e.code === 'ArrowRight') {
-          // Next element, loop to first if at end or none focused
-          const nextIndex = currentIndex === -1 ? 1 : (currentIndex + 1) % refs.length;
-          refs[nextIndex].current?.focus();
-        } else {
-          // Previous element, loop to last if at start or none focused
-          const prevIndex = currentIndex === -1 ? refs.length - 1 : (currentIndex - 1 + refs.length) % refs.length;
-          refs[prevIndex].current?.focus();
-        }
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
@@ -104,6 +69,21 @@ export default function Product() {
     }
     return () => window.removeEventListener('click', closeDropdown);
   }, [dropdownState]);
+
+  useKeyboardShortcuts({
+      onAdd: canCreate ? () => router.push('/inventory/product/add') : undefined,
+      onEdit: canUpdate ? (item) => router.push(`/inventory/product/edit/${item.id}`) : undefined,
+      onDelete: canDelete ? (item) => { setProductToDelete(item); setDeleteModalOpen(true); } : undefined,
+      onRefresh: () => { fetchProducts(); fetchKpis(); },
+      searchId: "product-search-input",
+      setPageNo,
+      pageNo,
+      totalPages,
+      items: productsData,
+      selectedRowIndex,
+      setSelectedRowIndex,
+      isModalOpen: deleteModalOpen,
+  });
 
   const fetchProducts = async () => {
     setIsLoading(true);
@@ -388,6 +368,7 @@ export default function Product() {
         <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
+              id="product-search-input"
               type="text"
               startIcon={Search}
               placeholder="Search name, code…"
@@ -442,25 +423,18 @@ export default function Product() {
               ]}
             />
           </div>
-          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
-              </span>
-              Focus search
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
-              </span>
-              Switch focus
-            </span>
-          </div>
+          <KeyboardShortcutBar
+            onAdd={canCreate ? () => router.push('/inventory/product/add') : undefined}
+            onEdit={canUpdate ? (item) => router.push(`/inventory/product/edit/${item.id}`) : undefined}
+            onDelete={canDelete ? (item) => { setProductToDelete(item); setDeleteModalOpen(true); } : undefined}
+            onRefresh={() => { fetchProducts(); fetchKpis(); }}
+            searchId="product-search-input"
+            pageNo={pageNo}
+            totalPages={totalPages}
+            selectedItem={productsData[selectedRowIndex]}
+            selectedRowIndex={selectedRowIndex}
+            addLabel="Add Product"
+          />
         </div>
 
         {/* Table */}
@@ -480,6 +454,7 @@ export default function Product() {
             setPageSize(size);
             setPageNo(1);
           }}
+          selectedRowIndex={selectedRowIndex}
         />
       </div>
 

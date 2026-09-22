@@ -14,7 +14,8 @@ export default function CommonTable({
         totalPages: 1
     },
     onPageChange,
-    onPageSizeChange
+    onPageSizeChange,
+    selectedRowIndex
 }) {
     const { totalItems, pageSize, pageNo, totalPages } = pagination;
     const isEmpty = !data || data.length === 0;
@@ -129,7 +130,11 @@ export default function CommonTable({
                                 <tr
                                     key={index}
                                     onClick={() => onRowClick && onRowClick(row)}
-                                    className={`transition-colors group ${onRowClick ? 'cursor-pointer hover:bg-white/40' : 'hover:bg-white/30'}`}
+                                    className={`transition-colors group ${
+                                        selectedRowIndex === index 
+                                            ? 'bg-primary/5 shadow-[inset_2px_0_0_0_var(--color-primary)]' 
+                                            : onRowClick ? 'cursor-pointer hover:bg-white/40' : 'hover:bg-white/30'
+                                    }`}
                                 >
                                     {columns.map((col) => (
                                         <td

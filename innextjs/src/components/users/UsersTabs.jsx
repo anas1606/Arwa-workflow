@@ -8,6 +8,7 @@ import UsersList from './tabs/UsersList';
 import SecurityRolesList from './tabs/SecurityRolesList';
 import AddUser from './modal/AddUser';
 import { useRouter } from 'next/router';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 export default function UsersTabs() {
     const { canRead: canReadUsers, canCreate: canCreateUsers } = usePermission('users');
@@ -57,44 +58,30 @@ export default function UsersTabs() {
         setSearchQuery('');
     }, [activeTab]);
 
+    const canAdd = activeTab === 'users' ? canCreateUsers : canCreateRoles;
+
     // Keyboard shortcuts
-    useEffect(() => {
-        const handleKeyDown = (e) => {
-            // Alt+1 → Users tab
-            if (e.altKey && (e.key === '1' || e.code === 'Digit1')) {
-                e.preventDefault();
-                if (canReadUsers) setActiveTab('users');
-                return;
+    useKeyboardShortcuts({
+        onAdd: canAdd ? () => {
+            if (activeTab === 'users') setAddUserOpen(true);
+            else router.push('/users/roles/add');
+        } : undefined,
+        onRefresh: triggerRefresh,
+        searchId: "users-search-input",
+        customShortcuts: [
+            {
+                key: '1',
+                altKey: true,
+                action: () => { if (canReadUsers) setActiveTab('users'); }
+            },
+            {
+                key: '2',
+                altKey: true,
+                action: () => { if (canReadRoles) setActiveTab('roles'); }
             }
-            // Alt+2 → Security Roles tab
-            if (e.altKey && (e.key === '2' || e.code === 'Digit2')) {
-                e.preventDefault();
-                if (canReadRoles) setActiveTab('roles');
-                return;
-            }
-            // Alt+A → Add user/role
-            if (e.altKey && (e.key.toLowerCase() === 'a' || e.code === 'KeyA')) {
-                e.preventDefault();
-                if (activeTab === 'users' && canCreateUsers) setAddUserOpen(true);
-                else if (activeTab === 'roles' && canCreateRoles) router.push('/users/roles/add');
-                return;
-            }
-            // Ctrl+S or / → Focus search
-            if ((e.ctrlKey && e.key.toLowerCase() === 's') || (e.key === '/' && !e.ctrlKey && !e.altKey && document.activeElement?.tagName !== 'INPUT')) {
-                e.preventDefault();
-                searchInputRef.current?.focus();
-                return;
-            }
-            // Alt+R → Refresh
-            if (e.altKey && (e.key.toLowerCase() === 'r' || e.code === 'KeyR')) {
-                e.preventDefault();
-                triggerRefresh();
-                return;
-            }
-        };
-        window.addEventListener('keydown', handleKeyDown);
-        return () => window.removeEventListener('keydown', handleKeyDown);
-    }, [activeTab, canReadUsers, canReadRoles, canCreateUsers, canCreateRoles, triggerRefresh]);
+        ],
+        isModalOpen: addUserOpen,
+    });
 
     const tabConfig = {
         users: {
@@ -102,21 +89,19 @@ export default function UsersTabs() {
             title: 'Users',
             subtitle: 'Manage your application users and team members.',
             addText: 'Add User',
-            searchPlaceholder: 'Search users (Ctrl+S or /)...',
+            searchPlaceholder: 'Search users (Ctrl+K or /)...',
         },
         roles: {
             icon: ShieldCheck,
             title: 'Security Roles',
             subtitle: 'Define access permissions and module restrictions for user groups.',
             addText: 'Add Role',
-            searchPlaceholder: 'Search roles (Ctrl+S or /)...',
+            searchPlaceholder: 'Search roles (Ctrl+K or /)...',
         },
     };
 
     const config = tabConfig[activeTab];
     const TabIcon = config.icon;
-    const canAdd = activeTab === 'users' ? canCreateUsers : canCreateRoles;
-
     return (
         <div className="w-full flex flex-col gap-5">
             {/* Page Header */}
@@ -182,6 +167,7 @@ export default function UsersTabs() {
                     
                     <div className="flex-1 min-w-0 sm:ml-2">
                         <Input
+                            id="users-search-input"
                             type="text"
                             startIcon={Search}
                             placeholder={config.searchPlaceholder}
@@ -191,44 +177,27 @@ export default function UsersTabs() {
                         />
                     </div>
                 </div>
-                <div className="flex items-center flex-wrap gap-4 px-1 mt-1 text-xs text-grey-muted font-medium">
-                    <span className="flex items-center gap-1.5">
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Ctrl</kbd>
-                            <span className="text-grey-icon">+</span>
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
-                        </span>
-                        Search
-                    </span>
-                    <span className="flex items-center gap-1.5">
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                            <span className="text-grey-icon">+</span>
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">1</kbd>
-                            <span className="text-grey-icon">/</span>
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">2</kbd>
-                        </span>
-                        Switch tabs
-                    </span>
-                    {canAdd && (
-                        <span className="flex items-center gap-1.5">
-                            <span className="flex items-center gap-1">
-                                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                                <span className="text-grey-icon">+</span>
-                                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">A</kbd>
-                            </span>
-                            Add {activeTab === 'users' ? 'User' : 'Role'}
-                        </span>
-                    )}
-                    <span className="flex items-center gap-1.5">
-                        <span className="flex items-center gap-1">
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                            <span className="text-grey-icon">+</span>
-                            <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">R</kbd>
-                        </span>
-                        Refresh list
-                    </span>
-                </div>
+                <KeyboardShortcutBar
+                    onAdd={canAdd ? () => {
+                        if (activeTab === 'users') setAddUserOpen(true);
+                        else router.push('/users/roles/add');
+                    } : undefined}
+                    onRefresh={triggerRefresh}
+                    searchId="users-search-input"
+                    addLabel={config.addText}
+                    customActions={[
+                        {
+                            label: 'Users Tab',
+                            keyCombo: ['Alt', '1'],
+                            onClick: () => { if (canReadUsers) setActiveTab('users'); }
+                        },
+                        {
+                            label: 'Roles Tab',
+                            keyCombo: ['Alt', '2'],
+                            onClick: () => { if (canReadRoles) setActiveTab('roles'); }
+                        }
+                    ]}
+                />
             </div>
 
             {/* Tab Content */}

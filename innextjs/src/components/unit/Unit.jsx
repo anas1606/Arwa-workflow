@@ -11,6 +11,7 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 import { getUnitsApi, deleteUnitApi, updateUnitApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 export default function Unit() {
   const { canRead, canCreate, canUpdate, canDelete } = usePermission('units');
@@ -43,23 +44,7 @@ export default function Unit() {
     return () => clearTimeout(timer);
   }, [inputValue]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && (e.key.toLowerCase() === 's' || e.code === 'KeyS')) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      } else if (e.altKey && (e.key === 'ArrowRight' || e.code === 'ArrowRight')) {
-        e.preventDefault();
-        filterSelectRef.current?.focus();
-      } else if (e.altKey && (e.key === 'ArrowLeft' || e.code === 'ArrowLeft')) {
-        e.preventDefault();
-        searchInputRef.current?.focus();
-      }
-    };
-    
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
   useEffect(() => {
     const closeDropdown = () => setDropdownState(null);
@@ -72,6 +57,21 @@ export default function Unit() {
   useEffect(() => {
     setPageNo(1);
   }, [query, statusFilter]);
+
+  useKeyboardShortcuts({
+      onAdd: canCreate ? () => setAddOpen(true) : undefined,
+      onEdit: canUpdate ? (item) => { setSelectedUnit(item); setEditOpen(true); } : undefined,
+      onDelete: canDelete ? (item) => { setSelectedUnit(item); setDeleteOpen(true); } : undefined,
+      onRefresh: () => setRefreshTrigger(prev => prev + 1),
+      searchId: "unit-search-input",
+      setPageNo,
+      pageNo,
+      totalPages: Math.ceil(totalItems / pageSize) || 1,
+      items: unitsData,
+      selectedRowIndex,
+      setSelectedRowIndex,
+      isModalOpen: addOpen || editOpen || deleteOpen,
+  });
 
   const fetchUnits = useCallback(async () => {
     setIsLoading(true);
@@ -322,6 +322,7 @@ export default function Unit() {
         <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
+              id="unit-search-input"
               type="text"
               startIcon={Search}
               placeholder="Search name, short name, or quantity…"
@@ -344,25 +345,18 @@ export default function Unit() {
               ]}
             />
           </div>
-          <div className="flex items-center gap-4 px-1 text-xs text-grey-muted font-medium">
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm">S</kbd>
-              </span>
-              Focus search
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="flex items-center gap-1">
-                <kbd className="px-1.5 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text font-sans shadow-sm flex items-center h-[22px]">Alt</kbd>
-                <span className="text-grey-icon">+</span>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowLeft size={14} strokeWidth={2.5} /></kbd>
-                <kbd className="px-1 py-0.5 border border-grey-border bg-grey-bg rounded text-grey-text shadow-sm flex items-center justify-center h-[22px] w-[22px]"><ArrowRight size={14} strokeWidth={2.5} /></kbd>
-              </span>
-              Switch focus
-            </span>
-          </div>
+          <KeyboardShortcutBar
+            onAdd={canCreate ? () => setAddOpen(true) : undefined}
+            onEdit={canUpdate ? (item) => { setSelectedUnit(item); setEditOpen(true); } : undefined}
+            onDelete={canDelete ? (item) => { setSelectedUnit(item); setDeleteOpen(true); } : undefined}
+            onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+            searchId="unit-search-input"
+            pageNo={pageNo}
+            totalPages={totalPages}
+            selectedItem={unitsData[selectedRowIndex]}
+            selectedRowIndex={selectedRowIndex}
+            addLabel="Add Unit"
+          />
         </div>
 
         {/* Table */}
@@ -382,6 +376,7 @@ export default function Unit() {
             setPageSize(size);
             setPageNo(1);
           }}
+          selectedRowIndex={selectedRowIndex}
         />
       </div>
 
