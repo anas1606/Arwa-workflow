@@ -204,6 +204,10 @@ export const getOrdersByProductApi = async (page = 1, limit = 10, search = '', f
   return await fetchDataWithParams('order/by-product', { page, limit, search, ...filters });
 };
 
+export const getOrderFiltersApi = async (type = '', search = '') => {
+  return await fetchDataWithParams('order/filters', { type, search });
+};
+
 
 export const getOrderByIdApi = async (id) => {
   return await fetchData(`order/${id}`);

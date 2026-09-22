@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useId, useMemo } from 'react';
 import { createPortal } from 'react-dom';
-import { X } from 'lucide-react';
+import { X, Search } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import clsx from 'clsx';
+import { getOrderFiltersApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -28,13 +29,61 @@ const CATEGORIES = [
   { id: 'orderType', label: 'Order Type' },
 ];
 
-export default function FilterModal({ open, onClose, onApply, ordersData, initialFilters }) {
+export default function FilterModal({ open, onClose, onApply, initialFilters }) {
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
 
   const [activeTab, setActiveTab] = useState('orderNumber');
   const [selectedFilters, setSelectedFilters] = useState({});
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filterOptions, setFilterOptions] = useState(null);
+  const [isSearching, setIsSearching] = useState(false);
+
+  useEffect(() => {
+    setSearchQuery('');
+    setIsSearching(false);
+  }, [activeTab]);
+
+  // Initial fetch of default options (top 10)
+  useEffect(() => {
+    if (open && !filterOptions) {
+      getOrderFiltersApi().then(res => {
+        if (res.data?.success) {
+          setFilterOptions(res.data.data);
+        }
+      });
+    }
+  }, [open, filterOptions]);
+
+  // Debounced server-side search
+  useEffect(() => {
+    if (!open) return;
+    
+    // Only search on backend for specific large datasets
+    if (activeTab !== 'customer' && activeTab !== 'product' && activeTab !== 'orderNumber') return;
+
+    const timer = setTimeout(() => {
+      setIsSearching(true);
+      // If query is empty, we still want to fetch the default top 10 for that tab to reset the list
+      getOrderFiltersApi(activeTab, searchQuery).then(res => {
+        if (res.data?.success) {
+          setFilterOptions(prev => {
+            if (!prev) return res.data.data;
+            const keyMap = { customer: 'customers', product: 'products', orderNumber: 'orderNumbers' };
+            const key = keyMap[activeTab];
+            return {
+              ...prev,
+              [key]: res.data.data[key]
+            };
+          });
+        }
+        setIsSearching(false);
+      });
+    }, 500);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeTab, open]);
 
   useEffect(() => {
     if (open) {
@@ -86,46 +135,51 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
     };
   }, [shouldRender, onClose]);
 
-  // Compute unique values and counts for the active tab
-  // For customer and product, we store IDs as filter values but display names
   const activeOptions = useMemo(() => {
-    if (!ordersData) return [];
-    const counts = {}; // key => { label, count }
-    ordersData.forEach(order => {
-      let entries = []; // { val, label } pairs
-      if (activeTab === 'orderNumber') entries = [{ val: order.orderNumber, label: order.orderNumber }];
-      else if (activeTab === 'orderDate') entries = [{ val: order.orderDate || 'N/A', label: order.orderDate || 'N/A' }];
-      else if (activeTab === 'dueDate') entries = [{ val: order.dueDate, label: order.dueDate }];
-      else if (activeTab === 'quantity') {
-        const qty = (order.orderLines || []).reduce((sum, p) => sum + p.quantity, 0);
-        entries = [{ val: qty.toString(), label: qty.toString() }];
-      }
-      else if (activeTab === 'customer') {
-        if (order.customerId && order.customer?.name) {
-          entries = [{ val: order.customerId, label: order.customer.name }];
-        }
-      }
-      else if (activeTab === 'priority') entries = [{ val: order.priority, label: order.priority }].filter(e => e.val);
-      else if (activeTab === 'status') entries = [{ val: order.status, label: order.status }].filter(e => e.val);
-      else if (activeTab === 'orderType') entries = [{ val: order.orderType, label: order.orderType }].filter(e => e.val);
-      else if (activeTab === 'product') {
-        entries = (order.orderLines || []).map(p => ({
-          val: p.productId || p.product?.id,
-          label: p.product?.name
-        })).filter(e => e.val && e.label);
-      }
+    if (!filterOptions) return [];
+    
+    let options = [];
+    if (activeTab === 'customer') {
+      options = (filterOptions.customers || []).map(c => ({ val: c.id, label: c.name }));
+    } else if (activeTab === 'product') {
+      options = (filterOptions.products || []).map(p => ({ val: p.id, label: p.name }));
+    } else if (activeTab === 'priority') {
+      options = (filterOptions.priorities || []).map(p => ({ val: p, label: p }));
+    } else if (activeTab === 'status') {
+      options = (filterOptions.statuses || []).map(s => ({ val: s, label: s }));
+    } else if (activeTab === 'orderType') {
+      options = (filterOptions.orderTypes || []).map(o => ({ val: o, label: o }));
+    } else if (activeTab === 'orderNumber') {
+      options = (filterOptions.orderNumbers || []).map(o => ({ val: o, label: o }));
+    } else {
+      // quantity, date ranges remain free-text/custom inputs that don't need checkbox lists
+      return [];
+    }
 
-      entries.forEach(({ val, label }) => {
-        if (!val) return;
-        if (!counts[val]) counts[val] = { label, count: 0 };
-        counts[val].count += 1;
-      });
+    // Sort alphabetically by label
+    return options.sort((a, b) => {
+      const labelA = a.label || '';
+      const labelB = b.label || '';
+      return labelA.localeCompare(labelB);
     });
+  }, [filterOptions, activeTab]);
 
-    return Object.entries(counts)
-      .map(([val, { label, count }]) => ({ val, label, count }))
-      .sort((a, b) => a.label.localeCompare(b.label));
-  }, [ordersData, activeTab]);
+  const displayOptions = useMemo(() => {
+    let opts = activeOptions;
+    
+    // Server already returns max 10, but we still ensure selected options are prepended
+    if (activeTab === 'orderNumber' || activeTab === 'product' || activeTab === 'customer') {
+      // Find all options that are currently selected so they are always visible
+      const selectedOpts = opts.filter(opt => (selectedFilters[activeTab] || []).includes(opt.val));
+      const unselectedOpts = opts.filter(opt => !(selectedFilters[activeTab] || []).includes(opt.val));
+      
+      // Show up to 10 options max, keeping the selected ones at the top.
+      const maxUnselected = Math.max(0, 10 - selectedOpts.length);
+      opts = [...selectedOpts, ...unselectedOpts.slice(0, maxUnselected)];
+    }
+    
+    return opts;
+  }, [activeOptions, activeTab, searchQuery, selectedFilters]);
 
   const handleToggleValue = (val) => {
     setSelectedFilters(prev => {
@@ -296,40 +350,70 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
                   </div>
                 </div>
               ) : (
-                <div className="space-y-1">
-                  {activeOptions.map((opt, i) => {
-                    const isSelected = (selectedFilters[activeTab] || []).includes(opt.val);
-                    return (
-                      <label 
-                        key={i} 
-                        className="flex items-center justify-between p-3 rounded-md hover:bg-grey-bg cursor-pointer transition-colors group"
-                      >
-                        <input 
-                          type="checkbox" 
-                          className="hidden" 
-                          checked={isSelected} 
-                          onChange={() => handleToggleValue(opt.val)} 
-                        />
-                        <div className="flex items-center gap-3">
-                          <div className={clsx(
-                            "w-5 h-5 rounded-md border flex items-center justify-center transition-colors",
-                            isSelected ? "bg-primary border-primary text-white" : "border-grey-border-strong bg-white group-hover:border-grey-icon"
-                          )}>
-                            {isSelected && <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-                          </div>
-                          <span className="text-sm font-semibold text-grey-text-dark">{opt.label}</span>
-                        </div>
-                        <span className="text-xs font-bold bg-[#f4f7fb] text-grey-muted px-2.5 py-1 rounded-md">
-                          {opt.count}
-                        </span>
-                      </label>
-                    );
-                  })}
-                  {activeOptions.length === 0 && (
-                    <div className="py-10 text-center text-sm font-medium text-grey-icon">
-                      No options available
+                <div className="space-y-1 flex flex-col h-full">
+                  {(activeTab === 'orderNumber' || activeTab === 'product' || activeTab === 'customer') && (
+                    <div className="px-1 pb-3 shrink-0">
+                      <Input 
+                        startIcon={Search} 
+                        placeholder="Search..." 
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                        className="!text-sm"
+                      />
                     </div>
                   )}
+                  <div className="flex-1 overflow-y-auto space-y-1 pr-1">
+                    {(!filterOptions || isSearching) ? (
+                      // Skeleton Loading State
+                      Array.from({ length: 6 }).map((_, i) => (
+                        <div key={i} className="flex items-center justify-between p-3 rounded-md animate-pulse">
+                          <div className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-md bg-grey-bg border border-grey-surface"></div>
+                            <div className="w-32 h-4 bg-grey-bg rounded"></div>
+                          </div>
+                        </div>
+                      ))
+                    ) : displayOptions.length > 0 ? (
+                      // Loaded Options
+                      displayOptions.map((opt, i) => {
+                        const isSelected = (selectedFilters[activeTab] || []).includes(opt.val);
+                        return (
+                          <label 
+                            key={i} 
+                            className="flex items-center justify-between p-3 rounded-md hover:bg-grey-bg cursor-pointer transition-colors group"
+                          >
+                            <input 
+                              type="checkbox" 
+                              className="hidden" 
+                              checked={isSelected} 
+                              onChange={() => handleToggleValue(opt.val)} 
+                            />
+                            <div className="flex items-center gap-3">
+                              <div className={clsx(
+                                "w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
+                                isSelected ? "bg-primary border-primary text-white" : "border-grey-border-strong bg-white group-hover:border-grey-icon"
+                              )}>
+                                {isSelected && <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+                              </div>
+                              <span className="text-sm font-semibold text-grey-text-dark break-all">{opt.label}</span>
+                            </div>
+                          </label>
+                        );
+                      })
+                    ) : (
+                      // Empty State
+                      <div className="py-10 text-center text-sm font-medium text-grey-icon">
+                        No options available
+                      </div>
+                    )}
+                    
+                    {/* Info message for limit */}
+                    {!searchQuery && (activeTab === 'orderNumber' || activeTab === 'product' || activeTab === 'customer') && (
+                      <div className="text-xs text-center text-grey-muted pt-2 pb-1">
+                        Showing top results. Use search to find more.
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
