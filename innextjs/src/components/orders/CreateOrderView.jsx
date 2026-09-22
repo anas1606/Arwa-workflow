@@ -13,6 +13,7 @@ import CustomerStep from './create/CustomerStep';
 import ModelsStep from './create/ModelsStep';
 import SpecsStep from './create/SpecsStep';
 import ReviewStep from './create/ReviewStep';
+import { usePermission } from '@/hooks/usePermission';
 
 const WIZARD_STEPS = [
   { id: 'customer', title: 'Customer', desc: 'Who is this order for?' },
@@ -23,6 +24,7 @@ const WIZARD_STEPS = [
 
 export default function CreateOrderView() {
   const router = useRouter();
+  const { canCreate } = usePermission('orders');
   const [stepIndex, setStepIndex] = useState(0);
 
   // Draft state
@@ -83,13 +85,22 @@ export default function CreateOrderView() {
     if (idx === 0) return !!customer && !!dueDate && !!priority;
     if (idx === 1) return lines.length > 0;
     if (idx === 2) {
-      return lines.every(l => 
-        l.specs?.bodyDesignId && 
-        l.specs?.colourId && 
-        l.specs?.brandId && 
-        l.specs?.stickerId &&
-        (l.specs?.packingType === 'CUSTOMIZE' || l.specs?.packagingId)
-      );
+      return lines.every(l => {
+        const isAccessoriesValid = (!l.specs?.accessoriesType || l.specs?.accessoriesType === 'STANDARD') ||
+          (l.specs?.accessoriesType === 'CUSTOMIZE' && l.specs?.accessoriesNote && l.specs.accessoriesNote.replace(/<[^>]*>?/gm, '').trim() !== '');
+          
+        const isPackingValid = (!l.specs?.packingType || l.specs?.packingType === 'STANDARD') ? !!l.specs?.packagingId :
+          (l.specs?.packingType === 'CUSTOMIZE' && l.specs?.packingNote && l.specs.packingNote.replace(/<[^>]*>?/gm, '').trim() !== '');
+
+        return !!(
+          l.specs?.bodyDesignId &&
+          l.specs?.colourId &&
+          l.specs?.brandId &&
+          l.specs?.stickerId &&
+          isAccessoriesValid &&
+          isPackingValid
+        );
+      });
     }
     if (idx === 3) return true;
     return true;
@@ -143,9 +154,26 @@ export default function CreateOrderView() {
     else setStepIndex(s => s - 1);
   };
 
+  if (!canCreate) {
+    return (
+      <div className="w-full flex items-center justify-center p-20">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-danger-main/10 rounded-full flex items-center justify-center mb-4">
+            <span className="text-danger-main font-bold text-xl">!</span>
+          </div>
+          <h2 className="text-lg font-bold text-grey-text-strong">Access Denied</h2>
+          <p className="text-sm text-grey-muted mt-2">You do not have permission to create orders.</p>
+          <Button variant="secondary" text="Go back" className="mt-4" onClick={() => router.push('/orders')} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <>
-      <Head><title>Create Order | Arwa Weld</title></Head>
+      <Head>
+        <title>Create Order | Arwa Weld</title>
+      </Head>
       <div className="flex flex-col h-[96vh] overflow-hidden ">
 
         <div className="shrink-0  py-1 flex items-start gap-6">
@@ -172,7 +200,7 @@ export default function CreateOrderView() {
                 return (
                   <div
                     key={step.id}
-                    className="relative flex-1 px-1 py-2"
+                    className="relative flex-1 px-1 py-1"
                     onClick={() => { 
                       if (idx <= stepIndex) {
                         setStepIndex(idx);
@@ -273,7 +301,7 @@ export default function CreateOrderView() {
 
         {/* FOOTER */}
         <div className="bg-white border-t border-grey-border/60 shrink-0">
-          <div className="w-full mx-auto px-6 lg:px-8 py-4 flex items-center justify-end gap-3 rounded-md">
+          <div className="w-full mx-auto px-3 py-2 flex items-center justify-end gap-3 rounded-md">
             <Button
               variant="secondary"
               text={stepIndex === 0 ? 'Cancel' : 'Back'}

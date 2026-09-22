@@ -16,9 +16,11 @@ import { StatusBadge, OrderTypeBadge } from './badges';
 import OrdersListTab from './tabs/OrdersListTab';
 import ByProductTab from './tabs/ByProductTab';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function OrdersView() {
   const router = useRouter();
+  const { canCreate, canUpdate, canDelete, canRead } = usePermission('orders');
   
   // Data state
   const [ordersData, setOrdersData] = useState([]);
@@ -73,37 +75,7 @@ export default function OrdersView() {
       const res = await getOrdersByProductApi(productPageNo, pageSize, query, activeFilters);
       
       if (res.data?.success) {
-        const pData = res.data.data.data;
-        const grouped = pData.map(prod => {
-           let qty = 0;
-           let standard = 0;
-           let customized = 0;
-           const ordersMap = new Map();
-           
-           (prod.orderLines || []).forEach(line => {
-              qty += line.quantity; 
-              const order = line.order;
-              if (order && !ordersMap.has(order.id)) {
-                 ordersMap.set(order.id, {
-                     ...order,
-                     // We override orderLines to only contain this product's line
-                     // This ensures the table's Qty and Products columns only show this product's specific details
-                     orderLines: [line] 
-                 });
-                 if (line.orderType?.toUpperCase() === 'CUSTOMIZE') customized++;
-                 else standard++;
-              }
-           });
-           
-           return {
-              product: prod.name,
-              qty,
-              orders: Array.from(ordersMap.values()),
-              standard,
-              customized
-           };
-        });
-        setProductData(grouped);
+        setProductData(res.data.data.data);
         setProductTotalItems(res.data.data.pagination.total);
         setProductTotalPages(res.data.data.pagination.totalPages);
       }
@@ -287,11 +259,27 @@ useKeyboardShortcuts({
       render: (row) => (
         <div className="flex items-center justify-end gap-3 text-grey-icon">
           <button onClick={(e) => { e.stopPropagation(); window.print(); }} className="hover:text-grey-text-strong transition-colors"><Printer size={18} /></button>
-          <button onClick={(e) => { e.stopPropagation(); router.push(`/orders/${row.id}/edit`); }} className="hover:text-grey-text-strong transition-colors"><Pencil size={18} /></button>
+          {canUpdate && (
+            <button onClick={(e) => { e.stopPropagation(); router.push(`/orders/${row.id}/edit`); }} className="hover:text-grey-text-strong transition-colors"><Pencil size={18} /></button>
+          )}
         </div>
       ),
     }
   ];
+
+  if (!canRead) {
+    return (
+      <div className="w-full flex items-center justify-center p-20">
+        <div className="flex flex-col items-center text-center">
+          <div className="w-16 h-16 bg-danger-main/10 rounded-full flex items-center justify-center mb-4">
+            <span className="text-danger-main font-bold text-xl">!</span>
+          </div>
+          <h2 className="text-lg font-bold text-grey-text-strong">Access Denied</h2>
+          <p className="text-sm text-grey-muted mt-2">You do not have permission to view orders.</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -313,12 +301,14 @@ useKeyboardShortcuts({
           <div className="flex items-center gap-2">
             <Button variant="secondary" icon={Printer} text="Export" />
             <Button variant="secondary" icon={Printer} text="Print" />
-            <Button
-              variant="primary"
-              onClick={() => router.push('/orders/new')}
-              icon={Plus}
-              text="Add new order"
-            />
+            {canCreate && (
+              <Button
+                variant="primary"
+                onClick={() => router.push('/orders/new')}
+                icon={Plus}
+                text="Add new order"
+              />
+            )}
           </div>
         </div>
 
@@ -422,9 +412,9 @@ useKeyboardShortcuts({
 
           {/* Hints */}
          <KeyboardShortcutBar
-            onAdd={() => router.push('/orders/new')}
-            onEdit={(item) => router.push(`/orders/${item.id}/edit`)}
-            onDelete={(item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); }}
+            onAdd={canCreate ? () => router.push('/orders/new') : undefined}
+            onEdit={canUpdate ? (item) => router.push(`/orders/${item.id}/edit`) : undefined}
+            onDelete={canDelete ? (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); } : undefined}
             onRefresh={fetchOrders}
             searchId="search-orders"
             pageNo={pageNo}
@@ -466,6 +456,8 @@ useKeyboardShortcuts({
             productTotalPages={productTotalPages}
             setProductPageNo={setProductPageNo}
             setPageSize={setPageSize}
+            query={query}
+            activeFilters={activeFilters}
           />
         )}
       </div>

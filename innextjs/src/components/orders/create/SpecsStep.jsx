@@ -54,12 +54,19 @@ export default function SpecsStep({
     }
   }, [activeLine?.model?.id, packagesCache]);
   const isLineComplete = (line) => {
+    const isAccessoriesValid = (!line.specs?.accessoriesType || line.specs?.accessoriesType === 'STANDARD') ||
+      (line.specs?.accessoriesType === 'CUSTOMIZE' && line.specs?.accessoriesNote && line.specs.accessoriesNote.replace(/<[^>]*>?/gm, '').trim() !== '');
+      
+    const isPackingValid = (!line.specs?.packingType || line.specs?.packingType === 'STANDARD') ? !!line.specs?.packagingId :
+      (line.specs?.packingType === 'CUSTOMIZE' && line.specs?.packingNote && line.specs.packingNote.replace(/<[^>]*>?/gm, '').trim() !== '');
+
     return !!(
       line.specs?.bodyDesignId &&
       line.specs?.colourId &&
       line.specs?.brandId &&
       line.specs?.stickerId &&
-      (line.specs?.packingType === 'CUSTOMIZE' || line.specs?.packagingId)
+      isAccessoriesValid &&
+      isPackingValid
     );
   };
 
@@ -149,16 +156,16 @@ export default function SpecsStep({
   };
 
   return (
-    <div className="h-full flex flex-col bg-[#f4f7f9] p-4 lg:p-6 rounded-xl">
+    <div className="h-full flex flex-col bg-[#f4f7f9] p-2 rounded-xl">
       {/* Page Title */}
-      <div className="pb-4 shrink-0">
+      <div className="pb-2 shrink-0">
         <h2 className="text-[15px] font-bold text-grey-text-strong">Technical specifications</h2>
       </div>
 
       <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-5">
         {/* LEFT SIDEBAR */}
-        <div className="w-full lg:w-[280px] shrink-0 bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden p-4">
-          <div className="mb-4 pb-4 border-b border-grey-border/40">
+        <div className="w-full lg:w-[280px] shrink-0 bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden p-2">
+          <div className="mb-2 pb-2 border-b border-grey-border/40">
             <div className="flex items-center justify-between mb-2.5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-grey-text-strong">Models</p>
               <p className="text-[11px] font-bold text-grey-text-strong">{lines.filter(isLineComplete).length}/{lines.length}</p>
@@ -179,7 +186,7 @@ export default function SpecsStep({
                   key={line.model.code}
                   onClick={() => setActiveSpecLineIndex(idx)}
                   className={clsx(
-                    'flex items-center gap-3 p-3 rounded-xl cursor-pointer transition-all border',
+                    'flex items-center gap-3 py-1 px-2 rounded-xl cursor-pointer transition-all border',
                     isLineActive ? 'bg-[#f4f7ff] border-primary shadow-sm' : 'bg-white border-grey-border/40 hover:bg-grey-bg/50 hover:border-grey-border/60'
                   )}
                 >
@@ -200,7 +207,7 @@ export default function SpecsStep({
           </div>
 
           {/* Sidebar footer shortcuts */}
-          <div className="pt-4 mt-2 border-t border-grey-surface flex flex-col gap-2">
+          <div className="pt-2 mt-2 border-t border-grey-surface flex flex-col gap-2">
             <button 
               onClick={handleCopyPrevious} 
               disabled={activeSpecLineIndex === 0}
@@ -235,7 +242,7 @@ export default function SpecsStep({
           ) : (
             <>
               {/* Main Body */}
-              <div className="flex-1 overflow-y-auto bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] p-6 space-y-8 pr-4">
+              <div className="flex-1 overflow-y-auto bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] p-3 space-y-3 ">
               {/* Active model header */}
               <div className="flex items-center gap-4">
                 <div className="w-[42px] h-[42px] rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
@@ -256,7 +263,7 @@ export default function SpecsStep({
               {/* Appearance & Branding */}
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-wider text-grey-text-strong mb-1">Appearance &amp; Branding</p>
-                <p className="text-xs text-grey-muted mb-5">Brand Name comes from the selected customer. Panel Sticker options depend on the brand.</p>
+                <p className="text-xs text-grey-muted mb-2">Brand Name comes from the selected customer. Panel Sticker options depend on the brand.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                     <div>
                       <Input
@@ -307,7 +314,7 @@ export default function SpecsStep({
 
               {/* Accessories & Packing */}
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-wider text-grey-text-strong mb-4">Accessories &amp; Packing</p>
+                <p className="text-[11px] font-bold uppercase tracking-wider text-grey-text-strong ">Accessories &amp; Packing</p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {/* Accessories */}
                   <div>

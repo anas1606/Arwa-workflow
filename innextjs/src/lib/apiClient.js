@@ -21,6 +21,8 @@ const apiClient = axios.create({
           value.forEach(v => {
             parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(v)}`);
           });
+        } else if (typeof value === 'object' && value !== null) {
+          parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(JSON.stringify(value))}`);
         } else {
           parts.push(`${encodeURIComponent(key)}=${encodeURIComponent(value)}`);
         }
