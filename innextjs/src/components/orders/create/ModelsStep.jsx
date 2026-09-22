@@ -3,6 +3,7 @@ import { Search, Plus, Check, X, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
 import Input from '@/common/input/Input';
 import { getProductsApi, getCategoriesApi } from '@/lib/fetcher';
+import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 
 export default function ModelsStep({
   lines,
@@ -15,6 +16,7 @@ export default function ModelsStep({
   const [modelQuery, setModelQuery] = useState('');
   const [modelCategory, setModelCategory] = useState('All categories');
   const [focusedModelIndex, setFocusedModelIndex] = useState(-1);
+  const [selectedLineIndex, setSelectedLineIndex] = useState(0);
 
   const modelSearchRef = useRef(null);
   const modelListRef = useRef(null);
@@ -109,10 +111,27 @@ export default function ModelsStep({
   }, [focusedModelIndex]);
 
   const handleRemoveLine = (idx) => {
+    if (idx < 0 || idx >= lines.length) return;
     const n = [...lines];
     n.splice(idx, 1);
     setLines(n);
+    if (selectedLineIndex >= n.length) {
+      setSelectedLineIndex(Math.max(0, n.length - 1));
+    }
   };
+
+  useKeyboardShortcuts({
+    searchId: 'model-search',
+    customShortcuts: [
+      { key: '+', action: () => { if (lines.length > 0) onUpdateLineQty(selectedLineIndex, 1); } },
+      { key: '-', action: () => { if (lines.length > 0) onUpdateLineQty(selectedLineIndex, -1); } },
+      { key: 'x', altKey: true, action: () => { if (lines.length > 0) handleRemoveLine(selectedLineIndex); } },
+      { key: 'ArrowDown', altKey: true, action: () => { if (lines.length > 0) setSelectedLineIndex(prev => Math.min(lines.length - 1, prev + 1)); } },
+      { key: 'ArrowUp', altKey: true, action: () => { if (lines.length > 0) setSelectedLineIndex(prev => Math.max(0, prev - 1)); } },
+      { key: 'ArrowRight', altKey: true, ignoreInInput: true, action: () => { document.getElementById('selected-models-panel')?.focus(); } },
+      { key: 'ArrowLeft', altKey: true, ignoreInInput: true, action: () => { document.getElementById('model-search')?.focus(); } }
+    ]
+  });
 
   return (
     <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
@@ -123,20 +142,24 @@ export default function ModelsStep({
             <h2 className="text-base font-bold text-grey-text-strong">Select models</h2>
           </div>
 
-          {/* Shortcuts */}
-          <div className="px-5 pb-3 flex flex-wrap gap-4 shrink-0">
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">←</span> Catalog</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">→</span> Selected</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">S</span> Search</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">↑↓</span> Lines</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">+</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">-</span> Qty</span>
-            <span className="flex items-center gap-1.5 text-xs text-grey-muted"><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border rounded text-[10px] font-bold bg-white text-grey-text shadow-sm">X</span> Remove</span>
+          <div className="px-5 pb-3 shrink-0">
+            <KeyboardShortcutBar 
+              searchId="model-search"
+              customActions={[
+                { label: 'Customer', keyCombo: ['Alt', '←'] },
+                { label: 'Selected', keyCombo: ['Alt', '→'] },
+                { label: 'Lines', keyCombo: ['Alt', '↑', '↓'] },
+                { label: 'Qty', keyCombo: ['+', '-'] },
+                { label: 'Remove', keyCombo: ['Alt', 'X'] }
+              ]}
+            />
           </div>
 
           {/* Search + Category */}
           <div className="px-5 pb-3 flex items-center gap-3 shrink-0">
             <div className="flex-1">
               <Input
+                id="model-search"
                 ref={modelSearchRef}
                 type="text"
                 startIcon={Search}
@@ -220,7 +243,7 @@ export default function ModelsStep({
       </div>
       
       {/* RIGHT: Selected */}
-      <div className="w-full lg:w-[280px] shrink-0 h-full overflow-y-auto pb-5">
+      <div id="selected-models-panel" tabIndex={-1} className="w-full lg:w-[280px] shrink-0 h-full overflow-y-auto pb-5 outline-none focus:ring-2 focus:ring-primary/50 focus:rounded-md">
         <div className="bg-white rounded-md border border-grey-border/60 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-grey-surface">
             <span className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">Selected</span>
@@ -243,7 +266,14 @@ export default function ModelsStep({
           ) : (
             <div className="divide-y divide-grey-surface">
               {lines.map((line, idx) => (
-                <div key={line.model.code} className="p-3">
+                <div 
+                  key={line.model.code} 
+                  className={clsx(
+                    "p-3 transition-colors",
+                    selectedLineIndex === idx ? "bg-primary/5 shadow-[inset_2px_0_0_0_var(--color-primary)]" : ""
+                  )}
+                  onClick={() => setSelectedLineIndex(idx)}
+                >
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-grey-icon w-4">{idx + 1}</span>
                     <div className="w-7 h-7 rounded-md bg-primary-subtle text-primary-dark text-xs font-bold flex items-center justify-center">

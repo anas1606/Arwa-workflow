@@ -6,7 +6,7 @@ import Button from '@/common/buttons/Button';
 import clsx from 'clsx';
 import { toast } from 'sonner';
 import { getOrderByIdApi, updateOrderApi } from '@/lib/fetcher';
-import { CUSTOMISATION_SPECS } from '@/common/dummy';
+import { useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 import SetQuantityModal from './modals/SetQuantityModal';
 import CustomerStep from './create/CustomerStep';
@@ -14,6 +14,7 @@ import ModelsStep from './create/ModelsStep';
 import SpecsStep from './create/SpecsStep';
 import ReviewStep from './create/ReviewStep';
 import { usePermission } from '@/hooks/usePermission';
+import { CUSTOMISATION_SPECS } from '@/common/dummy';
 
 const WIZARD_STEPS = [
   { id: 'customer', title: 'Customer', desc: 'Who is this order for?' },
@@ -66,8 +67,8 @@ export default function EditOrderView() {
               colourIdName: l.colour?.name || '',
               brandId: l.brandId || '',
               brandIdName: l.brand?.brandname || l.brand?.name || '',
-              stickerId: l.stickerId || '',
-              stickerIdName: l.sticker?.name || '',
+              stickerId: l.stickerId || 'default',
+              stickerIdName: l.sticker?.name || 'Arwa Default Sticker',
               accessoriesType: l.accessoriesType || 'STANDARD',
               accessoriesNote: l.accessoriesNote || '',
               packingType: l.packingType || 'STANDARD',
@@ -86,20 +87,9 @@ export default function EditOrderView() {
   }, [id, router]);
 
   // Keyboard shortcuts for stepper
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (stepIndex < WIZARD_STEPS.length - 1 && !loading) setStepIndex(s => s + 1);
-      }
-      if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (stepIndex > 0 && !loading) setStepIndex(s => s - 1);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stepIndex, loading]);
+  useKeyboardShortcuts({
+    customShortcuts: []
+  });
 
   // Actions
   const handleModalAdd = (model, qty) => {

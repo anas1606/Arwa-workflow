@@ -4,6 +4,7 @@ import { Check, Copy } from 'lucide-react';
 import clsx from 'clsx';
 import Input from '@/common/input/Input';
 import { CUSTOMISATION_SPECS } from '@/common/dummy';
+import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 import 'react-quill-new/dist/quill.snow.css';
@@ -109,30 +110,26 @@ export default function SpecsStep({
     setLines(newLines);
   }, [activeSpecLineIndex, lines, setLines]);
 
-  useEffect(() => {
-    if (!isActive) return;
-    const handleKeyDown = (e) => {
-      if (e.altKey && e.key === 'ArrowDown') {
-        e.preventDefault();
-        setActiveSpecLineIndex(prev => Math.min(prev + 1, lines.length - 1));
-      } else if (e.altKey && e.key === 'ArrowUp') {
-        e.preventDefault();
-        setActiveSpecLineIndex(prev => Math.max(prev - 1, 0));
-      } else if (e.altKey && (e.key === 'c' || e.key === 'C')) {
-        e.preventDefault();
-        handleCopyPrevious();
-      } else if (e.altKey && (e.key === 'a' || e.key === 'A')) {
-        e.preventDefault();
-        handleApplyToAll();
-      } else if (e.altKey && e.key >= '1' && e.key <= '9') {
-        e.preventDefault();
-        const idx = parseInt(e.key, 10) - 1;
+  const customShortcuts = [
+    { key: 'ArrowDown', altKey: true, action: () => setActiveSpecLineIndex(prev => Math.min(prev + 1, lines.length - 1)) },
+    { key: 'ArrowUp', altKey: true, action: () => setActiveSpecLineIndex(prev => Math.max(prev - 1, 0)) },
+    { key: 'c', altKey: true, action: () => handleCopyPrevious() },
+    { key: 'a', altKey: true, action: () => handleApplyToAll() }
+  ];
+  for (let i = 1; i <= 9; i++) {
+    customShortcuts.push({
+      key: i.toString(),
+      altKey: true,
+      action: () => {
+        const idx = i - 1;
         if (idx < lines.length) setActiveSpecLineIndex(idx);
       }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isActive, lines.length, setActiveSpecLineIndex, handleCopyPrevious, handleApplyToAll]);
+    });
+  }
+
+  useKeyboardShortcuts({
+    customShortcuts
+  });
 
   const handleUpdateSpec = (lineIdx, key, value, options = []) => {
     const newLines = [...lines];
@@ -229,12 +226,15 @@ export default function SpecsStep({
 
         {/* MAIN SPEC AREA */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
-          {/* Top shortcuts */}
-          <div className="flex flex-wrap items-center gap-3 p-3 bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)]">
-            <span className="flex items-center gap-1.5 text-[10px] text-grey-muted font-medium"><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">↓</span> Next model</span>
-            <span className="flex items-center gap-1.5 text-[10px] text-grey-muted font-medium"><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">↑</span> Previous</span>
-            <span className="flex items-center gap-1.5 text-[10px] text-grey-muted font-medium"><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">ALT</span><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">1-9</span> Jump</span>
-            <span className="flex items-center gap-1.5 text-[10px] text-grey-muted font-medium"><span className="px-1.5 py-0.5 border border-grey-border/80 rounded-[4px] text-[9px] font-bold bg-white text-grey-icon shadow-sm">TAB</span> Fields</span>
+          <div className="shrink-0 mb-3">
+            <KeyboardShortcutBar 
+              customActions={[
+                { label: 'Next model', keyCombo: ['Alt', '↓'] },
+                { label: 'Previous', keyCombo: ['Alt', '↑'] },
+                { label: 'Jump', keyCombo: ['Alt', '1-9'] },
+                { label: 'Fields', keyCombo: ['Tab'] }
+              ]}
+            />
           </div>
 
           {lines.length === 0 ? (
@@ -305,8 +305,8 @@ export default function SpecsStep({
                         required
                         className="!text-sm bg-white"
                         value={activeLine?.specs?.stickerId || ''}
-                        onChange={e => handleUpdateSpec(activeSpecLineIndex, 'stickerId', e.target.value, [{ label: 'None', value: 'default' }, ...(stickersCache[activeLine?.specs?.brandId] || []).map(s => ({ label: s.name, value: s.id }))])}
-                        options={[{ label: 'None', value: 'default' }, ...(stickersCache[activeLine?.specs?.brandId] || []).map(s => ({ label: s.name, value: s.id }))]}
+                      onChange={e => handleUpdateSpec(activeSpecLineIndex, 'stickerId', e.target.value, [{ label: 'Arwa Default Sticker', value: 'default' }, ...(stickersCache[activeLine?.specs?.brandId] || []).map(s => ({ label: s.name, value: s.id }))])}
+                        options={[{ label: 'Arwa Default Sticker', value: 'default' }, ...(stickersCache[activeLine?.specs?.brandId] || []).map(s => ({ label: s.name, value: s.id }))]}
                       />
                     </div>
                 </div>
@@ -418,7 +418,7 @@ export default function SpecsStep({
                     disabled={activeSpecLineIndex === lines.length - 1}
                     className="flex items-center gap-2 px-5 py-2.5 bg-primary text-[13px] font-bold text-white rounded-[8px] disabled:opacity-50 transition-colors hover:bg-primary-dark shadow-[0_2px_4px_rgba(0,0,0,0.1)]"
                   >
-                    Next model → <span className="text-[10px] text-primary-muted bg-white/20 rounded px-1 hidden sm:inline-block">ALT ↓</span>
+                    Next model → <span className="text-[10px] text-white/90 bg-white/20 rounded px-1 hidden sm:inline-block shadow-[inset_0_1px_1px_rgba(0,0,0,0.1)]">ALT ↓</span>
                   </button>
                 </div>
               )}

@@ -28,7 +28,8 @@ export const useKeyboardShortcuts = ({
     setSelectedRowIndex,
     isModalOpen = false,
     customShortcuts = [],
-    disabled = false
+    disabled = false,
+    disableInputCycling = false
 } = {}) => {
     useEffect(() => {
         if (disabled) return;
@@ -37,6 +38,34 @@ export const useKeyboardShortcuts = ({
             const activeEl = document.activeElement;
             const isInputActive = activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName);
             const isSearchFocused = activeEl && activeEl.id === searchId;
+
+            // 0. Custom Shortcuts (Highest Priority)
+            for (const shortcut of customShortcuts) {
+                if (shortcut.altKey && !e.altKey) continue;
+                if (shortcut.ctrlKey && !e.ctrlKey) continue;
+                if (shortcut.shiftKey && !e.shiftKey) continue;
+                let isMatch = false;
+                if (shortcut.key) {
+                    const sKey = shortcut.key.toLowerCase();
+                    const eKey = e.key.toLowerCase();
+                    const eCode = (e.code || '').toLowerCase();
+                    isMatch = (eKey === sKey) || (eCode === sKey);
+                    
+                    if (!isMatch && /^\d$/.test(shortcut.key)) {
+                        isMatch = (e.code === `Digit${shortcut.key}` || e.code === `Numpad${shortcut.key}`);
+                    }
+                    if (!isMatch && (sKey === '+' || sKey === '-')) {
+                        isMatch = (eKey === sKey) || (eCode === `numpad${sKey === '+' ? 'add' : 'subtract'}`);
+                    }
+                }
+
+                if (isMatch) {
+                    if (shortcut.ignoreInInput && isInputActive) continue;
+                    e.preventDefault();
+                    shortcut.action();
+                    return;
+                }
+            }
 
             // 1. Search Focus: Ctrl + K, Alt + S, or "/" (when not typing)
             if ((e.ctrlKey && e.key.toLowerCase() === 'k') || (e.altKey && e.key.toLowerCase() === 's') || (!isInputActive && e.key === '/')) {
@@ -84,7 +113,7 @@ export const useKeyboardShortcuts = ({
             }
 
             // 5.5 Input Cycling: Alt + Right / Alt + Left when inside an input
-            if (e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && isInputActive) {
+            if (!disableInputCycling && e.altKey && (e.key === 'ArrowRight' || e.key === 'ArrowLeft') && isInputActive) {
                 e.preventDefault();
                 const focusable = Array.from(document.querySelectorAll('input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])')).filter(el => el.offsetParent !== null);
                 const currentIndex = focusable.indexOf(document.activeElement);
@@ -114,30 +143,7 @@ export const useKeyboardShortcuts = ({
                 return;
             }
 
-            // 7. Custom Shortcuts
-            for (const shortcut of customShortcuts) {
-                if (shortcut.altKey && !e.altKey) continue;
-                if (shortcut.ctrlKey && !e.ctrlKey) continue;
-                if (shortcut.shiftKey && !e.shiftKey) continue;
-                let isMatch = false;
-                if (shortcut.key) {
-                    const sKey = shortcut.key.toLowerCase();
-                    const eKey = e.key.toLowerCase();
-                    const eCode = (e.code || '').toLowerCase();
-                    isMatch = (eKey === sKey) || (eCode === sKey);
-                    
-                    if (!isMatch && /^\d$/.test(shortcut.key)) {
-                        isMatch = (e.code === `Digit${shortcut.key}` || e.code === `Numpad${shortcut.key}`);
-                    }
-                }
-
-                if (isMatch) {
-                    if (shortcut.ignoreInInput && isInputActive) continue;
-                    e.preventDefault();
-                    shortcut.action();
-                    return;
-                }
-            }
+            // (Custom Shortcuts moved to top)
 
             // 8. Table Navigation & Row Actions (Only when NOT typing inside inputs and modal is not open)
             if (!isInputActive && !isModalOpen && items.length > 0) {
@@ -202,7 +208,7 @@ export const useKeyboardShortcuts = ({
     }, [
         onAdd, onEdit, onDelete, onView, onRefresh, onToggleSelect, onToggleSelectAll, searchId, onSearchFocus, onEscape,
         onNextPage, onPrevPage, setPageNo, pageNo, totalPages, items, selectedRowIndex,
-        setSelectedRowIndex, isModalOpen, customShortcuts, disabled
+        setSelectedRowIndex, isModalOpen, customShortcuts, disabled, disableInputCycling
     ]);
 };
 

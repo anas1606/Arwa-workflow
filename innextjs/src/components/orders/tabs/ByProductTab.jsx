@@ -89,7 +89,8 @@ export default function ByProductTab({
   setProductPageNo,
   setPageSize,
   query,
-  activeFilters
+  activeFilters,
+  selectedRowIndex
 }) {
   const [innerPagination, setInnerPagination] = React.useState({});
   const [loadedProducts, setLoadedProducts] = React.useState(new Set());
@@ -148,15 +149,19 @@ export default function ByProductTab({
       )}
 
       <div className={showSkeleton ? 'hidden' : 'block space-y-4'}>
-        {productData.map((group) => (
-          <ProductOrderTable 
-            key={group.product} 
+        {productData.map((group, index) => (
+          <div 
+            key={group.product}
+            className={`transition-all duration-200 ${selectedRowIndex === index ? 'ring-2 ring-primary/50 shadow-md rounded-lg scale-[1.01]' : ''}`}
+          >
+            <ProductOrderTable 
             productGroup={group} 
             columns={columns} 
             query={query} 
             activeFilters={activeFilters}
             onInitialLoadComplete={handleProductLoaded}
           />
+          </div>
         ))}
       </div>
 

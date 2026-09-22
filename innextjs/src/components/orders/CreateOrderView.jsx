@@ -7,6 +7,7 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 import { createOrderApi } from '@/lib/fetcher';
 import { CUSTOMISATION_SPECS } from '@/common/dummy';
+import { useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 import SetQuantityModal from './modals/SetQuantityModal';
 import CustomerStep from './create/CustomerStep';
@@ -39,21 +40,9 @@ export default function CreateOrderView() {
   const [activeSpecLineIndex, setActiveSpecLineIndex] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // Keyboard shortcuts for stepper
-  React.useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && e.key === 'ArrowRight') {
-        e.preventDefault();
-        if (stepIndex < WIZARD_STEPS.length - 1) setStepIndex(s => s + 1);
-      }
-      if (e.altKey && e.key === 'ArrowLeft') {
-        e.preventDefault();
-        if (stepIndex > 0) setStepIndex(s => s - 1);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [stepIndex]);
+  useKeyboardShortcuts({
+    customShortcuts: []
+  });
 
   // Actions
   const handleModalAdd = (model, qty) => {
