@@ -216,6 +216,7 @@ enum StandardType {
 enum OrderType {
   STANDARD
   CUSTOMIZE
+  HYBRID
 }
 
 enum Priority {
@@ -232,6 +233,7 @@ enum CustomisationType {
 enum OrderStatus {
   DRAFT
   CONFIRMED
+  IN_PRODUCTION
   COMPLETED
   CANCELLED
 }
@@ -275,6 +277,7 @@ model OrderLine {
   packingType     CustomisationType @default(STANDARD) @map("packing_type")
   packingNote     String?           @db.Text @map("packing_note")
   packagingId     String?           @map("packaging_id")
+  orderType       CustomisationType @default(STANDARD) @map("order_type")
 
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")

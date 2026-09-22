@@ -200,6 +200,11 @@ export const getOrdersApi = async (page = 1, limit = 10, search = '', filters = 
   return await fetchDataWithParams('order', { page, limit, search, ...filters });
 };
 
+export const getOrdersByProductApi = async (page = 1, limit = 10, search = '', filters = {}) => {
+  return await fetchDataWithParams('order/by-product', { page, limit, search, ...filters });
+};
+
+
 export const getOrderByIdApi = async (id) => {
   return await fetchData(`order/${id}`);
 };

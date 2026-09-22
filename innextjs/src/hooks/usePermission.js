@@ -7,7 +7,12 @@ export const usePermission = (moduleKey) => {
         return { canRead: false, canCreate: false, canUpdate: false, canDelete: false };
     }
 
-    if (user.role === 'super_admin' || user.role === 'SUPER_ADMIN') {
+    if (
+        user.isSuperAdmin || 
+        (user.role && user.role.toLowerCase().replace(/[^a-z0-9]/g, '') === 'superadmin') ||
+        user.role === 'super_admin' || 
+        user.role === 'SUPER_ADMIN'
+    ) {
         return { canRead: true, canCreate: true, canUpdate: true, canDelete: true };
     }
 

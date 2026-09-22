@@ -23,7 +23,7 @@ export const createOrderSchema = z.object({
   dueDate: z.string().or(z.date()),
   priority: z.enum(['LOW', 'NORMAL', 'HIGH']).default('NORMAL'),
   remark: z.string().optional().or(z.literal('')),
-  status: z.enum(['DRAFT', 'CONFIRMED', 'COMPLETED', 'CANCELLED']).default('DRAFT'),
+  status: z.enum(['DRAFT', 'CONFIRMED', 'IN_PRODUCTION', 'COMPLETED', 'CANCELLED']).default('DRAFT'),
   orderLines: z.array(orderLineSchema).min(1, 'At least one product is required'),
 });
 
@@ -33,6 +33,6 @@ export const updateOrderSchema = z.object({
   dueDate: z.string().or(z.date()).optional(),
   priority: z.enum(['LOW', 'NORMAL', 'HIGH']).optional(),
   remark: z.string().optional().or(z.literal('')),
-  status: z.enum(['DRAFT', 'CONFIRMED', 'COMPLETED', 'CANCELLED']).optional(),
+  status: z.enum(['DRAFT', 'CONFIRMED', 'IN_PRODUCTION', 'COMPLETED', 'CANCELLED']).optional(),
   orderLines: z.array(orderLineSchema).optional(),
 });

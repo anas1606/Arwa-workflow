@@ -11,14 +11,15 @@ export default async function handler(req, res) {
     try {
         switch (method) {
             case 'GET': {
-                const { page = 1, limit = 10, search = '', orderType, priority, status, customerId, productId, orderNumber } = req.query;
+                const { page = 1, limit = 10, search = '' } = req.query;
+                const extractValue = (key) => req.query[key] || req.query[`${key}[]`];
                 const filters = {
-                    orderType,
-                    priority,
-                    status,
-                    customerId,
-                    productId,
-                    orderNumber
+                    orderType: extractValue('orderType'),
+                    priority: extractValue('priority'),
+                    status: extractValue('status'),
+                    customerId: extractValue('customerId'),
+                    productId: extractValue('productId'),
+                    orderNumber: extractValue('orderNumber')
                 };
                 const result = await getAllOrders(page, limit, search, filters);
                 if (result.success) return successResponse(res, 'Orders fetched successfully', result.data);

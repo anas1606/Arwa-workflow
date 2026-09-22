@@ -1,4 +1,4 @@
-export const ORDER_TYPES = ['Standard', 'Customised'];
+export const ORDER_TYPES = ['Standard', 'Customised', 'Hybrid'];
 
 export function orderTotalQty(order) {
   const lines = order.orderLines || order.products || [];

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { X } from 'lucide-react';
+import { X, AlertTriangle } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import clsx from 'clsx';
@@ -68,6 +68,14 @@ export default function SetQuantityModal({ isOpen, onClose, model, onAdd }) {
               value={qty}
               onChange={(e) => setQty(e.target.value)}
             />
+            {Number(qty) > (model.stockQuantity || 0) && (
+              <div className="flex items-start gap-2 mt-2 p-2.5 bg-warning/10 text-warning-dark rounded-md border border-warning/20">
+                <AlertTriangle size={14} className="shrink-0 mt-0.5" />
+                <p className="text-xs font-semibold leading-tight">
+                  In this product you have only {model.stockQuantity || 0} stock
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Quick Select */}

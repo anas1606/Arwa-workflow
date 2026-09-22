@@ -125,20 +125,23 @@ export default function EditOrderView() {
     setLines(newLines);
   };
 
-  const canProceed = () => {
-    if (stepIndex === 0) return !!customer && !!dueDate && !!priority;
-    if (stepIndex === 1) return lines.length > 0;
-    if (stepIndex === 2) {
+  const isStepValid = (idx) => {
+    if (idx === 0) return !!customer && !!dueDate && !!priority;
+    if (idx === 1) return lines.length > 0;
+    if (idx === 2) {
       return lines.every(l => 
         l.specs?.bodyDesignId && 
         l.specs?.colourId && 
-        l.specs?.brandId && 
-        l.specs?.stickerId
+        l.specs?.brandId &&
+        l.specs?.stickerId &&
+        (l.specs?.packingType === 'CUSTOMIZE' || l.specs?.packagingId)
       );
     }
-    if (stepIndex === 3) return true;
+    if (idx === 3) return true;
     return true;
   };
+
+  const canProceed = () => isStepValid(stepIndex);
 
   const handleNext = async () => {
     if (stepIndex < WIZARD_STEPS.length - 1) {
@@ -218,7 +221,20 @@ export default function EditOrderView() {
                   <div
                     key={step.id}
                     className="relative flex-1 px-1 py-2"
-                    onClick={() => { if ((isDone || isActive) && !loading) setStepIndex(idx); }}
+                    onClick={() => { 
+                      if (idx <= stepIndex) {
+                        setStepIndex(idx);
+                      } else {
+                        let allValid = true;
+                        for (let i = stepIndex; i < idx; i++) {
+                          if (!isStepValid(i)) {
+                            allValid = false;
+                            break;
+                          }
+                        }
+                        if (allValid) setStepIndex(idx);
+                      }
+                    }}
                   >
                     {/* Top border indicator */}
                     {(isActive || isDone) && <div className="absolute top-0 inset-x-0 h-[2px] bg-primary rounded-b-sm" />}

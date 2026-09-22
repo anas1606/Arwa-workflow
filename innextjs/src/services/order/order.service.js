@@ -5,33 +5,41 @@ export const createOrder = async (data, userId = null) => {
         // Use Prisma interactive transaction to ensure atomicity
         const result = await prisma.$transaction(async (tx) => {
             // 0. Compute OrderType
-            let orderType = 'STANDARD';
+            let hasStandard = false;
+            let hasCustomize = false;
+            
             if (data.orderLines && data.orderLines.length > 0) {
                 for (const line of data.orderLines) {
+                    let lineType = 'STANDARD';
+                    
                     if (line.accessoriesType === 'CUSTOMIZE' || line.packingType === 'CUSTOMIZE') {
-                        orderType = 'CUSTOMIZE';
-                        break;
-                    }
-                    if (line.stickerId && line.stickerId !== 'default' && line.stickerId !== null) {
-                        orderType = 'CUSTOMIZE';
-                        break;
-                    }
-                    if (line.bodyDesignId) {
+                        lineType = 'CUSTOMIZE';
+                    } else if (line.stickerId && line.stickerId !== 'default' && line.stickerId !== null) {
+                        lineType = 'CUSTOMIZE';
+                    } else if (line.bodyDesignId) {
                         const bd = await tx.productBodyDesign.findUnique({ where: { id: line.bodyDesignId } });
                         if (bd && bd.type === 'NON_STANDARD') {
-                            orderType = 'CUSTOMIZE';
-                            break;
+                            lineType = 'CUSTOMIZE';
                         }
-                    }
-                    if (line.colourId) {
+                    } 
+                    
+                    if (lineType === 'STANDARD' && line.colourId) {
                         const c = await tx.productColour.findUnique({ where: { id: line.colourId } });
                         if (c && c.type === 'NON_STANDARD') {
-                            orderType = 'CUSTOMIZE';
-                            break;
+                            lineType = 'CUSTOMIZE';
                         }
                     }
+                    
+                    line.orderType = lineType;
+                    
+                    if (lineType === 'STANDARD') hasStandard = true;
+                    if (lineType === 'CUSTOMIZE') hasCustomize = true;
                 }
             }
+            
+            let orderType = 'STANDARD';
+            if (hasStandard && hasCustomize) orderType = 'HYBRID';
+            else if (hasCustomize) orderType = 'CUSTOMIZE';
 
             const orderCount = await tx.order.count();
             const orderNumber = `ORD-${(orderCount + 1).toString().padStart(5, '0')}`;
@@ -65,6 +73,7 @@ export const createOrder = async (data, userId = null) => {
                     packingType: line.packingType !== undefined ? line.packingType : undefined,
                     packingNote: line.packingNote || null,
                     packagingId: line.packagingId || null,
+                    orderType: line.orderType || 'STANDARD',
                     createdBy: userId || null,
                 }));
 
@@ -209,33 +218,41 @@ export const updateOrder = async (id, data, userId = null) => {
     try {
         const result = await prisma.$transaction(async (tx) => {
             // 0. Compute OrderType
-            let orderType = 'STANDARD';
+            let hasStandard = false;
+            let hasCustomize = false;
+            
             if (data.orderLines && data.orderLines.length > 0) {
                 for (const line of data.orderLines) {
+                    let lineType = 'STANDARD';
+                    
                     if (line.accessoriesType === 'CUSTOMIZE' || line.packingType === 'CUSTOMIZE') {
-                        orderType = 'CUSTOMIZE';
-                        break;
-                    }
-                    if (line.stickerId && line.stickerId !== 'default' && line.stickerId !== null) {
-                        orderType = 'CUSTOMIZE';
-                        break;
-                    }
-                    if (line.bodyDesignId) {
+                        lineType = 'CUSTOMIZE';
+                    } else if (line.stickerId && line.stickerId !== 'default' && line.stickerId !== null) {
+                        lineType = 'CUSTOMIZE';
+                    } else if (line.bodyDesignId) {
                         const bd = await tx.productBodyDesign.findUnique({ where: { id: line.bodyDesignId } });
                         if (bd && bd.type === 'NON_STANDARD') {
-                            orderType = 'CUSTOMIZE';
-                            break;
+                            lineType = 'CUSTOMIZE';
                         }
-                    }
-                    if (line.colourId) {
+                    } 
+                    
+                    if (lineType === 'STANDARD' && line.colourId) {
                         const c = await tx.productColour.findUnique({ where: { id: line.colourId } });
                         if (c && c.type === 'NON_STANDARD') {
-                            orderType = 'CUSTOMIZE';
-                            break;
+                            lineType = 'CUSTOMIZE';
                         }
                     }
+                    
+                    line.orderType = lineType;
+                    
+                    if (lineType === 'STANDARD') hasStandard = true;
+                    if (lineType === 'CUSTOMIZE') hasCustomize = true;
                 }
             }
+            
+            let orderType = 'STANDARD';
+            if (hasStandard && hasCustomize) orderType = 'HYBRID';
+            else if (hasCustomize) orderType = 'CUSTOMIZE';
 
             // 1. Update the Order
             const updatedOrder = await tx.order.update({
@@ -272,6 +289,7 @@ export const updateOrder = async (id, data, userId = null) => {
                     packingType: line.packingType !== undefined ? line.packingType : undefined,
                     packingNote: line.packingNote || null,
                     packagingId: line.packagingId || null,
+                    orderType: line.orderType || 'STANDARD',
                     createdBy: userId || null, // Assuming the order lines are recreated
                 }));
 
@@ -306,6 +324,97 @@ export const deleteOrder = async (id, deletedBy = null) => {
         return { success: true, data: result };
     } catch (error) {
         console.error('Error in deleteOrder service:', error);
+        return { success: false, message: error.message };
+    }
+};
+
+export const getOrdersByProduct = async (page = 1, limit = 10, search = '', filters = {}) => {
+    try {
+        const skip = (page - 1) * limit;
+        const take = parseInt(limit);
+
+        const orderWhere = { is_deleted: false };
+
+        if (search) {
+            orderWhere.OR = [
+                { orderNumber: { contains: search, mode: 'insensitive' } },
+                { customer: { name: { contains: search, mode: 'insensitive' } } }
+            ];
+        }
+
+        if (filters.orderType) {
+            orderWhere.orderType = Array.isArray(filters.orderType) ? { in: filters.orderType } : filters.orderType;
+        }
+        if (filters.priority) {
+            orderWhere.priority = Array.isArray(filters.priority) ? { in: filters.priority } : filters.priority;
+        }
+        if (filters.status) {
+            orderWhere.status = Array.isArray(filters.status) ? { in: filters.status } : filters.status;
+        }
+        if (filters.customerId) {
+            orderWhere.customerId = Array.isArray(filters.customerId) ? { in: filters.customerId } : filters.customerId;
+        }
+        if (filters.orderNumber) {
+            orderWhere.orderNumber = Array.isArray(filters.orderNumber) ? { in: filters.orderNumber } : filters.orderNumber;
+        }
+
+        const productWhere = {
+            orderLines: {
+                some: {
+                    order: orderWhere
+                }
+            }
+        };
+
+        if (filters.productId) {
+            productWhere.id = Array.isArray(filters.productId) ? { in: filters.productId } : filters.productId;
+        }
+
+        const [products, total] = await Promise.all([
+            prisma.product.findMany({
+                where: productWhere,
+                skip,
+                take,
+                orderBy: {
+                    name: 'asc'
+                },
+                include: {
+                    orderLines: {
+                        where: {
+                            order: orderWhere
+                        },
+                        include: {
+                            order: {
+                                include: {
+                                    customer: {
+                                        select: { name: true, code: true }
+                                    }
+                                }
+                            },
+                            product: true
+                        }
+                    }
+                }
+            }),
+            prisma.product.count({ where: productWhere })
+        ]);
+
+        const totalPages = Math.ceil(total / take);
+
+        return {
+            success: true,
+            data: {
+                data: products,
+                pagination: {
+                    total,
+                    page: parseInt(page),
+                    limit: take,
+                    totalPages
+                }
+            }
+        };
+    } catch (error) {
+        console.error('Error in getOrdersByProduct service:', error);
         return { success: false, message: error.message };
     }
 };

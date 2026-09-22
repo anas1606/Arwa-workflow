@@ -87,35 +87,44 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
   }, [shouldRender, onClose]);
 
   // Compute unique values and counts for the active tab
+  // For customer and product, we store IDs as filter values but display names
   const activeOptions = useMemo(() => {
     if (!ordersData) return [];
-    const counts = {};
+    const counts = {}; // key => { label, count }
     ordersData.forEach(order => {
-      let values = [];
-      if (activeTab === 'orderNumber') values = [order.orderNumber];
-      else if (activeTab === 'orderDate') values = [order.orderDate || 'N/A'];
-      else if (activeTab === 'dueDate') values = [order.dueDate];
+      let entries = []; // { val, label } pairs
+      if (activeTab === 'orderNumber') entries = [{ val: order.orderNumber, label: order.orderNumber }];
+      else if (activeTab === 'orderDate') entries = [{ val: order.orderDate || 'N/A', label: order.orderDate || 'N/A' }];
+      else if (activeTab === 'dueDate') entries = [{ val: order.dueDate, label: order.dueDate }];
       else if (activeTab === 'quantity') {
         const qty = (order.orderLines || []).reduce((sum, p) => sum + p.quantity, 0);
-        values = [qty.toString()];
+        entries = [{ val: qty.toString(), label: qty.toString() }];
       }
-      else if (activeTab === 'customer') values = [order.customer?.name].filter(Boolean);
-      else if (activeTab === 'priority') values = [order.priority];
-      else if (activeTab === 'status') values = [order.status];
-      else if (activeTab === 'orderType') values = [order.orderType];
+      else if (activeTab === 'customer') {
+        if (order.customerId && order.customer?.name) {
+          entries = [{ val: order.customerId, label: order.customer.name }];
+        }
+      }
+      else if (activeTab === 'priority') entries = [{ val: order.priority, label: order.priority }].filter(e => e.val);
+      else if (activeTab === 'status') entries = [{ val: order.status, label: order.status }].filter(e => e.val);
+      else if (activeTab === 'orderType') entries = [{ val: order.orderType, label: order.orderType }].filter(e => e.val);
       else if (activeTab === 'product') {
-        values = (order.orderLines || []).map(p => p.product?.name).filter(Boolean);
+        entries = (order.orderLines || []).map(p => ({
+          val: p.productId || p.product?.id,
+          label: p.product?.name
+        })).filter(e => e.val && e.label);
       }
 
-      values.forEach(val => {
+      entries.forEach(({ val, label }) => {
         if (!val) return;
-        counts[val] = (counts[val] || 0) + 1;
+        if (!counts[val]) counts[val] = { label, count: 0 };
+        counts[val].count += 1;
       });
     });
 
     return Object.entries(counts)
-      .map(([val, count]) => ({ val, count }))
-      .sort((a, b) => a.val.localeCompare(b.val));
+      .map(([val, { label, count }]) => ({ val, label, count }))
+      .sort((a, b) => a.label.localeCompare(b.label));
   }, [ordersData, activeTab]);
 
   const handleToggleValue = (val) => {
@@ -162,7 +171,14 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
   };
 
   const handleDone = () => {
-    onApply(selectedFilters);
+    // Map internal filter keys to API-expected keys
+    const mapped = {};
+    Object.entries(selectedFilters).forEach(([key, value]) => {
+      if (key === 'customer') mapped['customerId'] = value;
+      else if (key === 'product') mapped['productId'] = value;
+      else mapped[key] = value;
+    });
+    onApply(mapped);
     onClose();
   };
 
@@ -301,7 +317,7 @@ export default function FilterModal({ open, onClose, onApply, ordersData, initia
                           )}>
                             {isSelected && <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}
                           </div>
-                          <span className="text-sm font-semibold text-grey-text-dark">{opt.val}</span>
+                          <span className="text-sm font-semibold text-grey-text-dark">{opt.label}</span>
                         </div>
                         <span className="text-xs font-bold bg-[#f4f7fb] text-grey-muted px-2.5 py-1 rounded-md">
                           {opt.count}
