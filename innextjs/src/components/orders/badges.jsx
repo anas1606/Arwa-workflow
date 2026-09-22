@@ -7,6 +7,7 @@ import {
   OctagonX,
   PlayCircle,
   Sparkles,
+  Combine,
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -22,7 +23,7 @@ export const orderStatusMeta = {
     label: 'CONFIRMED',
   },
   IN_PRODUCTION: {
-    className: 'bg-primary/10 text-primary-dark border border-primary/20',
+    className: 'bg-warning/10 text-warning-dark border border-warning/20',
     icon: PlayCircle,
     label: 'IN PRODUCTION',
   },
@@ -49,6 +50,11 @@ export const orderTypeMeta = {
     icon: Sparkles,
     label: 'CUSTOMISED',
   },
+  Hybrid: {
+    className: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+    icon: Combine,
+    label: 'HYBRID',
+  },
   CUSTOMIZE: {
     className: 'bg-primary/10 text-primary-dark border border-primary/20',
     icon: Sparkles,
@@ -63,6 +69,11 @@ export const orderTypeMeta = {
     className: 'bg-grey-surface text-grey-text-strong border border-grey-border',
     icon: Layers,
     label: 'STANDARD',
+  },
+  HYBRID: {
+    className: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+    icon: Combine,
+    label: 'HYBRID',
   },
 };
 

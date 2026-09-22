@@ -47,7 +47,10 @@ export async function middleware(req) {
             return NextResponse.json({ success: false, message: 'Unauthorized: User is inactive or deleted' }, { status: 401 });
         }
 
-        const isSuperAdmin = decoded.role === 'super_admin';
+        const isSuperAdmin = decoded.isSuperAdmin === true || 
+                             decoded.role === 'super_admin' || 
+                             decoded.role === 'SUPER_ADMIN' ||
+                             (decoded.role && decoded.role.toLowerCase().replace(/[^a-z0-9]/g, '') === 'superadmin');
 
         if (!isSuperAdmin) {
             // Find which module they are accessing

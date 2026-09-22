@@ -1,5 +1,5 @@
 import React, { useMemo, useEffect, useRef, useState } from 'react';
-import { Search, Plus, Check, X } from 'lucide-react';
+import { Search, Plus, Check, X, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
 import Input from '@/common/input/Input';
 import { getProductsApi, getCategoriesApi } from '@/lib/fetcher';
@@ -265,6 +265,14 @@ export default function ModelsStep({
                     <div className="flex-1 text-center font-bold text-sm text-grey-text-strong">{line.quantity}</div>
                     <button className="w-9 h-9 flex items-center justify-center text-grey-muted hover:bg-grey-surface font-bold text-base" onClick={() => onUpdateLineQty(idx, 1)}>+</button>
                   </div>
+                  {line.quantity > (line.model.stockQuantity || 0) && (
+                    <div className="mt-2 flex items-start gap-1.5 p-2 bg-warning/10 text-warning-dark rounded-md border border-warning/20">
+                      <AlertTriangle size={12} className="shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-bold leading-tight">
+                        In this product you have only {line.model.stockQuantity || 0} stock
+                      </p>
+                    </div>
+                  )}
                 </div>
               ))}
             </div>

@@ -77,6 +77,7 @@ export default function ReviewStep({
               >
                 <option value="DRAFT">Draft</option>
                 <option value="CONFIRMED">Confirmed</option>
+                <option value="IN_PRODUCTION">In Production</option>
                 <option value="COMPLETED">Completed</option>
                 <option value="CANCELLED">Cancelled</option>
               </select>

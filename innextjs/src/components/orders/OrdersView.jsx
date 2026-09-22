@@ -1,9 +1,9 @@
 import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import Head from 'next/head';
-import { Search, Plus, Filter, Printer, Pencil, Eye, Trash2, RefreshCw, LayoutList, Package, Tags, Factory } from 'lucide-react';
+import { Search, Plus, Filter, Printer, Pencil, Eye, Trash2, RefreshCw, LayoutList, Package, ChevronLeft, ChevronRight } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
-import { dueDaysLabel, MACHINES } from '@/common/dummy';
+import { dueDaysLabel } from '@/common/dummy';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import clsx from 'clsx';
@@ -11,8 +11,11 @@ import { useRouter } from 'next/router';
 import OrderDetailsModal from './modals/OrderDetailsModal';
 import FilterModal from './modals/FilterModal';
 import DeleteModal from '@/common/modal/DeleteModal';
-import { getOrdersApi } from '@/lib/fetcher';
-import { StatusBadge, OrderTypeBadge, MachineStatusBadge } from './badges';
+import { getOrdersApi, getOrdersByProductApi } from '@/lib/fetcher';
+import { StatusBadge, OrderTypeBadge } from './badges';
+import OrdersListTab from './tabs/OrdersListTab';
+import ByProductTab from './tabs/ByProductTab';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
 export default function OrdersView() {
   const router = useRouter();
@@ -25,42 +28,10 @@ export default function OrdersView() {
   const [totalPages, setTotalPages] = useState(1);
   const [viewMode, setViewMode] = useState('orders');
 
-  const productGrouped = useMemo(() => {
-    const map = {};
-    ordersData.forEach(order => {
-      (order.orderLines || []).forEach(line => {
-        const prod = line.product?.name || 'Unknown Product';
-        if (!map[prod]) map[prod] = { product: prod, qty: 0, orders: [] };
-        map[prod].qty += line.quantity;
-        if (!map[prod].orders.find(o => o.id === order.id)) {
-          map[prod].orders.push(order);
-        }
-      });
-    });
-    return Object.values(map);
-  }, [ordersData]);
-
-  const machineTypeGroups = useMemo(() => {
-    // We deterministically assign orders to a machine to simulate the old layout
-    const groups = MACHINES.map(m => ({ machine: m, orders: [], standard: 0, customised: 0 }));
-    
-    ordersData.forEach(order => {
-      // hash order id to 0-3
-      let hash = 0;
-      for (let i = 0; i < order.id.length; i++) hash += order.id.charCodeAt(i);
-      const mIdx = hash % MACHINES.length;
-      
-      groups[mIdx].orders.push(order);
-      if (order.orderType?.toUpperCase() === 'CUSTOMIZE' || order.orderType?.toUpperCase() === 'CUSTOMISED') {
-        groups[mIdx].customised++;
-      } else {
-        groups[mIdx].standard++;
-      }
-    });
-    
-    return groups;
-  }, [ordersData]);
-  
+  const [productData, setProductData] = useState([]);
+  const [productTotalItems, setProductTotalItems] = useState(0);
+  const [productTotalPages, setProductTotalPages] = useState(1);
+  const [productPageNo, setProductPageNo] = useState(1);
   
   // Table state
   const [query, setQuery] = useState('');
@@ -76,23 +47,12 @@ export default function OrdersView() {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
 
+  const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+
   const fetchOrders = useCallback(async () => {
     try {
       setIsLoading(true);
-      const queryParams = new URLSearchParams({
-        page: pageNo,
-        limit: pageSize,
-        search: query,
-      });
-      const filters = {};
-      if (activeFilters.orderType) filters.orderType = activeFilters.orderType;
-      if (activeFilters.priority) filters.priority = activeFilters.priority;
-      if (activeFilters.status) filters.status = activeFilters.status;
-      if (activeFilters.orderNumber) filters.orderNumber = activeFilters.orderNumber;
-      if (activeFilters.customer) filters.customerId = activeFilters.customer;
-      if (activeFilters.product) filters.productId = activeFilters.product;
-
-      const res = await getOrdersApi(pageNo, pageSize, query, filters);
+      const res = await getOrdersApi(pageNo, pageSize, query, activeFilters);
       
       if (res.data?.success) {
         setOrdersData(res.data.data.data);
@@ -107,9 +67,60 @@ export default function OrdersView() {
     }
   }, [pageNo, pageSize, query, activeFilters]);
 
+  const fetchProducts = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const res = await getOrdersByProductApi(productPageNo, pageSize, query, activeFilters);
+      
+      if (res.data?.success) {
+        const pData = res.data.data.data;
+        const grouped = pData.map(prod => {
+           let qty = 0;
+           let standard = 0;
+           let customized = 0;
+           const ordersMap = new Map();
+           
+           (prod.orderLines || []).forEach(line => {
+              qty += line.quantity; 
+              const order = line.order;
+              if (order && !ordersMap.has(order.id)) {
+                 ordersMap.set(order.id, {
+                     ...order,
+                     // We override orderLines to only contain this product's line
+                     // This ensures the table's Qty and Products columns only show this product's specific details
+                     orderLines: [line] 
+                 });
+                 if (line.orderType?.toUpperCase() === 'CUSTOMIZE') customized++;
+                 else standard++;
+              }
+           });
+           
+           return {
+              product: prod.name,
+              qty,
+              orders: Array.from(ordersMap.values()),
+              standard,
+              customized
+           };
+        });
+        setProductData(grouped);
+        setProductTotalItems(res.data.data.pagination.total);
+        setProductTotalPages(res.data.data.pagination.totalPages);
+      }
+    } catch (error) {
+      console.error('Failed to fetch orders by product', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [productPageNo, pageSize, query, activeFilters]);
+
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    if (viewMode === 'orders') {
+        fetchOrders();
+    } else if (viewMode === 'product') {
+        fetchProducts();
+    }
+  }, [fetchOrders, fetchProducts, viewMode]);
 
   useEffect(() => {
     if (!actionMenu) return;
@@ -122,19 +133,24 @@ export default function OrdersView() {
     };
   }, [actionMenu]);
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.altKey && e.key === '1') { e.preventDefault(); setViewMode('orders'); }
-      if (e.altKey && e.key === '2') { e.preventDefault(); setViewMode('productGrouped'); }
-      if (e.altKey && e.key === '3') { e.preventDefault(); setViewMode('orderTypeGrouped'); }
-      if (e.altKey && (e.key === 's' || e.key === 'S')) {
-        e.preventDefault();
-        document.getElementById('search-orders')?.focus();
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, []);
+useKeyboardShortcuts({
+      onAdd: () => router.push('/orders/new'),
+      onEdit: (item) => router.push(`/orders/${item.id}/edit`),
+      onDelete: (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); },
+      onRefresh: fetchOrders,
+      searchId: "search-orders",
+      pageNo,
+      setPageNo,
+      totalPages,
+      items: ordersData,
+      selectedRowIndex,
+      setSelectedRowIndex,
+      isModalOpen: isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen,
+      customShortcuts: [
+          { key: '1', altKey: true, action: () => setViewMode('orders') },
+          { key: '2', altKey: true, action: () => setViewMode('product') },
+      ]
+  });
 
   const totalFilters = useMemo(() => {
     return Object.values(activeFilters).reduce((sum, filter) => {
@@ -337,20 +353,25 @@ export default function OrdersView() {
         {/* Tabs & Toolbar Container */}
         <div className="card-panel flex w-full flex-col gap-4 border-none !p-4 bg-white/40 backdrop-blur-md rounded-md shadow-sm">
           {/* Tabs */}
-          <div className="flex items-center gap-2">
+          <nav className="relative inline-flex items-center p-1 bg-white/60 rounded-[10px] shrink-0 self-start gap-1">
+            {/* Animated Background Pill */}
+            <div
+              className={clsx(
+                "absolute left-1 top-1 bottom-1 w-[130px] rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-grey-border/50 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                viewMode === 'orders' ? "translate-x-0" : "translate-x-[134px]"
+              )}
+            />
             <button
               onClick={() => setViewMode('orders')}
               title="Alt+1"
               className={clsx(
-                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus:outline-none',
-                viewMode === 'orders'
-                  ? 'bg-white/90 text-grey-text-strong shadow-sm border border-grey-border'
-                  : 'text-grey-icon hover:text-grey-text-strong bg-transparent',
+                'relative z-10 w-[130px] inline-flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors focus:outline-none',
+                viewMode === 'orders' ? 'text-grey-text-strong' : 'text-grey-icon hover:text-grey-text-strong'
               )}
             >
               <LayoutList className="h-3.5 w-3.5" aria-hidden />
               Order list
-              <kbd className="ml-0.5 hidden rounded border border-grey-border/80 bg-white/80 px-1 font-mono text-[10px] font-semibold text-grey-muted lg:inline">
+              <kbd className={clsx("ml-0.5 hidden rounded border px-1 font-mono text-[10px] font-semibold lg:inline", viewMode === 'orders' ? 'border-grey-border/80 bg-white text-grey-muted shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : 'border-grey-border/40 bg-transparent text-grey-icon/70')}>
                 1
               </kbd>
             </button>
@@ -358,35 +379,17 @@ export default function OrdersView() {
               onClick={() => setViewMode('product')}
               title="Alt+2"
               className={clsx(
-                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus:outline-none',
-                viewMode === 'product'
-                  ? 'bg-white/90 text-grey-text-strong shadow-sm border border-grey-border'
-                  : 'text-grey-icon hover:text-grey-text-strong bg-transparent',
+                'relative z-10 w-[130px] inline-flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors focus:outline-none',
+                viewMode === 'product' ? 'text-grey-text-strong' : 'text-grey-icon hover:text-grey-text-strong'
               )}
             >
               <Package className="h-3.5 w-3.5" aria-hidden />
               By product
-              <kbd className="ml-0.5 hidden rounded border border-grey-border/80 bg-white/80 px-1 font-mono text-[10px] font-semibold text-grey-muted lg:inline">
+              <kbd className={clsx("ml-0.5 hidden rounded border px-1 font-mono text-[10px] font-semibold lg:inline", viewMode === 'product' ? 'border-grey-border/80 bg-white text-grey-muted shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : 'border-grey-border/40 bg-transparent text-grey-icon/70')}>
                 2
               </kbd>
             </button>
-            <button
-              onClick={() => setViewMode('orderType')}
-              title="Alt+3"
-              className={clsx(
-                'inline-flex min-h-9 cursor-pointer items-center gap-1.5 rounded-lg px-3 text-xs font-semibold transition-colors focus:outline-none',
-                viewMode === 'orderType'
-                  ? 'bg-white/90 text-grey-text-strong shadow-sm border border-grey-border'
-                  : 'text-grey-icon hover:text-grey-text-strong bg-transparent',
-              )}
-            >
-              <Tags className="h-3.5 w-3.5" aria-hidden />
-              By order type
-              <kbd className="ml-0.5 hidden rounded border border-grey-border/80 bg-white/80 px-1 font-mono text-[10px] font-semibold text-grey-muted lg:inline">
-                3
-              </kbd>
-            </button>
-          </div>
+          </nav>
 
           {/* Search & Filters */}
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -398,7 +401,6 @@ export default function OrdersView() {
                 placeholder="Search order #, customer..."
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                className="w-full bg-white rounded-md border-grey-border shadow-sm"
               />
             </div>
             <button 
@@ -419,140 +421,53 @@ export default function OrdersView() {
           </div>
 
           {/* Hints */}
-          <div className="flex items-center gap-1 text-xs text-grey-icon font-medium flex-wrap">
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">Alt</span>
-            <span>+</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">S</span>
-            <span>search ·</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">Alt</span>
-            <span>+</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">1</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">2</span>
-            <span className="px-1 py-0.5 bg-grey-surface rounded text-grey-text-light border border-grey-border font-mono text-2xs">3</span>
-            <span>switch views ·</span>
-            <Filter size={12} className="inline ml-1" />
-            <span>Filters — order, order date, due date, quantity, customer, priority, status, product</span>
-          </div>
+         <KeyboardShortcutBar
+            onAdd={() => router.push('/orders/new')}
+            onEdit={(item) => router.push(`/orders/${item.id}/edit`)}
+            onDelete={(item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); }}
+            onRefresh={fetchOrders}
+            searchId="search-orders"
+            pageNo={pageNo}
+            totalPages={totalPages}
+            selectedItem={ordersData[selectedRowIndex]}
+            selectedRowIndex={selectedRowIndex}
+            addLabel="Add Order"
+            customActions={[
+                { label: 'Order List', keyCombo: ['Alt', '1'], onClick: () => setViewMode('orders') },
+                { label: 'By Product', keyCombo: ['Alt', '2'], onClick: () => setViewMode('product') },
+            ]}
+          />
         </div>
 
         {/* Views */}
         {viewMode === 'orders' && (
-          <CommonTable
+          <OrdersListTab 
             columns={columns}
-            data={ordersData}
+            ordersData={ordersData}
             isLoading={isLoading}
-            emptyState="No orders found."
-            pagination={{
-              totalItems,
-              pageSize,
-              pageNo,
-              totalPages,
-            }}
-            onPageChange={setPageNo}
-            onPageSizeChange={(size) => {
-              setPageSize(size);
-              setPageNo(1);
-            }}
+            totalItems={totalItems}
+            pageSize={pageSize}
+            pageNo={pageNo}
+            totalPages={totalPages}
+            setPageNo={setPageNo}
+            setPageSize={setPageSize}
+            selectedRowIndex={selectedRowIndex}
           />
         )}
 
         {viewMode === 'product' && (
-          <div className="w-full space-y-4">
-            {productGrouped.map((group) => (
-              <section key={group.product} className="card-panel !p-0 w-full overflow-hidden bg-white shadow-sm border border-grey-border rounded-lg">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-grey-border/60 bg-grey-bg/50 px-4 py-3">
-                  <div className="flex min-w-0 items-center gap-2.5">
-                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-dark">
-                      <Package className="h-4 w-4" aria-hidden />
-                    </span>
-                    <div className="min-w-0">
-                      <h2 className="truncate text-sm font-bold text-grey-text-strong">
-                        {group.product}
-                      </h2>
-                      <p className="text-2xs font-medium text-grey-muted">
-                        Total quantity: {group.qty}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <CommonTable
-                  columns={columns}
-                  data={group.orders}
-                  isLoading={isLoading}
-                  emptyState="No orders for this product."
-                />
-              </section>
-            ))}
-            {productGrouped.length === 0 && !isLoading && (
-              <div className="text-center py-10 text-sm text-grey-muted bg-white rounded-lg border border-grey-border">
-                No orders match your search or filter.
-              </div>
-            )}
-          </div>
+          <ByProductTab
+            columns={columns}
+            productData={productData}
+            isLoading={isLoading}
+            productTotalItems={productTotalItems}
+            pageSize={pageSize}
+            productPageNo={productPageNo}
+            productTotalPages={productTotalPages}
+            setProductPageNo={setProductPageNo}
+            setPageSize={setPageSize}
+          />
         )}
-
-        {/* By Machine / Order Type view */}
-        <div className={clsx("transition-opacity duration-300", viewMode === 'orderType' ? 'opacity-100 block' : 'opacity-0 hidden')}>
-          {viewMode === 'orderType' && (
-            <div className="w-full space-y-4">
-              {machineTypeGroups.map((group) => (
-                <section key={group.machine.id} className="card-panel !p-0 w-full overflow-hidden bg-white shadow-sm border border-grey-border rounded-lg">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-grey-border/60 bg-grey-bg/50 px-4 py-3">
-                    <div className="flex min-w-0 items-center gap-2.5">
-                      <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary-dark">
-                        <Factory className="h-4 w-4" aria-hidden />
-                      </span>
-                      <div className="min-w-0">
-                        <h2 className="truncate text-sm font-bold text-grey-text-strong">
-                          {group.machine.name}
-                        </h2>
-                        <p className="text-2xs font-medium text-grey-muted">
-                          {group.machine.station} · {group.machine.job}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <MachineStatusBadge status={group.machine.status} />
-                      <div className="flex flex-wrap gap-1.5">
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-grey-surface px-2 py-1 text-2xs font-semibold text-grey-text-strong border border-grey-border">
-                          Company standard
-                          <span className="font-mono text-sm font-bold text-grey-text-strong">
-                            {group.standard}
-                          </span>
-                        </span>
-                        <span className="inline-flex items-center gap-1.5 rounded-lg bg-primary/10 px-2 py-1 text-2xs font-semibold text-primary-dark border border-primary/20">
-                          Customised
-                          <span className="font-mono text-sm font-bold">
-                            {group.customised}
-                          </span>
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {group.orders.length === 0 ? (
-                    <p className="px-3 py-6 text-center text-sm text-grey-muted">
-                      No orders assigned to this machine for the current filters.
-                    </p>
-                  ) : (
-                    <CommonTable
-                      columns={columns}
-                      data={group.orders}
-                      isLoading={isLoading}
-                      emptyState="No orders for this machine."
-                    />
-                  )}
-                </section>
-              ))}
-              
-              <p className="text-xs text-grey-muted px-1">
-                {machineTypeGroups.length} machines · {ordersData.length} orders · 
-                Company standard {machineTypeGroups.reduce((s, g) => s + g.standard, 0)} · 
-                Customised {machineTypeGroups.reduce((s, g) => s + g.customised, 0)}
-              </p>
-            </div>
-          )}
-        </div>
       </div>
 
       <OrderDetailsModal
