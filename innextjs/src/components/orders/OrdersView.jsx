@@ -345,7 +345,7 @@ useKeyboardShortcuts({
             { label: "DUE THIS WEEK", value: isLoading ? "..." : ordersData.filter(o => new Date(o.dueDate) >= new Date() && new Date(o.dueDate) <= new Date(new Date().setDate(new Date().getDate() + 7))).length, hint: "Risk of delay" },
             { label: "LATE / BLOCKED", value: isLoading ? "..." : ordersData.filter(o => new Date(o.dueDate) < new Date() && o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length, hint: "Needs attention" },
           ].map((kpi, i) => (
-            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-md h-[90px]">
+            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-xl h-[90px]">
               <div
                 className={clsx('absolute inset-y-0 left-0 w-1',
                   i === 0 ? 'bg-primary' :
@@ -366,7 +366,7 @@ useKeyboardShortcuts({
         </section>
 
         {/* Tabs & Toolbar Container */}
-        <div className="card-panel flex w-full flex-col gap-4 border-none !p-4 bg-white/40 backdrop-blur-md rounded-md shadow-sm">
+        <div className="card-panel flex w-full flex-col gap-4 border-none !p-4 bg-white/40 backdrop-blur-md rounded-xl shadow-sm">
           {/* Tabs */}
           <nav className="relative inline-flex items-center p-1 bg-white/60 rounded-[10px] shrink-0 self-start gap-1">
             {/* Animated Background Pill */}
@@ -421,7 +421,7 @@ useKeyboardShortcuts({
             <button 
               onClick={() => setIsFilterModalOpen(true)}
               className={clsx(
-                "flex items-center gap-2 px-3 h-10 rounded-md border text-sm font-bold transition-colors shrink-0",
+                "flex items-center gap-2 px-3 h-10 rounded-xl border text-sm font-bold transition-colors shrink-0",
                 totalFilters > 0 ? "border-primary-subtle bg-primary-bg text-primary-dark" : "bg-white border-grey-border shadow-sm text-grey-text hover:bg-grey-bg"
               )}
             >
@@ -512,7 +512,7 @@ useKeyboardShortcuts({
       />
       {actionMenu && typeof document !== 'undefined' && createPortal(
         <div
-          className="absolute z-[9999] bg-white rounded-md shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-grey-surface py-1.5 w-40 flex flex-col"
+          className="absolute z-[9999] bg-white rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.1)] border border-grey-surface py-1.5 w-40 flex flex-col"
           style={{ top: actionMenu.top, left: actionMenu.left }}
           onClick={(e) => e.stopPropagation()}
         >

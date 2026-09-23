@@ -42,7 +42,7 @@ export const createOrder = async (data, userId = null) => {
             else if (hasCustomize) orderType = 'CUSTOMIZE';
 
             const lastOrder = await tx.order.findFirst({
-                orderBy: { createdAt: 'desc' }
+                orderBy: { orderNumber: 'desc' }
             });
             
             let nextSeq = 1;

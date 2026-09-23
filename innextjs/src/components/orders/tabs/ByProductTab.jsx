@@ -47,10 +47,10 @@ function ProductOrderTable({ productGroup, columns, query, activeFilters, onInit
           <span className="text-grey-border">·</span>
           <span>Total qty <span className="font-bold text-grey-text-strong">{productGroup.qty}</span></span>
           <span className="text-grey-border">·</span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-grey-surface px-2 py-0.5 text-2xs font-bold text-grey-text-strong border border-grey-border">
+          <span className="inline-flex items-center gap-1 rounded-xl bg-grey-surface px-2 py-0.5 text-2xs font-bold text-grey-text-strong border border-grey-border">
             Standard <span className="font-mono">{productGroup.standard}</span>
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-2 py-0.5 text-2xs font-bold text-primary-dark border border-primary/20">
+          <span className="inline-flex items-center gap-1 rounded-xl bg-primary/10 px-2 py-0.5 text-2xs font-bold text-primary-dark border border-primary/20">
             Customized <span className="font-mono">{productGroup.customized}</span>
           </span>
         </div>
@@ -177,7 +177,7 @@ export default function ByProductTab({
                     setPageSize(Number(e.target.value));
                     setProductPageNo(1);
                   }}
-                  className="appearance-none bg-white border border-grey-border text-grey-text-strong rounded-md px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-muted cursor-pointer shadow-sm transition-all hover:bg-white"
+                  className="appearance-none bg-white border border-grey-border text-grey-text-strong rounded-xl px-3 py-1.5 pr-8 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary-muted cursor-pointer shadow-sm transition-all hover:bg-white"
                 >
                   <option value={2}>2</option>
                   <option value={5}>5</option>
@@ -191,7 +191,7 @@ export default function ByProductTab({
               <button
                 onClick={() => setProductPageNo(p => Math.max(1, p - 1))}
                 disabled={productPageNo <= 1}
-                className={`w-8 h-8 flex justify-center items-center rounded-md transition-all border ${productPageNo <= 1 ? "border-transparent text-grey-border-strong cursor-not-allowed opacity-50" : "bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm"}`}
+                className={`w-8 h-8 flex justify-center items-center rounded-xl transition-all border ${productPageNo <= 1 ? "border-transparent text-grey-border-strong cursor-not-allowed opacity-50" : "bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm"}`}
               >
                 <ChevronLeft size={16} />
               </button>
@@ -201,7 +201,7 @@ export default function ByProductTab({
                   <button
                     key={p}
                     onClick={() => setProductPageNo(p)}
-                    className={`w-8 h-8 rounded-md text-sm font-medium transition-all flex items-center justify-center border ${p === productPageNo
+                    className={`w-8 h-8 rounded-xl text-sm font-medium transition-all flex items-center justify-center border ${p === productPageNo
                       ? 'bg-primary text-white border-primary shadow-sm'
                       : 'bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm'
                       }`}
@@ -214,7 +214,7 @@ export default function ByProductTab({
               <button
                 onClick={() => setProductPageNo(p => Math.min(productTotalPages, p + 1))}
                 disabled={productPageNo >= productTotalPages}
-                className={`w-8 h-8 flex justify-center items-center rounded-md transition-all border ${productPageNo >= productTotalPages ? "border-transparent text-grey-border-strong cursor-not-allowed opacity-50" : "bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm"}`}
+                className={`w-8 h-8 flex justify-center items-center rounded-xl transition-all border ${productPageNo >= productTotalPages ? "border-transparent text-grey-border-strong cursor-not-allowed opacity-50" : "bg-white border-grey-border text-grey-text hover:bg-grey-bg hover:text-grey-text-strong cursor-pointer shadow-sm"}`}
               >
                 <ChevronRight size={16} />
               </button>

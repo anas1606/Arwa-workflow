@@ -254,7 +254,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-[#f8f9fc] shadow-2xl rounded-md border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-[700px] w-full max-h-[85vh] overflow-hidden flex flex-col`}
+        className={`app-modal-panel bg-[#f8f9fc] shadow-2xl rounded-xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-[700px] w-full max-h-[85vh] overflow-hidden flex flex-col`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 shrink-0">
@@ -284,7 +284,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
                   key={cat.id}
                   onClick={() => setActiveTab(cat.id)}
                   className={clsx(
-                    "flex items-center justify-between px-4 py-3 rounded-md text-sm font-bold transition-all text-left",
+                    "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all text-left",
                     isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-grey-text hover:bg-grey-surface"
                   )}
                 >
@@ -303,7 +303,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
           </div>
 
           {/* Right Content (Options) */}
-          <div className="flex-1 bg-white rounded-md shadow-sm border border-grey-surface flex flex-col overflow-hidden mx-2 mb-2 relative">
+          <div className="flex-1 bg-white rounded-xl shadow-sm border border-grey-surface flex flex-col overflow-hidden mx-2 mb-2 relative">
             <div className="px-6 py-4 border-b border-grey-bg shrink-0">
               <h3 className="font-bold text-grey-text-strong">{CATEGORIES.find(c => c.id === activeTab)?.label}</h3>
             </div>
@@ -366,9 +366,9 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
                     {(!filterOptions || isSearching) ? (
                       // Skeleton Loading State
                       Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="flex items-center justify-between p-3 rounded-md animate-pulse">
+                        <div key={i} className="flex items-center justify-between p-3 rounded-xl animate-pulse">
                           <div className="flex items-center gap-3">
-                            <div className="w-5 h-5 rounded-md bg-grey-bg border border-grey-surface"></div>
+                            <div className="w-5 h-5 rounded-xl bg-grey-bg border border-grey-surface"></div>
                             <div className="w-32 h-4 bg-grey-bg rounded"></div>
                           </div>
                         </div>
@@ -380,7 +380,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
                         return (
                           <label 
                             key={i} 
-                            className="flex items-center justify-between p-3 rounded-md hover:bg-grey-bg cursor-pointer transition-colors group"
+                            className="flex items-center justify-between p-3 rounded-xl hover:bg-grey-bg cursor-pointer transition-colors group"
                           >
                             <input 
                               type="checkbox" 
@@ -390,7 +390,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
                             />
                             <div className="flex items-center gap-3">
                               <div className={clsx(
-                                "w-5 h-5 rounded-md border flex items-center justify-center transition-colors shrink-0",
+                                "w-5 h-5 rounded-xl border flex items-center justify-center transition-colors shrink-0",
                                 isSelected ? "bg-primary border-primary text-white" : "border-grey-border-strong bg-white group-hover:border-grey-icon"
                               )}>
                                 {isSelected && <svg viewBox="0 0 14 14" fill="none" className="w-3.5 h-3.5"><path d="M3 7.5L5.5 10L11 4" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>}

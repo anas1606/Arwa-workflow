@@ -352,7 +352,7 @@ export default function SpecsStep({
                           key={opt}
                           onClick={() => handleUpdateSpec(activeSpecLineIndex, 'accessoriesType', opt)}
                           className={clsx(
-                            'flex-1 h-9 rounded-md text-[13px] font-bold transition-all',
+                            'flex-1 h-9 rounded-xl text-[13px] font-bold transition-all',
                             (activeLine?.specs?.accessoriesType || 'STANDARD') === opt ? 'bg-[#eef2ff] text-primary shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : 'text-grey-text-light hover:bg-grey-bg/50'
                           )}
                         >
@@ -387,7 +387,7 @@ export default function SpecsStep({
                           key={opt}
                           onClick={() => handleUpdateSpec(activeSpecLineIndex, 'packingType', opt)}
                           className={clsx(
-                            'flex-1 h-9 rounded-md text-[13px] font-bold transition-all',
+                            'flex-1 h-9 rounded-xl text-[13px] font-bold transition-all',
                             (activeLine?.specs?.packingType || 'STANDARD') === opt ? 'bg-[#eef2ff] text-primary shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : 'text-grey-text-light hover:bg-grey-bg/50'
                           )}
                         >

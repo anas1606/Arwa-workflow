@@ -241,7 +241,7 @@ body {
 
   /* Badges */
   .badge {
-    @apply inline-flex items-center gap-1 rounded-md px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide;
+    @apply inline-flex items-center gap-1 rounded-xl px-2 py-0.5 text-2xs font-semibold uppercase tracking-wide;
     background-color: color-mix(in srgb, var(--color-white) 55%, transparent);
     backdrop-filter: blur(8px);
     -webkit-backdrop-filter: blur(8px);

@@ -220,7 +220,7 @@ export default function EditOrderView() {
 
         {/* STEPPER HEADER */}
         <div className="bg-white border-y border-grey-border/60 shrink-0">
-          <div className="w-full mx-auto rounded-md">
+          <div className="w-full mx-auto rounded-xl">
             <div className="flex items-center">
               {WIZARD_STEPS.map((step, idx) => {
                 const isActive = idx === stepIndex;
@@ -248,7 +248,7 @@ export default function EditOrderView() {
                     {(isActive || isDone) && <div className="absolute top-0 inset-x-0 h-[2px] bg-primary rounded-b-sm" />}
                     
                     <div className={clsx(
-                      'flex items-center w-full gap-3 px-3 py-2.5 rounded-md cursor-pointer transition-colors',
+                      'flex items-center w-full gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
                       isActive ? 'bg-primary-bg' : isDone ? '' : 'hover:bg-grey-surface/50'
                     )}>
                       <div className={clsx(
@@ -334,7 +334,7 @@ export default function EditOrderView() {
 
         {/* FOOTER */}
         <div className="bg-white border-t border-grey-border/60 shrink-0">
-          <div className="w-full mx-auto px-3 py-2 flex items-center justify-end gap-3 rounded-md">
+          <div className="w-full mx-auto px-3 py-2 flex items-center justify-end gap-3 rounded-xl">
             <Button
               variant="secondary"
               text={stepIndex === 0 ? 'Cancel' : 'Back'}

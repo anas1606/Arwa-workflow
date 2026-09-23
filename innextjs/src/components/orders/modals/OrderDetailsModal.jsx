@@ -219,13 +219,13 @@ export default function OrderDetailsModal({
                             {(line.accessoriesType === 'CUSTOMIZE' || line.packingType === 'CUSTOMIZE') && (
                               <div className="mt-2 flex flex-col gap-2">
                                 {line.accessoriesType === 'CUSTOMIZE' && line.accessoriesNote && (
-                                  <div className="text-xs border border-primary/15 bg-primary/5 rounded-md p-2.5">
+                                  <div className="text-xs border border-primary/15 bg-primary/5 rounded-xl p-2.5">
                                     <span className="font-bold text-primary-dark text-[10px] uppercase tracking-wider">Accessories Note</span>
                                     <div className="text-grey-text-dark mt-1 leading-relaxed [&>p]:m-0" dangerouslySetInnerHTML={{__html: line.accessoriesNote}} />
                                   </div>
                                 )}
                                 {line.packingType === 'CUSTOMIZE' && line.packingNote && (
-                                  <div className="text-xs border border-primary/15 bg-primary/5 rounded-md p-2.5">
+                                  <div className="text-xs border border-primary/15 bg-primary/5 rounded-xl p-2.5">
                                     <span className="font-bold text-primary-dark text-[10px] uppercase tracking-wider">Packing Note</span>
                                     <div className="text-grey-text-dark mt-1 leading-relaxed [&>p]:m-0" dangerouslySetInnerHTML={{__html: line.packingNote}} />
                                   </div>
@@ -249,9 +249,9 @@ export default function OrderDetailsModal({
         
         {/* Footer - Fixed */}
         <div className="flex-none p-4 flex items-center justify-end gap-3 bg-white border-t border-grey-surface">
-          <Button variant="secondary" text="Close" onClick={onClose} className="bg-grey-bg rounded-md shadow-sm border-0" />
-          <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-md shadow-sm border border-grey-border" />
-          <Button variant="primary" text="Edit order" icon={Pencil} onClick={onEdit} className="rounded-md shadow-sm" />
+          <Button variant="secondary" text="Close" onClick={onClose} className="bg-grey-bg rounded-xl shadow-sm border-0" />
+          <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-xl shadow-sm border border-grey-border" />
+          <Button variant="primary" text="Edit order" icon={Pencil} onClick={onEdit} className="rounded-xl shadow-sm" />
         </div>
         
       </div>
