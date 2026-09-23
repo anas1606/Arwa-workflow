@@ -106,7 +106,7 @@ export default function CustomerStep({
     <div className="flex flex-col lg:flex-row gap-3 items-start h-full">
       {/* LEFT: Customer list */}
       <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
-        <div className="flex-1 bg-white rounded-md border border-grey-border/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
+        <div className="flex-1 bg-white rounded-xl border border-grey-border/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
           <div className="px-5 pt-5 pb-3 shrink-0">
             <h2 className="text-base font-bold text-grey-text-strong">Select customer</h2>
             <p className="text-xs text-grey-muted mt-0.5">Search and pick the account for this production order.</p>
@@ -130,7 +130,7 @@ export default function CustomerStep({
               />
             </div>
             {canCreateCustomer && (
-              <Button variant="secondary" icon={Plus} text="Add customer" onClick={() => setIsAddOpen(true)} className="!h-10 !rounded-md !text-sm" />
+              <Button variant="secondary" icon={Plus} text="Add customer" onClick={() => setIsAddOpen(true)} className="!h-10 !rounded-xl !text-sm" />
             )}
           </div>
 
@@ -159,7 +159,7 @@ export default function CustomerStep({
             {isLoading ? (
               Array.from({ length: 5 }).map((_, idx) => (
                 <div key={`skel-${idx}`} className="flex items-center gap-3 px-5 py-3.5 border-b border-grey-surface/50">
-                  <div className="w-9 h-9 rounded-md bg-grey-surface animate-pulse shrink-0" />
+                  <div className="w-9 h-9 rounded-xl bg-grey-surface animate-pulse shrink-0" />
                   <div className="flex-1 space-y-2">
                     <div className="h-3.5 bg-grey-surface rounded animate-pulse w-1/3" />
                     <div className="h-2.5 bg-grey-surface rounded animate-pulse w-1/4" />
@@ -182,7 +182,7 @@ export default function CustomerStep({
                       )}
                     >
                       <div className={clsx(
-                        'w-9 h-9 rounded-md flex items-center justify-center text-xs font-bold shrink-0',
+                        'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0',
                         isSelected ? 'bg-primary text-white' : 'bg-grey-surface text-grey-text-light'
                       )}>
                         {c.name.substring(0, 2).toUpperCase()}
@@ -212,10 +212,10 @@ export default function CustomerStep({
           <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon px-1">Order Summary</p>
 
           {/* Customer card */}
-          <div className={clsx('bg-white rounded-md border border-grey-border/60 shadow-sm p-3', customer ? 'flex items-center gap-3' : 'flex items-center justify-center py-4')}>
+          <div className={clsx('bg-white rounded-xl border border-grey-border/60 shadow-sm p-3', customer ? 'flex items-center gap-3' : 'flex items-center justify-center py-4')}>
             {customer ? (
               <>
-                <div className="w-9 h-9 rounded-md bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
+                <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
                   {customer.name.substring(0, 2).toUpperCase()}
                 </div>
                 <div>
@@ -229,7 +229,7 @@ export default function CustomerStep({
           </div>
 
           {/* Due date */}
-          <div className="bg-white rounded-md border border-grey-border/60 shadow-sm p-4 space-y-3">
+          <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm p-4 space-y-3">
             <div className="flex items-center justify-between">
               <label className="flex items-center gap-1.5 text-xs font-bold text-grey-text">
                 <Calendar size={13} className="text-grey-icon" /> Due date *
@@ -249,7 +249,7 @@ export default function CustomerStep({
                   key={p.label}
                   onClick={() => setDueDate(addDays(p.days))}
                   className={clsx(
-                    'text-[11px] font-medium py-1.5 rounded-md border transition-colors',
+                    'text-[11px] font-medium py-1.5 rounded-xl border transition-colors',
                     dueDate === addDays(p.days) ? 'bg-primary-bg text-primary-dark border-primary-subtle' : 'bg-grey-bg text-grey-text-light border-transparent hover:bg-grey-surface'
                   )}
                 >
@@ -263,7 +263,7 @@ export default function CustomerStep({
           </div>
 
           {/* Priority */}
-          <div className="bg-white rounded-md border border-grey-border/60 shadow-sm p-4">
+          <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm p-4">
             <label className="flex items-center gap-1.5 text-xs font-bold text-grey-text mb-3">
               <Flag size={13} className="text-grey-icon" /> Priority *
             </label>
@@ -273,7 +273,7 @@ export default function CustomerStep({
                   key={p}
                   onClick={() => setPriority(p)}
                   className={clsx(
-                    'flex-1 py-1.5 rounded-md text-xs font-bold border transition-colors',
+                    'flex-1 py-1.5 rounded-xl text-xs font-bold border transition-colors',
                     p === 'Low' ? (priority === 'Low' ? 'bg-success-subtle text-success-text border-success-subtle' : 'bg-success-bg/50 text-success-dark border-transparent hover:bg-success-subtle') :
                     p === 'Normal' ? (priority === 'Normal' ? 'bg-warning-subtle text-warning-text border-warning-subtle' : 'bg-warning-bg/50 text-warning-dark border-transparent hover:bg-warning-subtle') :
                     (priority === 'High' ? 'bg-danger-subtle text-danger-text border-danger-subtle' : 'bg-danger-bg/50 text-danger-dark border-transparent hover:bg-danger-subtle')
@@ -286,10 +286,10 @@ export default function CustomerStep({
           </div>
 
           {/* Planner notes */}
-          <div className="bg-white rounded-md border border-grey-border/60 shadow-sm p-4">
+          <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm p-4">
             <label className="text-xs font-bold text-grey-text block mb-2">Planner notes <span className="text-grey-icon font-normal">(optional)</span></label>
             <textarea
-              className="w-full text-sm text-grey-text-strong bg-grey-bg/40 border border-grey-border/60 rounded-md p-3 resize-none h-[88px] placeholder:text-grey-icon focus:outline-none focus:ring-2 focus:ring-primary-muted/30"
+              className="w-full text-sm text-grey-text-strong bg-grey-bg/40 border border-grey-border/60 rounded-xl p-3 resize-none h-[88px] placeholder:text-grey-icon focus:outline-none focus:ring-2 focus:ring-primary-muted/30"
               placeholder="Delivery instructions, shift preferences, material constraints..."
               value={plannerNotes}
               onChange={e => setPlannerNotes(e.target.value)}

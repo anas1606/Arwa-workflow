@@ -20,7 +20,7 @@ export default function ReviewStep({
   isEdit = false
 }) {
   return (
-    <div className="bg-white rounded-md border border-grey-border/60 shadow-sm overflow-hidden h-full flex flex-col">
+    <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm overflow-hidden h-full flex flex-col">
       {/* Header */}
       <div className="px-5 py-4 border-b border-grey-surface shrink-0">
         <h2 className="text-base font-bold text-grey-text-strong">Review order</h2>
@@ -30,7 +30,7 @@ export default function ReviewStep({
         {/* Customer hero row */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-md bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+            <div className="w-11 h-11 rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
               {customer?.name?.substring(0, 2).toUpperCase() || 'NA'}
             </div>
             <div>
@@ -54,7 +54,7 @@ export default function ReviewStep({
         </div>
 
         {/* Ready to create / update */}
-        <div className="bg-grey-bg/60 border border-grey-surface rounded-md px-4 py-3">
+        <div className="bg-grey-bg/60 border border-grey-surface rounded-xl px-4 py-3">
           <div className="flex items-center justify-between mb-2">
             <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">Ready to {isEdit ? 'update' : 'create'}</p>
             <span className="text-[10px] font-bold text-primary-dark bg-primary-subtle px-2 py-0.5 rounded-full">4/4</span>
@@ -73,7 +73,7 @@ export default function ReviewStep({
               <select
                 value={status}
                 onChange={(e) => setStatus && setStatus(e.target.value)}
-                className="w-full bg-white border border-grey-border rounded-md text-sm font-medium py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
+                className="w-full bg-white border border-grey-border rounded-xl text-sm font-medium py-1.5 px-3 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary"
               >
                 <option value="DRAFT">Draft</option>
                 <option value="CONFIRMED">Confirmed</option>
@@ -93,11 +93,11 @@ export default function ReviewStep({
           </div>
           <div className="space-y-3">
             {lines.map((line, idx) => (
-              <div key={idx} className="border border-grey-border/60 rounded-md overflow-hidden">
+              <div key={idx} className="border border-grey-border/60 rounded-xl overflow-hidden">
                 {/* Row header */}
                 <div className="flex items-center gap-3 px-4 py-3 bg-grey-bg/40 border-b border-grey-surface">
                   <span className="text-xs font-bold text-grey-muted w-4">{idx + 1}</span>
-                  <div className="w-8 h-8 rounded-md bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
+                  <div className="w-8 h-8 rounded-xl bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
                   <div className="flex-1">
                     <p className="font-bold text-sm text-grey-text-strong">{line.model.name}</p>
                     <p className="text-[11px] text-grey-icon font-mono">{line.model.code}</p>
