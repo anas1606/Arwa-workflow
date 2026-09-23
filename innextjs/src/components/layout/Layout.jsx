@@ -20,6 +20,7 @@ export function Layout({ children }) {
     { path: '/inventory/product', module: 'products' },
     { path: '/inventory/unit', module: 'units' },
     { path: '/inventory/packaging', module: 'packaging' },
+    { path: '/inventory/stock', module: 'products' },
     { path: '/users', module: 'users', fallbackModule: 'security_roles' }
   ];
 

@@ -24,14 +24,7 @@ import clsx from 'clsx';
 const operationsNav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true, moduleKey: 'dashboard' },
   { to: '/customers', label: 'Customers', icon: Building2, moduleKey: 'customers' },
-  {
-    to: '/orders',
-    label: 'Orders',
-    icon: ClipboardList,
-    children: [
-      { to: '/orders', label: 'All orders', icon: LayoutList, end: true, moduleKey: 'orders' },
-    ],
-  },
+  { to: '/orders', label: 'Orders', icon: ClipboardList, moduleKey: 'orders' },
   { to: '/production', label: 'Production', icon: Factory, moduleKey: 'production' },
   {
     to: '/inventory',
@@ -43,6 +36,7 @@ const operationsNav = [
       { to: '/inventory/unit', label: 'Unit', icon: Ruler, moduleKey: 'units' },
       { to: '/inventory/packaging', label: 'Packaging', icon: Package, moduleKey: 'packaging' },
       { to: '/inventory/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'customisation' },
+      { to: '/inventory/stock', label: 'Stock', icon: Box, moduleKey: 'products' },
     ],
   },
 ];
@@ -153,7 +147,7 @@ function NestedNavItem({ item, pathname }) {
         id={submenuId}
         className={clsx(
           'overflow-hidden p-0 transition-all duration-200 ease-out',
-          open ? 'max-h-[12rem] mt-[2px] opacity-100 pointer-events-auto' : 'm-0 max-h-0 opacity-0 pointer-events-none'
+          open ? 'max-h-[20rem] mt-[2px] opacity-100 pointer-events-auto' : 'm-0 max-h-0 opacity-0 pointer-events-none'
         )}
         role="group"
         aria-label={`${item.label} views`}
