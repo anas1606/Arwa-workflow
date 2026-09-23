@@ -76,7 +76,7 @@ const handleResponse = (promise) =>
   promise
     .then((res) => ({ data: res.data, error: null }))
     .catch((err) => {
-      console.error("API Error:", err?.response || err);
+      console.error("API Error:", err?.message || "Unknown error", err?.response?.data);
       const resData = err.response?.data;
       
       // If the backend provided a specific error details (like Zod validation errors) in resData.error

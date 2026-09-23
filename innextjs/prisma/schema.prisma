@@ -292,3 +292,52 @@ model OrderLine {
   sticker    Sticker?           @relation(fields: [stickerId], references: [id])
   packaging  Packaging?         @relation(fields: [packagingId], references: [id])
 }
+
+model Box {
+  id         String    @id @default(uuid())
+  name       String
+  
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+
+  sections   Section[]
+}
+
+model Section {
+  id         String    @id @default(uuid())
+  name       String
+  boxId      String    @map("box_id")
+  
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+
+  box        Box       @relation(fields: [boxId], references: [id], onDelete: Cascade)
+  trays      Tray[]
+}
+
+model Tray {
+  id         String    @id @default(uuid())
+  name       String
+  sectionId  String    @map("section_id")
+  
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+
+  section    Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+

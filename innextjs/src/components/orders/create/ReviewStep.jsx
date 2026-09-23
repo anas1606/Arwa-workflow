@@ -97,7 +97,7 @@ export default function ReviewStep({
                 {/* Row header */}
                 <div className="flex items-center gap-3 px-4 py-3 bg-grey-bg/40 border-b border-grey-surface">
                   <span className="text-xs font-bold text-grey-muted w-4">{idx + 1}</span>
-                  <div className="w-8 h-8 rounded-xl bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center">{line.model.code.substring(0, 2)}</div>
+                  <div className="w-8 h-8 rounded-xl bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center">{(line.model.code || line.model.name || 'NA').substring(0, 2)}</div>
                   <div className="flex-1">
                     <p className="font-bold text-sm text-grey-text-strong">{line.model.name}</p>
                     <p className="text-[11px] text-grey-icon font-mono">{line.model.code}</p>

@@ -15,7 +15,7 @@ import { useRouter } from 'next/router';
 import DeleteModal from '@/common/modal/DeleteModal';
 
 function productInitials(name) {
-  return name
+  return (name || 'NA')
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0])

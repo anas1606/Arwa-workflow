@@ -241,3 +241,62 @@ export const updateOrderApi = async (id, payload) => {
 };
 
 export const deleteOrderApi = (id, deletedBy = null) => deleteData(`order/${id}`, { data: { deletedBy } });
+
+// Box (Godown)
+export const getBoxesApi = async (page = 1, limit = 10, search = '') => {
+  return await fetchDataWithParams('box', { page, limit, search });
+};
+
+export const getBoxByIdApi = async (id) => {
+  return await fetchData(`box/${id}`);
+};
+
+export const createBoxApi = (payload) => postData("box", payload);
+
+export const updateBoxApi = async (id, payload) => {
+  return await putData(`box/${id}`, { id, ...payload });
+};
+
+export const deleteBoxApi = (id, deletedBy = null) => deleteData(`box/${id}`, { data: { deletedBy } });
+
+export const getBoxKpisApi = async () => {
+  return await fetchData('box/kpi');
+};
+
+// Section
+export const getSectionsApi = async (page = 1, limit = 10, search = '', boxId = null) => {
+  const params = { page, limit, search };
+  if (boxId) params.boxId = boxId;
+  return await fetchDataWithParams('section', params);
+};
+
+export const getSectionByIdApi = async (id) => {
+  return await fetchData(`section/${id}`);
+};
+
+export const createSectionApi = (payload) => postData("section", payload);
+
+export const updateSectionApi = async (id, payload) => {
+  return await putData(`section/${id}`, { id, ...payload });
+};
+
+export const deleteSectionApi = (id, deletedBy = null) => deleteData(`section/${id}`, { data: { deletedBy } });
+
+// Tray
+export const getTraysApi = async (page = 1, limit = 10, search = '', sectionId = null) => {
+  const params = { page, limit, search };
+  if (sectionId) params.sectionId = sectionId;
+  return await fetchDataWithParams('tray', params);
+};
+
+export const getTrayByIdApi = async (id) => {
+  return await fetchData(`tray/${id}`);
+};
+
+export const createTrayApi = (payload) => postData("tray", payload);
+
+export const updateTrayApi = async (id, payload) => {
+  return await putData(`tray/${id}`, { id, ...payload });
+};
+
+export const deleteTrayApi = (id, deletedBy = null) => deleteData(`tray/${id}`, { data: { deletedBy } });

@@ -203,7 +203,7 @@ export default function SpecsStep({
               const isLineActive = activeSpecLineIndex === idx;
               return (
                 <div
-                  key={line.model.code}
+                  key={line.model.id}
                   onClick={() => setActiveSpecLineIndex(idx)}
                   className={clsx(
                     'flex items-center gap-3 py-1 px-2 rounded-xl cursor-pointer transition-all border',
@@ -214,7 +214,7 @@ export default function SpecsStep({
                     {idx + 1}
                   </div>
                   <div className={clsx('w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 text-white shadow-sm', isLineActive ? 'bg-primary' : 'bg-grey-icon/60')}>
-                    {line.model.code.substring(0, 2)}
+                    {(line.model.code || line.model.name || 'NA').substring(0, 2)}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className={clsx('text-[13px] font-bold truncate', isLineActive ? 'text-primary-dark' : 'text-grey-text-strong')}>{line.model.name}</p>
@@ -269,7 +269,7 @@ export default function SpecsStep({
               {/* Active model header */}
               <div className="flex items-center gap-4">
                 <div className="w-[42px] h-[42px] rounded-xl bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0 shadow-sm">
-                  {activeLine?.model?.code?.substring(0, 2)}
+                  {(activeLine?.model?.code || activeLine?.model?.name || 'NA').substring(0, 2)}
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-[17px] text-grey-text-strong tracking-tight">{activeLine?.model?.name}</h3>
