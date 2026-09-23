@@ -130,22 +130,21 @@ export default function CustomerStep({
                 value={customerQuery}
                 onChange={e => {
                   setCustomerQuery(e.target.value);
-                  setFocusedCustomerIndex(0); // Default focus to first item when typing
+                  setFocusedCustomerIndex(-1); // Changed from 0 so we don't default select
                 }}
                 onKeyDown={e => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
-                    const idx = focusedCustomerIndex >= 0 ? focusedCustomerIndex : 0;
-                    if (filteredCustomers[idx]) {
-                      setCustomer(filteredCustomers[idx]);
+                    if (focusedCustomerIndex >= 0 && filteredCustomers[focusedCustomerIndex]) {
+                      setCustomer(filteredCustomers[focusedCustomerIndex]);
                       setTimeout(() => document.getElementById('due-date')?.focus(), 100);
                     }
                   } else if (e.key === 'ArrowDown') {
                     e.preventDefault();
-                    setFocusedCustomerIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1));
+                    setFocusedCustomerIndex(prev => prev < 0 ? 0 : Math.min(prev + 1, filteredCustomers.length - 1));
                   } else if (e.key === 'ArrowUp') {
                     e.preventDefault();
-                    setFocusedCustomerIndex(prev => Math.max(prev - 1, 0));
+                    setFocusedCustomerIndex(prev => Math.max(prev - 1, -1));
                   }
                 }}
               />

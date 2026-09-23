@@ -41,6 +41,20 @@ export default function CreateOrderView() {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useKeyboardShortcuts({
+    onNextStep: () => {
+      if (!isSubmitting) {
+        if (canProceed()) {
+          handleNext();
+        } else {
+          toast.error('Please complete all required fields in this step first.');
+        }
+      }
+    },
+    onPrevStep: () => {
+      if (!isSubmitting) {
+        handleBack();
+      }
+    },
     customShortcuts: []
   });
 
@@ -247,16 +261,18 @@ export default function CreateOrderView() {
               />
             )}
             
-            {stepIndex === 1 && (
-              <ModelsStep
-                lines={lines}
-                setLines={setLines}
-                isActive={stepIndex === 1}
-                modalModel={modalModel}
-                onAddLineClick={setModalModel}
-                onUpdateLineQty={handleUpdateLineQty}
-              />
-            )}
+        {stepIndex === 1 && (
+          <ModelsStep
+            lines={lines}
+            setLines={setLines}
+            isActive={stepIndex === 1}
+            modalModel={modalModel}
+            onAddLineClick={(model) => {
+              setModalModel(model);
+            }}
+            onUpdateLineQty={handleUpdateLineQty}
+          />
+        )}
 
             {stepIndex === 2 && (
               <SpecsStep

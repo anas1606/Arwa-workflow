@@ -134,8 +134,22 @@ export default function SpecsStep({
   }, [activeSpecLineIndex, lines, setLines]);
 
   const customShortcuts = [
-    { key: 'ArrowDown', altKey: true, action: () => setActiveSpecLineIndex(prev => Math.min(prev + 1, lines.length - 1)) },
-    { key: 'ArrowUp', altKey: true, action: () => setActiveSpecLineIndex(prev => Math.max(prev - 1, 0)) },
+    { key: 'ArrowDown', altKey: true, action: () => {
+      setActiveSpecLineIndex(prev => {
+        const next = Math.min(prev + 1, lines.length - 1);
+        setTimeout(() => document.getElementById(`spec-line-${next}`)?.focus(), 50);
+        return next;
+      });
+    }},
+    { key: 'ArrowUp', altKey: true, action: () => {
+      setActiveSpecLineIndex(prev => {
+        const next = Math.max(prev - 1, 0);
+        setTimeout(() => document.getElementById(`spec-line-${next}`)?.focus(), 50);
+        return next;
+      });
+    }},
+    { key: 'ArrowRight', altKey: true, action: () => document.getElementById('body-design-input')?.focus() },
+    { key: 'ArrowLeft', altKey: true, action: () => document.getElementById(`spec-line-${activeSpecLineIndex}`)?.focus() },
     { key: 'c', altKey: true, action: () => handleCopyPrevious() },
     { key: 'a', altKey: true, action: () => handleApplyToAll() }
   ];
@@ -203,10 +217,12 @@ export default function SpecsStep({
               const isLineActive = activeSpecLineIndex === idx;
               return (
                 <div
+                  id={`spec-line-${idx}`}
+                  tabIndex={-1}
                   key={line.model.id}
                   onClick={() => setActiveSpecLineIndex(idx)}
                   className={clsx(
-                    'flex items-center gap-3 py-1 px-2 rounded-xl cursor-pointer transition-all border',
+                    'flex items-center gap-3 py-1 px-2 rounded-xl cursor-pointer transition-all border outline-none focus:ring-2 focus:ring-primary/50',
                     isLineActive ? 'bg-[#f4f7ff] border-primary shadow-sm' : 'bg-white border-grey-border/40 hover:bg-grey-bg/50 hover:border-grey-border/60'
                   )}
                 >
@@ -290,6 +306,7 @@ export default function SpecsStep({
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                     <div>
                       <AsyncSelectInput
+                        id="body-design-input"
                         label="Body Design"
                         required
                         className="!text-sm bg-white"

@@ -20,6 +20,8 @@ export const useKeyboardShortcuts = ({
     onEscape,
     onNextPage,
     onPrevPage,
+    onNextStep,
+    onPrevStep,
     setPageNo,
     pageNo,
     totalPages,
@@ -143,7 +145,22 @@ export const useKeyboardShortcuts = ({
                 return;
             }
 
-            // (Custom Shortcuts moved to top)
+            // 7. Wizard Navigation: Shift + Enter (Next) / Ctrl + Shift + Enter (Prev)
+            if (e.shiftKey && e.key === 'Enter') {
+                if (e.ctrlKey) {
+                    if (onPrevStep) {
+                        e.preventDefault();
+                        onPrevStep();
+                        return;
+                    }
+                } else {
+                    if (onNextStep) {
+                        e.preventDefault();
+                        onNextStep();
+                        return;
+                    }
+                }
+            }
 
             // 8. Table Navigation & Row Actions (Only when NOT typing inside inputs and modal is not open)
             if (!isInputActive && !isModalOpen && items.length > 0) {
@@ -207,7 +224,7 @@ export const useKeyboardShortcuts = ({
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [
         onAdd, onEdit, onDelete, onView, onRefresh, onToggleSelect, onToggleSelectAll, searchId, onSearchFocus, onEscape,
-        onNextPage, onPrevPage, setPageNo, pageNo, totalPages, items, selectedRowIndex,
+        onNextPage, onPrevPage, onNextStep, onPrevStep, setPageNo, pageNo, totalPages, items, selectedRowIndex,
         setSelectedRowIndex, isModalOpen, customShortcuts, disabled, disableInputCycling
     ]);
 };

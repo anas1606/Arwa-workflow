@@ -91,7 +91,7 @@ export default function ModelsStep({
         } else if (e.key === 'ArrowUp') {
           e.preventDefault();
           setFocusedModelIndex(prev => Math.max(prev - 1, 0));
-        } else if (e.key === 'Enter' && focusedModelIndex >= 0) {
+        } else if (e.key === 'Enter' && !e.shiftKey && !e.ctrlKey && !e.altKey && focusedModelIndex >= 0) {
           e.preventDefault();
           onAddLineClick(filteredModels[focusedModelIndex]);
         }
