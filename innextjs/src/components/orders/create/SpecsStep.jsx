@@ -3,13 +3,14 @@ import dynamic from 'next/dynamic';
 import { Check, Copy } from 'lucide-react';
 import clsx from 'clsx';
 import Input from '@/common/input/Input';
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { CUSTOMISATION_SPECS } from '@/common/dummy';
 import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 import 'react-quill-new/dist/quill.snow.css';
 
-import { getBrandsByCustomerIdApi, getStickersByBrandIdApi, getPackagingsApi } from '@/lib/fetcher';
+import { getBrandsApi, getStickersApi, getPackagingsApi, getBodyDesignsApi, getColoursApi } from '@/lib/fetcher';
 
 export default function SpecsStep({
   customer,
@@ -19,41 +20,63 @@ export default function SpecsStep({
   activeSpecLineIndex,
   setActiveSpecLineIndex
 }) {
-  const [brands, setBrands] = React.useState([]);
-  const [stickersCache, setStickersCache] = React.useState({});
-  const [packagesCache, setPackagesCache] = React.useState({});
-
-  useEffect(() => {
-    if (customer?.id) {
-      getBrandsByCustomerIdApi(customer.id).then(res => {
-        if (res.data?.success) setBrands(res.data.data || []);
-      }).catch(console.error);
-    }
-  }, [customer?.id]);
-
   const activeLine = lines[activeSpecLineIndex];
 
-  useEffect(() => {
-    const brandId = activeLine?.specs?.brandId;
-    if (brandId && !stickersCache[brandId]) {
-      getStickersByBrandIdApi(brandId).then(res => {
-        if (res.data?.success) {
-          setStickersCache(prev => ({ ...prev, [brandId]: res.data.data || [] }));
-        }
-      }).catch(console.error);
-    }
-  }, [activeLine?.specs?.brandId, stickersCache]);
+  const loadBodyDesignOptions = React.useCallback(async (inputValue, productId) => {
+    if (!productId) return [];
+    try {
+      const res = await getBodyDesignsApi(1, 10, inputValue, productId, true);
+      if (res.data?.success) {
+        return (res.data.data || []).map(d => ({ label: d.name, value: d.id }));
+      }
+    } catch (err) { console.error(err); }
+    return [];
+  }, []);
 
-  useEffect(() => {
-    const productId = activeLine?.model?.id;
-    if (productId && !packagesCache[productId]) {
-      getPackagingsApi(1, 100, '', productId).then(res => {
-        if (res.data?.success) {
-          setPackagesCache(prev => ({ ...prev, [productId]: res.data.data?.data || [] }));
-        }
-      }).catch(console.error);
-    }
-  }, [activeLine?.model?.id, packagesCache]);
+  const loadColourOptions = React.useCallback(async (inputValue, productId) => {
+    if (!productId) return [];
+    try {
+      const res = await getColoursApi(1, 10, inputValue, productId, true);
+      if (res.data?.success) {
+        return (res.data.data || []).map(c => ({ label: c.name, value: c.id }));
+      }
+    } catch (err) { console.error(err); }
+    return [];
+  }, []);
+
+  const loadBrandOptions = React.useCallback(async (inputValue, customerId) => {
+    if (!customerId) return [];
+    try {
+      const res = await getBrandsApi(1, 10, inputValue, customerId, true);
+      if (res.data?.success) {
+        return (res.data.data.data || []).map(b => ({ label: b.brandname || b.name, value: b.id }));
+      }
+    } catch (err) { console.error(err); }
+    return [];
+  }, []);
+
+  const loadStickerOptions = React.useCallback(async (inputValue, brandId) => {
+    if (!brandId) return [{ label: 'Arwa Default Sticker', value: 'default' }];
+    try {
+      const res = await getStickersApi(1, 10, inputValue, brandId);
+      if (res.data?.success) {
+        return [{ label: 'Arwa Default Sticker', value: 'default' }, ...(res.data.data.data || []).map(s => ({ label: s.name, value: s.id }))];
+      }
+    } catch (err) { console.error(err); }
+    return [{ label: 'Arwa Default Sticker', value: 'default' }];
+  }, []);
+
+  const loadPackagingOptions = React.useCallback(async (inputValue, productId) => {
+    if (!productId) return [];
+    try {
+      const res = await getPackagingsApi(1, 10, inputValue, productId, true);
+      if (res.data?.success) {
+        return (res.data.data.data || []).map(p => ({ label: p.name, value: p.id }));
+      }
+    } catch (err) { console.error(err); }
+    return [];
+  }, []);
+
   const isLineComplete = (line) => {
     const isAccessoriesValid = (!line.specs?.accessoriesType || line.specs?.accessoriesType === 'STANDARD') ||
       (line.specs?.accessoriesType === 'CUSTOMIZE' && line.specs?.accessoriesNote && line.specs.accessoriesNote.replace(/<[^>]*>?/gm, '').trim() !== '');
@@ -266,47 +289,51 @@ export default function SpecsStep({
                 <p className="text-xs text-grey-muted mb-2">Brand Name comes from the selected customer. Panel Sticker options depend on the brand.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-5">
                     <div>
-                      <Input
-                        type="select"
+                      <AsyncSelectInput
                         label="Body Design"
                         required
                         className="!text-sm bg-white"
-                        value={activeLine?.specs?.bodyDesignId || ''}
-                        onChange={e => handleUpdateSpec(activeSpecLineIndex, 'bodyDesignId', e.target.value, (activeLine?.model?.bodyDesigns || []).map(d => ({ label: d.name, value: d.id })))}
-                        options={(activeLine?.model?.bodyDesigns || []).map(d => ({ label: d.name, value: d.id }))}
+                        value={activeLine?.specs?.bodyDesignId ? { label: activeLine?.specs?.bodyDesignIdName || 'Selected', value: activeLine?.specs?.bodyDesignId } : null}
+                        onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'bodyDesignId', opt?.value || '', opt ? [opt] : [])}
+                        loadOptions={(inputValue) => loadBodyDesignOptions(inputValue, activeLine?.model?.id)}
+                        defaultOptions={true}
+                        key={`bodyDesign-${activeLine?.model?.id}`}
                       />
                     </div>
                     <div>
-                      <Input
-                        type="select"
+                      <AsyncSelectInput
                         label="Body Color"
                         required
                         className="!text-sm bg-white"
-                        value={activeLine?.specs?.colourId || ''}
-                        onChange={e => handleUpdateSpec(activeSpecLineIndex, 'colourId', e.target.value, (activeLine?.model?.colours || []).map(c => ({ label: c.name, value: c.id })))}
-                        options={(activeLine?.model?.colours || []).map(c => ({ label: c.name, value: c.id }))}
+                        value={activeLine?.specs?.colourId ? { label: activeLine?.specs?.colourIdName || 'Selected', value: activeLine?.specs?.colourId } : null}
+                        onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'colourId', opt?.value || '', opt ? [opt] : [])}
+                        loadOptions={(inputValue) => loadColourOptions(inputValue, activeLine?.model?.id)}
+                        defaultOptions={true}
+                        key={`colour-${activeLine?.model?.id}`}
                       />
                     </div>
                     <div>
-                      <Input
-                        type="select"
+                      <AsyncSelectInput
                         label="Brand Name"
                         required
                         className="!text-sm bg-white"
-                        value={activeLine?.specs?.brandId || ''}
-                        onChange={e => handleUpdateSpec(activeSpecLineIndex, 'brandId', e.target.value, brands.map(b => ({ label: b.brandname || b.name, value: b.id })))}
-                        options={brands.map(b => ({ label: b.brandname || b.name, value: b.id }))}
+                        value={activeLine?.specs?.brandId ? { label: activeLine?.specs?.brandIdName || 'Selected', value: activeLine?.specs?.brandId } : null}
+                        onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'brandId', opt?.value || '', opt ? [opt] : [])}
+                        loadOptions={(inputValue) => loadBrandOptions(inputValue, customer?.id)}
+                        defaultOptions={true}
+                        key={`brand-${customer?.id}`}
                       />
                     </div>
                     <div>
-                      <Input
-                        type="select"
+                      <AsyncSelectInput
                         label="Panel Sticker"
                         required
                         className="!text-sm bg-white"
-                        value={activeLine?.specs?.stickerId || ''}
-                      onChange={e => handleUpdateSpec(activeSpecLineIndex, 'stickerId', e.target.value, [{ label: 'Arwa Default Sticker', value: 'default' }, ...(stickersCache[activeLine?.specs?.brandId] || []).map(s => ({ label: s.name, value: s.id }))])}
-                        options={[{ label: 'Arwa Default Sticker', value: 'default' }, ...(stickersCache[activeLine?.specs?.brandId] || []).map(s => ({ label: s.name, value: s.id }))]}
+                        value={activeLine?.specs?.stickerId ? { label: activeLine?.specs?.stickerIdName || 'Selected', value: activeLine?.specs?.stickerId } : null}
+                        onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'stickerId', opt?.value || '', opt ? [opt] : [])}
+                        loadOptions={(inputValue) => loadStickerOptions(inputValue, activeLine?.specs?.brandId)}
+                        defaultOptions={true}
+                        key={`sticker-${activeLine?.specs?.brandId}`}
                       />
                     </div>
                 </div>
@@ -329,7 +356,7 @@ export default function SpecsStep({
                             (activeLine?.specs?.accessoriesType || 'STANDARD') === opt ? 'bg-[#eef2ff] text-primary shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : 'text-grey-text-light hover:bg-grey-bg/50'
                           )}
                         >
-                          {opt === 'STANDARD' ? 'Regular' : 'Customise'}
+                          {opt === 'STANDARD' ? 'Standard' : 'Customise'}
                         </button>
                       ))}
                     </div>
@@ -364,7 +391,7 @@ export default function SpecsStep({
                             (activeLine?.specs?.packingType || 'STANDARD') === opt ? 'bg-[#eef2ff] text-primary shadow-[0_1px_2px_rgba(0,0,0,0.05)]' : 'text-grey-text-light hover:bg-grey-bg/50'
                           )}
                         >
-                          {opt === 'STANDARD' ? 'Regular' : 'Customise'}
+                          {opt === 'STANDARD' ? 'Standard' : 'Customise'}
                         </button>
                       ))}
                     </div>
@@ -385,14 +412,15 @@ export default function SpecsStep({
                       </div>
                     ) : (
                       <div>
-                        <Input
-                          type="select"
+                        <AsyncSelectInput
                           required
                           className="!text-sm bg-white"
-                          value={activeLine?.specs?.packagingId || ''}
-                          onChange={e => handleUpdateSpec(activeSpecLineIndex, 'packagingId', e.target.value, (packagesCache[activeLine?.model?.id] || []).map(p => ({ label: p.name, value: p.id })))}
-                          options={(packagesCache[activeLine?.model?.id] || []).map(p => ({ label: p.name, value: p.id }))}
+                          value={activeLine?.specs?.packagingId ? { label: activeLine?.specs?.packagingIdName || 'Selected', value: activeLine?.specs?.packagingId } : null}
+                          onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'packagingId', opt?.value || '', opt ? [opt] : [])}
+                          loadOptions={(inputValue) => loadPackagingOptions(inputValue, activeLine?.model?.id)}
+                          defaultOptions={true}
                           placeholder="Select Standard Package"
+                          key={`pkg-${activeLine?.model?.id}`}
                         />
                       </div>
                     )}

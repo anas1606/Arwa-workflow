@@ -17,7 +17,7 @@ export const createBrand = async (data, userId = null) => {
     }
 };
 
-export const getAllBrands = async (page = 1, limit = 10, search = '', customerId = '') => {
+export const getAllBrands = async (page = 1, limit = 10, search = '', customerId = '', minimal = false) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -34,27 +34,28 @@ export const getAllBrands = async (page = 1, limit = 10, search = '', customerId
             where.customer_id = customerId;
         }
 
-        const [data, total] = await Promise.all([
-            prisma.brand.findMany({
-                where,
-                skip,
-                take,
-                orderBy: {
-                    createdAt: 'desc'
-                },
-                include: {
-                   
-                    _count: {
-                        select: {
-                            stickers: { where: { is_deleted: false } }
-                        }
+        const queryArgs = {
+            where, skip, take, orderBy: { createdAt: 'desc' }
+        };
+        
+        if (minimal) {
+            queryArgs.select = { id: true, brandname: true, customer_id: true };
+        } else {
+            queryArgs.include = {
+                _count: {
+                    select: {
+                        stickers: { where: { is_deleted: false } }
                     }
                 }
-            }),
+            };
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.brand.findMany(queryArgs),
             prisma.brand.count({ where })
         ]);
 
-        const formattedData = data.map(brand => {
+        const formattedData = minimal ? data : data.map(brand => {
             const { _count, createdBy, updatedBy, is_deleted, deletedAt, deletedBy, ...rest } = brand;
             return {
                 ...rest,

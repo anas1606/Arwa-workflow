@@ -2,10 +2,11 @@ import { fetchData, fetchDataWithHeaders, postData, postDataWithHeaders, userput
 import axios from "axios";
 
 // customer
-export const getCustomersApi = async (page = 1, limit = 10, search = '', region = '') => {
+export const getCustomersApi = async (page = 1, limit = 10, search = '', region = '', minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
   if (region && region !== 'ALL') params.region = region;
+  if (minimal) params.minimal = true;
   return await fetchDataWithParams('customer', params);
 };
 
@@ -20,10 +21,11 @@ export const updateCustomerApi = async (id, payload) => {
 export const deleteCustomerApi = (id, deletedBy = null) => deleteData(`customer/${id}`, { data: { deletedBy } });
 
 // brand
-export const getBrandsApi = async (page = 1, limit = 10, search = '', customerId = '') => {
+export const getBrandsApi = async (page = 1, limit = 10, search = '', customerId = '', minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
-  if (customerId) params.customerId = customerId;
+  if (customerId && customerId !== 'ALL') params.customerId = customerId;
+  if (minimal) params.minimal = true;
   return await fetchDataWithParams('brand', params);
 };
 
@@ -62,11 +64,12 @@ export const createStickerApi = (payload) => postData("sticker", payload);
 export const deleteStickerApi = (id, deletedBy = null) => deleteData(`sticker/${id}`, { data: { deletedBy } });
 
 // category
-export const getCategoriesApi = async (page = 1, limit = 10, search = '', status = 'ALL', parentId = undefined) => {
+export const getCategoriesApi = async (page = 1, limit = 10, search = '', status = 'ALL', parentId = undefined, minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
   if (status && status !== 'ALL') params.status = status;
   if (parentId !== undefined) params.parentId = parentId;
+  if (minimal) params.minimal = true;
   return await fetchDataWithParams('category', params);
 };
 
@@ -108,13 +111,14 @@ export const updateUnitApi = async (id, payload) => {
 export const deleteUnitApi = (id, deletedBy = null) => deleteData(`unit/${id}`, { data: { deletedBy } });
 
 // product
-export const getProductsApi = async (page = 1, limit = 10, search = '', status = 'ALL', categoryId = 'ALL', stock = 'ALL', unitId = 'ALL') => {
+export const getProductsApi = async (page = 1, limit = 10, search = '', status = 'ALL', categoryId = 'ALL', stock = 'ALL', unitId = 'ALL', minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
   if (status && status !== 'ALL') params.status = status;
   if (categoryId && categoryId !== 'ALL') params.categoryId = categoryId;
   if (stock && stock !== 'ALL') params.stock = stock;
   if (unitId && unitId !== 'ALL') params.unitId = unitId;
+  if (minimal) params.minimal = true;
   return await fetchDataWithParams('product', params);
 };
 
@@ -132,6 +136,22 @@ export const deleteProductApi = (id, deletedBy = null) => deleteData(`product/${
 
 export const getProductKpisApi = async () => {
   return await fetchData('product/kpi');
+};
+
+export const getBodyDesignsApi = async (page = 1, limit = 10, search = '', productId = 'ALL', minimal = false) => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (productId && productId !== 'ALL') params.productId = productId;
+  if (minimal) params.minimal = true;
+  return await fetchDataWithParams('product/body-design', params);
+};
+
+export const getColoursApi = async (page = 1, limit = 10, search = '', productId = 'ALL', minimal = false) => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  if (productId && productId !== 'ALL') params.productId = productId;
+  if (minimal) params.minimal = true;
+  return await fetchDataWithParams('product/colour', params);
 };
 
 // Users
@@ -159,10 +179,11 @@ export const deleteSecurityRoleApi = (id, deletedBy = null) => deleteData(`secur
 export const getModulesApi = async () => fetchData('module');
 
 // packaging
-export const getPackagingsApi = async (page = 1, limit = 10, search = '', productId = 'ALL') => {
+export const getPackagingsApi = async (page = 1, limit = 10, search = '', productId = 'ALL', minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
   if (productId && productId !== 'ALL') params.productId = productId;
+  if (minimal) params.minimal = true;
   return await fetchDataWithParams('packaging', params);
 };
 

@@ -5,7 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import { CUSTOMISATION_SPECS, MODEL_OPTION_KEYS, MODEL_CATEGORIES } from '@/common/dummy';
 
-const FIXED_CUSTOMISE_OPTIONS = ['Regular', 'Customise'];
+const FIXED_CUSTOMISE_OPTIONS = ['Standard', 'Customise'];
 const MODEL_OPTION_KEY_SET = new Set(MODEL_OPTION_KEYS);
 
 function getModalRoot() {

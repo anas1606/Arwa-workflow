@@ -19,19 +19,34 @@ export default function AsyncSelectInput({
   const id = providedId || generatedId;
   const debounceTimeout = useRef(null);
 
-  const debouncedLoadOptions = useCallback((inputValue, callback) => {
-    if (debounceTimeout.current) {
+  const debouncedLoadOptions = useCallback(
+    (inputValue) =>
+      new Promise((resolve) => {
+        if (debounceTimeout.current) {
+          clearTimeout(debounceTimeout.current);
+        }
+        debounceTimeout.current = setTimeout(async () => {
+          try {
+            const result = await loadOptions(inputValue);
+            resolve(result);
+          } catch (e) {
+            resolve([]);
+          }
+        }, 500);
+      }),
+    [loadOptions]
+  );
+
+  const handleInputChange = (inputValue, actionMeta) => {
+    // When the input is cleared, react-select (if defaultOptions=true) skips calling loadOptions.
+    // This leaves the timeout for the last character running, which causes an unwanted API call.
+    if (!inputValue && debounceTimeout.current) {
       clearTimeout(debounceTimeout.current);
     }
-    debounceTimeout.current = setTimeout(() => {
-      const result = loadOptions(inputValue);
-      if (result && typeof result.then === 'function') {
-        result.then(callback);
-      } else {
-        callback(result);
-      }
-    }, 500); // 500ms debounce
-  }, [loadOptions]);
+    if (props.onInputChange) {
+      props.onInputChange(inputValue, actionMeta);
+    }
+  };
 
   // Custom styling to match Input.jsx
   const customStyles = {
@@ -115,6 +130,7 @@ export default function AsyncSelectInput({
         placeholder={placeholder}
         value={value}
         onChange={onChange}
+        onInputChange={handleInputChange}
         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
         menuPosition="fixed"
         {...props}

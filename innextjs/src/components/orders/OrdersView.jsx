@@ -37,10 +37,18 @@ export default function OrdersView() {
   
   // Table state
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [pageNo, setPageNo] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [activeTab, setActiveTab] = useState('order_list');
   const [activeFilters, setActiveFilters] = useState({});
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 500);
+    return () => clearTimeout(handler);
+  }, [query]);
 
   // Modals state
   const [selectedOrder, setSelectedOrder] = useState(null);
@@ -54,7 +62,7 @@ export default function OrdersView() {
   const fetchOrders = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getOrdersApi(pageNo, pageSize, query, activeFilters);
+      const res = await getOrdersApi(pageNo, pageSize, debouncedQuery, activeFilters);
       
       if (res.data?.success) {
         setOrdersData(res.data.data.data);
@@ -67,12 +75,12 @@ export default function OrdersView() {
     } finally {
       setIsLoading(false);
     }
-  }, [pageNo, pageSize, query, activeFilters]);
+  }, [pageNo, pageSize, debouncedQuery, activeFilters]);
 
   const fetchProducts = useCallback(async () => {
     try {
       setIsLoading(true);
-      const res = await getOrdersByProductApi(productPageNo, pageSize, query, activeFilters);
+      const res = await getOrdersByProductApi(productPageNo, pageSize, debouncedQuery, activeFilters);
       
       if (res.data?.success) {
         setProductData(res.data.data.data);
@@ -84,7 +92,7 @@ export default function OrdersView() {
     } finally {
       setIsLoading(false);
     }
-  }, [productPageNo, pageSize, query, activeFilters]);
+  }, [productPageNo, pageSize, debouncedQuery, activeFilters]);
 
   useEffect(() => {
     if (viewMode === 'orders') {
@@ -153,7 +161,7 @@ useKeyboardShortcuts({
 
   React.useEffect(() => {
     setPageNo(1);
-  }, [query, activeTab]);
+  }, [debouncedQuery, activeTab]);
 
 
 
@@ -163,7 +171,7 @@ useKeyboardShortcuts({
       label: 'Order',
       render: (row) => (
         <div className="flex items-center gap-2.5 cursor-pointer" onClick={() => { setSelectedOrder(row); setIsDetailsModalOpen(true); }}>
-          <span className="font-bold text-primary hover:text-primary-dark transition-colors">{row.orderNumber}</span>
+          <span className="font-bold text-primary hover:text-primary-dark transition-colors whitespace-nowrap">{row.orderNumber}</span>
         </div>
       ),
     },
