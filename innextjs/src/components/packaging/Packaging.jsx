@@ -79,6 +79,7 @@ export default function Packaging() {
       setPageNo,
       pageNo,
       totalPages: Math.ceil(totalItems / pageSize) || 1,
+      items: packagingsData,
       selectedRowIndex,
       setSelectedRowIndex,
       isModalOpen: addOpen || editOpen || deleteOpen,

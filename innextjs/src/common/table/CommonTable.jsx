@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, MoreVertical } from "lucide-react";
 
 export default function CommonTable({
@@ -19,6 +19,20 @@ export default function CommonTable({
 }) {
     const { totalItems, pageSize, pageNo, totalPages } = pagination;
     const isEmpty = !data || data.length === 0;
+
+    const tbodyRef = useRef(null);
+
+    useEffect(() => {
+        if (selectedRowIndex !== undefined && tbodyRef.current && !isLoading && !isEmpty) {
+            const selectedRow = tbodyRef.current.children[selectedRowIndex];
+            if (selectedRow) {
+                selectedRow.scrollIntoView({
+                    behavior: 'smooth',
+                    block: 'nearest',
+                });
+            }
+        }
+    }, [selectedRowIndex, isLoading, isEmpty]);
 
     const getPageWindow = () => {
         if (isEmpty || totalPages <= 1) return [1];
@@ -106,7 +120,7 @@ export default function CommonTable({
                     </thead>
 
                     {/* BODY */}
-                    <tbody className="divide-y divide-white/10">
+                    <tbody className="divide-y divide-white/10" ref={tbodyRef}>
                         {isLoading ? (
                             Array.from({ length: Math.min(pageSize, 10) }).map((_, idx) => (
                                 <tr key={`skeleton-${idx}`} className="animate-pulse">
@@ -130,16 +144,16 @@ export default function CommonTable({
                                 <tr
                                     key={index}
                                     onClick={() => onRowClick && onRowClick(row)}
-                                    className={`transition-colors group ${selectedRowIndex === index
-                                            ? 'bg-primary/5 shadow-[inset_2px_0_0_0_var(--color-primary)]'
-                                            : onRowClick ? 'cursor-pointer hover:bg-grey-bg/30 bg-white' : 'hover:bg-grey-bg/30 bg-white'
+                                    className={`transition-colors group scroll-mt-32 scroll-mb-32 ${selectedRowIndex === index
+                                            ? 'bg-primary-bg shadow-[inset_2px_0_0_0_var(--color-primary)]'
+                                            : onRowClick ? 'cursor-pointer hover:bg-grey-surface bg-white' : 'hover:bg-grey-surface bg-white'
                                         }`}
                                 >
                                     {columns.map((col) => (
                                         <td
                                             key={col.key}
                                             className={`px-5 py-4 overflow-visible ${col.className || ""} ${col.align === "center" ? "text-center" : col.align === "right" ? "text-right" : "text-left"}
-                                                ${col.key === "actions" ? `sticky right-0 z-10 ${selectedRowIndex === index ? 'bg-[#f4f7fd]' : 'bg-white group-hover:bg-[#f8f9fc]'}` : ""}`}
+                                                ${col.key === "actions" ? "sticky right-0 z-10 bg-inherit" : ""}`}
                                         >
                                             {renderCell(col, row, index)}
                                         </td>
