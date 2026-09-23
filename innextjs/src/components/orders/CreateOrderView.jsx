@@ -31,7 +31,7 @@ export default function CreateOrderView() {
   // Draft state
   const [customer, setCustomer] = useState(null);
   const [lines, setLines] = useState([]);
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [priority, setPriority] = useState('Normal');
   const [plannerNotes, setPlannerNotes] = useState('');
 
@@ -46,7 +46,7 @@ export default function CreateOrderView() {
 
   // Actions
   const handleModalAdd = (model, qty) => {
-    const idx = lines.findIndex(l => l.model.code === model.code);
+    const idx = lines.findIndex(l => l.model.id === model.id);
     if (idx >= 0) {
       const newLines = [...lines];
       newLines[idx].quantity += qty;
