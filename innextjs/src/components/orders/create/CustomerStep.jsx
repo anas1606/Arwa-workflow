@@ -83,16 +83,21 @@ export default function CustomerStep({
     }
   }, [debouncedQuery, isActive]);
 
+  useEffect(() => {
+    if (isActive) {
+      setTimeout(() => {
+        document.getElementById('customer-search')?.focus();
+      }, 100);
+    }
+  }, [isActive]);
+
   const filteredCustomers = customers;
 
   useKeyboardShortcuts({
     searchId: 'customer-search',
     customShortcuts: [
       { key: 'ArrowRight', altKey: true, ignoreInInput: true, action: () => { document.getElementById('due-date')?.focus(); } },
-      { key: 'ArrowLeft', altKey: true, ignoreInInput: true, action: () => { document.getElementById('customer-search')?.focus(); } },
-      { key: 'ArrowDown', action: () => setFocusedCustomerIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1)) },
-      { key: 'ArrowUp', action: () => setFocusedCustomerIndex(prev => Math.max(prev - 1, 0)) },
-      { key: 'Enter', action: () => { if (focusedCustomerIndex >= 0) setCustomer(filteredCustomers[focusedCustomerIndex]); } }
+      { key: 'ArrowLeft', altKey: true, ignoreInInput: true, action: () => { document.getElementById('customer-search')?.focus(); } }
     ]
   });
 
@@ -125,7 +130,23 @@ export default function CustomerStep({
                 value={customerQuery}
                 onChange={e => {
                   setCustomerQuery(e.target.value);
-                  setFocusedCustomerIndex(-1);
+                  setFocusedCustomerIndex(0); // Default focus to first item when typing
+                }}
+                onKeyDown={e => {
+                  if (e.key === 'Enter') {
+                    e.preventDefault();
+                    const idx = focusedCustomerIndex >= 0 ? focusedCustomerIndex : 0;
+                    if (filteredCustomers[idx]) {
+                      setCustomer(filteredCustomers[idx]);
+                      setTimeout(() => document.getElementById('due-date')?.focus(), 100);
+                    }
+                  } else if (e.key === 'ArrowDown') {
+                    e.preventDefault();
+                    setFocusedCustomerIndex(prev => Math.min(prev + 1, filteredCustomers.length - 1));
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault();
+                    setFocusedCustomerIndex(prev => Math.max(prev - 1, 0));
+                  }
                 }}
               />
             </div>
@@ -174,7 +195,10 @@ export default function CustomerStep({
                   return (
                     <div
                       key={c.id}
-                      onClick={() => setCustomer(c)}
+                      onClick={() => {
+                        setCustomer(c);
+                        setTimeout(() => document.getElementById('due-date')?.focus(), 100);
+                      }}
                       onMouseEnter={() => setFocusedCustomerIndex(idx)}
                       className={clsx(
                         'flex items-center gap-3 px-5 py-3.5 cursor-pointer border-b border-grey-surface/50 transition-colors',
@@ -185,7 +209,7 @@ export default function CustomerStep({
                         'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0',
                         isSelected ? 'bg-primary text-white' : 'bg-grey-surface text-grey-text-light'
                       )}>
-                        {c.name.substring(0, 2).toUpperCase()}
+                        {(c.name || 'NA').substring(0, 2).toUpperCase()}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={clsx('font-bold text-sm', isSelected ? 'text-primary-text' : 'text-grey-text-strong')}>{c.name}</p>
@@ -216,7 +240,7 @@ export default function CustomerStep({
             {customer ? (
               <>
                 <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
-                  {customer.name.substring(0, 2).toUpperCase()}
+                     {(customer.name || 'NA').substring(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <p className="font-bold text-sm text-grey-text-strong leading-tight">{customer.name}</p>
@@ -242,12 +266,33 @@ export default function CustomerStep({
               className="!text-sm"
               value={dueDate}
               onChange={e => setDueDate(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  document.getElementById('priority-btn-Low')?.focus();
+                }
+              }}
             />
             <div className="grid grid-cols-3 gap-1.5">
               {DUE_PRESETS.map(p => (
                 <button
+                  type="button"
                   key={p.label}
-                  onClick={() => setDueDate(addDays(p.days))}
+                  onClick={() => {
+                    setDueDate(addDays(p.days));
+                    setTimeout(() => {
+                      document.getElementById('priority-btn-Low')?.focus();
+                    }, 150);
+                  }}
+                  onKeyDown={e => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      setDueDate(addDays(p.days));
+                      setTimeout(() => {
+                        document.getElementById('priority-btn-Low')?.focus();
+                      }, 150);
+                    }
+                  }}
                   className={clsx(
                     'text-[11px] font-medium py-1.5 rounded-xl border transition-colors',
                     dueDate === addDays(p.days) ? 'bg-primary-bg text-primary-dark border-primary-subtle' : 'bg-grey-bg text-grey-text-light border-transparent hover:bg-grey-surface'
@@ -270,8 +315,13 @@ export default function CustomerStep({
             <div className="flex gap-2">
               {['Low', 'Normal', 'High'].map(p => (
                 <button
+                  type="button"
+                  id={`priority-btn-${p}`}
                   key={p}
-                  onClick={() => setPriority(p)}
+                  onClick={() => {
+                    setPriority(p);
+                    setTimeout(() => document.getElementById('planner-notes')?.focus(), 50);
+                  }}
                   className={clsx(
                     'flex-1 py-1.5 rounded-xl text-xs font-bold border transition-colors',
                     p === 'Low' ? (priority === 'Low' ? 'bg-success-subtle text-success-text border-success-subtle' : 'bg-success-bg/50 text-success-dark border-transparent hover:bg-success-subtle') :
@@ -289,6 +339,7 @@ export default function CustomerStep({
           <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm p-4">
             <label className="text-xs font-bold text-grey-text block mb-2">Planner notes <span className="text-grey-icon font-normal">(optional)</span></label>
             <textarea
+              id="planner-notes"
               className="w-full text-sm text-grey-text-strong bg-grey-bg/40 border border-grey-border/60 rounded-xl p-3 resize-none h-[88px] placeholder:text-grey-icon focus:outline-none focus:ring-2 focus:ring-primary-muted/30"
               placeholder="Delivery instructions, shift preferences, material constraints..."
               value={plannerNotes}

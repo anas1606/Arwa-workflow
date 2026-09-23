@@ -26,7 +26,7 @@ export default function ModelsStep({
   const [products, setProducts] = useState([]);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isProductsLoading, setIsProductsLoading] = useState(false);
-  
+
   useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedQuery(modelQuery);
@@ -117,16 +117,52 @@ export default function ModelsStep({
     }
   };
 
+  const prevLinesLength = useRef(lines.length);
+  useEffect(() => {
+    if (lines.length > prevLinesLength.current) {
+      const newIdx = lines.length - 1;
+      setSelectedLineIndex(newIdx);
+      setTimeout(() => {
+        const el = document.getElementById(`line-qty-${newIdx}`);
+        if (el) {
+          el.focus();
+          el.select();
+        }
+      }, 250);
+    }
+    prevLinesLength.current = lines.length;
+  }, [lines.length]);
+
   useKeyboardShortcuts({
     searchId: 'model-search',
     customShortcuts: [
       { key: '+', action: () => { if (lines.length > 0) onUpdateLineQty(selectedLineIndex, 1); } },
       { key: '-', action: () => { if (lines.length > 0) onUpdateLineQty(selectedLineIndex, -1); } },
       { key: 'x', altKey: true, action: () => { if (lines.length > 0) handleRemoveLine(selectedLineIndex); } },
-      { key: 'ArrowDown', altKey: true, action: () => { if (lines.length > 0) setSelectedLineIndex(prev => Math.min(lines.length - 1, prev + 1)); } },
-      { key: 'ArrowUp', altKey: true, action: () => { if (lines.length > 0) setSelectedLineIndex(prev => Math.max(0, prev - 1)); } },
-      { key: 'ArrowRight', altKey: true, ignoreInInput: true, action: () => { document.getElementById('selected-models-panel')?.focus(); } },
-      { key: 'ArrowLeft', altKey: true, ignoreInInput: true, action: () => { document.getElementById('model-search')?.focus(); } }
+      { key: 'ArrowDown', altKey: true, action: () => { 
+        if (lines.length > 0) {
+          setSelectedLineIndex(prev => {
+            const nextIdx = Math.min(lines.length - 1, prev + 1);
+            setTimeout(() => document.getElementById(`line-qty-${nextIdx}`)?.focus(), 50);
+            return nextIdx;
+          });
+        }
+      } },
+      { key: 'ArrowUp', altKey: true, action: () => { 
+        if (lines.length > 0) {
+          setSelectedLineIndex(prev => {
+            const prevIdx = Math.max(0, prev - 1);
+            setTimeout(() => document.getElementById(`line-qty-${prevIdx}`)?.focus(), 50);
+            return prevIdx;
+          });
+        }
+      } },
+      { key: 'ArrowRight', altKey: true, action: () => { 
+        if (lines.length > 0) {
+          document.getElementById(`line-qty-${selectedLineIndex}`)?.focus(); 
+        }
+      } },
+      { key: 'ArrowLeft', altKey: true, action: () => { document.getElementById('model-search')?.focus(); } }
     ]
   });
 
@@ -140,7 +176,7 @@ export default function ModelsStep({
           </div>
 
           <div className="px-5 pb-3 shrink-0">
-            <KeyboardShortcutBar 
+            <KeyboardShortcutBar
               searchId="model-search"
               customActions={[
                 { label: 'Customer', keyCombo: ['Alt', '←'] },
@@ -198,11 +234,11 @@ export default function ModelsStep({
             ) : (
               <>
                 {filteredModels.map((m, idx) => {
-                  const isSelected = lines.some(l => l.model.code === m.code);
+                 const isSelected = lines.some(l => l.model.id === m.id);
                   const isFocused = focusedModelIndex === idx;
                   return (
                     <div
-                      key={m.code}
+                      key={m.id}
                       onClick={() => onAddLineClick(m)}
                       onMouseEnter={() => setFocusedModelIndex(idx)}
                       className={clsx(
@@ -214,7 +250,7 @@ export default function ModelsStep({
                         'w-9 h-9 rounded-xl flex items-center justify-center text-xs font-bold shrink-0',
                         isSelected ? 'bg-primary text-white' : 'bg-grey-surface text-grey-text-light'
                       )}>
-                        {m.code.substring(0, 2)}
+                        {(m.code || m.name || 'NA').substring(0, 2)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className={clsx('font-bold text-sm', isSelected ? 'text-primary-text' : 'text-grey-text-strong')}>{m.name}</p>
@@ -234,7 +270,7 @@ export default function ModelsStep({
           </div>
         </div>
       </div>
-      
+
       {/* RIGHT: Selected */}
       <div id="selected-models-panel" tabIndex={-1} className="w-full lg:w-[280px] shrink-0 h-full overflow-y-auto pb-5 outline-none focus:ring-2 focus:ring-primary/50 focus:rounded-xl">
         <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm overflow-hidden">
@@ -259,8 +295,8 @@ export default function ModelsStep({
           ) : (
             <div className="divide-y divide-grey-surface">
               {lines.map((line, idx) => (
-                <div 
-                  key={line.model.code} 
+                <div
+                  key={line.model.id}
                   className={clsx(
                     "p-3 transition-colors",
                     selectedLineIndex === idx ? "bg-primary/5 shadow-[inset_2px_0_0_0_var(--color-primary)]" : ""
@@ -270,7 +306,7 @@ export default function ModelsStep({
                   <div className="flex items-center gap-2">
                     <span className="text-[10px] font-bold text-grey-icon w-4">{idx + 1}</span>
                     <div className="w-7 h-7 rounded-xl bg-primary-subtle text-primary-dark text-xs font-bold flex items-center justify-center">
-                      {line.model.code.substring(0, 2)}
+                      {(line.model.code || line.model.name || 'NA').substring(0, 2)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-xs text-grey-text-strong truncate">{line.model.name}</p>
@@ -283,9 +319,47 @@ export default function ModelsStep({
                       <X size={14} />
                     </button>
                   </div>
-                  <div className="mt-2 flex items-center bg-grey-bg rounded-xl overflow-hidden border border-grey-border/60">
+                  <div className="mt-2 flex items-center bg-grey-bg rounded-xl overflow-hidden border border-grey-border/60 focus-within:ring-2 focus-within:ring-primary/50 focus-within:bg-white transition-colors">
                     <button className="w-9 h-9 flex items-center justify-center text-grey-muted hover:bg-grey-surface font-bold text-base" onClick={() => onUpdateLineQty(idx, -1)}>-</button>
-                    <div className="flex-1 text-center font-bold text-sm text-grey-text-strong">{line.quantity}</div>
+                    <input 
+                      id={`line-qty-${idx}`}
+                      type="number"
+                      className="flex-1 min-w-0 text-center font-bold text-sm text-grey-text-strong bg-transparent outline-none m-0"
+                      value={line.quantity === 0 ? '' : line.quantity}
+                      onChange={(e) => {
+                        const val = parseInt(e.target.value) || 0;
+                        onUpdateLineQty(idx, val - line.quantity);
+                      }}
+                      onFocus={(e) => {
+                        setSelectedLineIndex(idx);
+                        e.target.select();
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.altKey && e.key === 'ArrowLeft') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          document.getElementById('model-search')?.focus();
+                        } else if (e.altKey && e.key === 'ArrowDown') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const nextIdx = Math.min(lines.length - 1, idx + 1);
+                          setSelectedLineIndex(nextIdx);
+                          setTimeout(() => {
+                            const el = document.getElementById(`line-qty-${nextIdx}`);
+                            if (el) { el.focus(); el.select(); }
+                          }, 50);
+                        } else if (e.altKey && e.key === 'ArrowUp') {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const prevIdx = Math.max(0, idx - 1);
+                          setSelectedLineIndex(prevIdx);
+                          setTimeout(() => {
+                            const el = document.getElementById(`line-qty-${prevIdx}`);
+                            if (el) { el.focus(); el.select(); }
+                          }, 50);
+                        }
+                      }}
+                    />
                     <button className="w-9 h-9 flex items-center justify-center text-grey-muted hover:bg-grey-surface font-bold text-base" onClick={() => onUpdateLineQty(idx, 1)}>+</button>
                   </div>
                   {line.quantity > (line.model.stockQuantity || 0) && (
