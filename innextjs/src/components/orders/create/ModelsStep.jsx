@@ -1,7 +1,8 @@
-import React, { useMemo, useEffect, useRef, useState } from 'react';
+import React, { useMemo, useEffect, useRef, useState, useCallback } from 'react';
 import { Search, Plus, Check, X, AlertTriangle } from 'lucide-react';
 import clsx from 'clsx';
 import Input from '@/common/input/Input';
+import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { getProductsApi, getCategoriesApi } from '@/lib/fetcher';
 import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 
@@ -14,7 +15,8 @@ export default function ModelsStep({
   modalModel
 }) {
   const [modelQuery, setModelQuery] = useState('');
-  const [modelCategory, setModelCategory] = useState('All categories');
+  const [modelCategoryOption, setModelCategoryOption] = useState({ label: 'All categories', value: 'All categories' });
+  const modelCategory = modelCategoryOption.value;
   const [focusedModelIndex, setFocusedModelIndex] = useState(-1);
   const [selectedLineIndex, setSelectedLineIndex] = useState(0);
 
@@ -22,7 +24,6 @@ export default function ModelsStep({
   const modelListRef = useRef(null);
 
   const [products, setProducts] = useState([]);
-  const [categoriesList, setCategoriesList] = useState([]);
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [isProductsLoading, setIsProductsLoading] = useState(false);
   
@@ -33,22 +34,24 @@ export default function ModelsStep({
     return () => clearTimeout(timer);
   }, [modelQuery]);
 
-  const fetchCategories = async () => {
+  const loadCategoryOptions = useCallback(async (inputValue) => {
     try {
-      const res = await getCategoriesApi(1, 100);
+      const res = await getCategoriesApi(1, 10, inputValue, 'ALL', undefined, true);
       if (res.data?.success) {
-        setCategoriesList(res.data.data.data || []);
+        const options = (res.data.data.data || []).map(cat => ({ label: cat.name, value: cat.id }));
+        return [{ label: 'All categories', value: 'All categories' }, ...options];
       }
     } catch (err) {
       console.error(err);
     }
-  };
+    return [{ label: 'All categories', value: 'All categories' }];
+  }, []);
 
   const fetchProducts = async () => {
     setIsProductsLoading(true);
     try {
       const categoryFilter = modelCategory === 'All categories' ? 'ALL' : modelCategory;
-      const res = await getProductsApi(1, 100, debouncedQuery, 'ALL', categoryFilter);
+      const res = await getProductsApi(1, 10, debouncedQuery, 'ALL', categoryFilter, 'ALL', 'ALL', true);
       if (res.data?.success) {
         setProducts(res.data.data.data || []);
       }
@@ -59,11 +62,7 @@ export default function ModelsStep({
     }
   };
 
-  useEffect(() => {
-    if (isActive) {
-      fetchCategories();
-    }
-  }, [isActive]);
+
 
   useEffect(() => {
     if (isActive) {
@@ -71,9 +70,7 @@ export default function ModelsStep({
     }
   }, [debouncedQuery, modelCategory, isActive]);
 
-  const categories = useMemo(() => {
-    return ['All categories', ...categoriesList.map(c => c.id)];
-  }, [categoriesList]);
+
 
   const filteredModels = products;
 
@@ -172,20 +169,16 @@ export default function ModelsStep({
                 }}
               />
             </div>
-            <div className="w-44 shrink-0">
-              <Input
-                type="select"
-                className="!text-sm"
-                value={modelCategory}
-                onChange={e => {
-                  setModelCategory(e.target.value);
+            <div className="w-44 shrink-0 z-20">
+              <AsyncSelectInput
+                loadOptions={loadCategoryOptions}
+                defaultOptions={true}
+                placeholder="Category"
+                value={modelCategoryOption}
+                onChange={(option) => {
+                  setModelCategoryOption(option || { label: 'All categories', value: 'All categories' });
                   setFocusedModelIndex(-1);
                 }}
-                options={categories.map(c => {
-                  if (c === 'All categories') return { label: 'All categories', value: 'All categories' };
-                  const cat = categoriesList.find(cat => cat.id === c);
-                  return { label: cat ? cat.name : c, value: c };
-                })}
               />
             </div>
           </div>

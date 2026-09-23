@@ -10,8 +10,6 @@ function ProductOrderTable({ productGroup, columns, query, activeFilters, onInit
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  const isInitialLoad = React.useRef(true);
-
   const fetchProductOrders = useCallback(async () => {
     try {
       setIsLoading(true);
@@ -25,10 +23,7 @@ function ProductOrderTable({ productGroup, columns, query, activeFilters, onInit
       console.error('Failed to fetch orders for product', productGroup.id, error);
     } finally {
       setIsLoading(false);
-      if (isInitialLoad.current) {
-        isInitialLoad.current = false;
-        if (onInitialLoadComplete) onInitialLoadComplete(productGroup.id);
-      }
+      if (onInitialLoadComplete) onInitialLoadComplete(productGroup.id);
     }
   }, [productGroup.id, pageNo, pageSize, query, activeFilters, onInitialLoadComplete]);
 

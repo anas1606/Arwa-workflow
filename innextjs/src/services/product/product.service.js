@@ -83,7 +83,7 @@ export const createProduct = async (data, userId = null) => {
     }
 };
 
-export const getAllProducts = async (page = 1, limit = 10, search = '', statusFilter = 'ALL', categoryId = 'ALL', stockFilter = 'ALL', unitId = 'ALL') => {
+export const getAllProducts = async (page = 1, limit = 10, search = '', statusFilter = 'ALL', categoryId = 'ALL', stockFilter = 'ALL', unitId = 'ALL', minimal = false) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -133,7 +133,13 @@ export const getAllProducts = async (page = 1, limit = 10, search = '', statusFi
             where.stockQuantity = { lte: prisma.product.fields.lowStockThreshold };
         }
 
-        const selectFields = {
+        const selectFields = minimal ? {
+            id: true,
+            name: true,
+            code: true,
+            stockQuantity: true,
+            category: { select: { id: true, name: true } }
+        } : {
             id: true,
             name: true,
             code: true,
@@ -180,26 +186,30 @@ export const getAllProducts = async (page = 1, limit = 10, search = '', statusFi
             prisma.product.count({ where })
         ]);
 
-        // Fetch user names
-        const userIds = new Set();
-        data.forEach(p => {
-            if (p.createdBy) userIds.add(p.createdBy);
-            if (p.updatedBy) userIds.add(p.updatedBy);
-        });
-
-        const users = await prisma.user.findMany({
-            where: { id: { in: Array.from(userIds) } },
-            select: { id: true, username: true }
-        });
+        let enrichedData = data;
         
-        const userMap = {};
-        users.forEach(u => userMap[u.id] = u.username);
+        if (!minimal) {
+            // Fetch user names
+            const userIds = new Set();
+            data.forEach(p => {
+                if (p.createdBy) userIds.add(p.createdBy);
+                if (p.updatedBy) userIds.add(p.updatedBy);
+            });
 
-        const enrichedData = data.map(p => ({
-            ...p,
-            createdByName: userMap[p.createdBy] || null,
-            updatedByName: userMap[p.updatedBy] || null
-        }));
+            const users = await prisma.user.findMany({
+                where: { id: { in: Array.from(userIds) } },
+                select: { id: true, username: true }
+            });
+            
+            const userMap = {};
+            users.forEach(u => userMap[u.id] = u.username);
+
+            enrichedData = data.map(p => ({
+                ...p,
+                createdByName: userMap[p.createdBy] || null,
+                updatedByName: userMap[p.updatedBy] || null
+            }));
+        }
 
         const totalPages = Math.ceil(total / take);
 

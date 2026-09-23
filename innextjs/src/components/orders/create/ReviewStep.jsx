@@ -132,12 +132,12 @@ export default function ReviewStep({
                     <div className="grid grid-cols-2 gap-x-4 gap-y-3">
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon mb-0.5">Accessories</p>
-                        <p className="text-sm font-bold text-grey-text-strong">{line.specs?.accessoriesType === 'CUSTOMIZE' ? 'Customise' : 'Regular'}</p>
+                        <p className="text-sm font-bold text-grey-text-strong">{line.specs?.accessoriesType === 'CUSTOMIZE' ? 'Customise' : 'Standard'}</p>
                       </div>
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon mb-0.5">Packing</p>
                         <p className="text-sm font-bold text-grey-text-strong">
-                          {line.specs?.packingType === 'CUSTOMIZE' ? 'Customise' : (line.specs?.packagingIdName || 'Regular')}
+                          {line.specs?.packingType === 'CUSTOMIZE' ? 'Customise' : (line.specs?.packagingIdName || 'Standard')}
                         </p>
                       </div>
                     </div>

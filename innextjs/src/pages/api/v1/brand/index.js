@@ -11,8 +11,8 @@ export default async function handler(req, res) {
     try {
         switch (method) {
             case 'GET': {
-                const { page = 1, limit = 10, search = '', customerId = '' } = req.query;
-                const result = await getAllBrands(page, limit, search, customerId);
+                const { page = 1, limit = 10, search = '', customerId = '', minimal = 'false' } = req.query;
+                const result = await getAllBrands(page, limit, search, customerId, minimal === 'true');
                 if (result.success) return successResponse(res, 'Brands fetched successfully', result.data);
                 return errorResponse(res, 'Failed to fetch Brands', result.message);
             }

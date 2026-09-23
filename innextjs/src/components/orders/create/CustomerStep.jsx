@@ -66,7 +66,7 @@ export default function CustomerStep({
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const res = await getCustomersApi(1, 50, debouncedQuery);
+      const res = await getCustomersApi(1, 10, debouncedQuery, '', true);
       if (res.data?.success) {
         setCustomers(res.data.data.data || []);
       }

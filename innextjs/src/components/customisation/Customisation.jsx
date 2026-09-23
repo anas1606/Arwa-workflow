@@ -19,7 +19,7 @@ import { usePermission } from '@/hooks/usePermission';
 
 
 const TABLE_SPEC_KEYS = ['body_design', 'body_color', 'brand_name', 'panel_sticker', 'accessories', 'packing'];
-const FIXED_CUSTOMISE_OPTIONS = ['Regular', 'Customise'];
+const FIXED_CUSTOMISE_OPTIONS = ['Standard', 'Customise'];
 const MAX_VISIBLE_OPTIONS = 3;
 const MODEL_OPTION_KEY_SET = new Set(MODEL_OPTION_KEYS);
 

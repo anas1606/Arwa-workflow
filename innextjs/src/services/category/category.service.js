@@ -37,7 +37,7 @@ export const createCategory = async (data, userId = null) => {
     }
 };
 
-export const getAllCategories = async (page = 1, limit = 10, search = '', statusFilter = 'ALL', parentId = undefined) => {
+export const getAllCategories = async (page = 1, limit = 10, search = '', statusFilter = 'ALL', parentId = undefined, minimal = false) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -59,7 +59,10 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
             where.isActive = false;
         }
 
-        const selectFields = {
+        const selectFields = minimal ? {
+            id: true,
+            name: true,
+        } : {
             id: true,
             name: true,
             isActive: true,
@@ -98,53 +101,57 @@ export const getAllCategories = async (page = 1, limit = 10, search = '', status
         ]);
 
         const totalPages = Math.ceil(total / take);
-
-        // Fetch all categories to calculate cumulative item counts efficiently
-        const allCategories = await prisma.category.findMany({
-            where: { is_deleted: false },
-            select: { 
-                id: true, 
-                parentId: true, 
-                _count: { select: { products: { where: { is_deleted: false } } } } 
-            }
-        });
         
-        const childrenMap = {};
-        allCategories.forEach(cat => {
-            if (cat.parentId) {
-                if (!childrenMap[cat.parentId]) childrenMap[cat.parentId] = [];
-                childrenMap[cat.parentId].push(cat.id);
-            }
-        });
+        let mappedData = data;
         
-        const getCumulativeCount = (id) => {
-            const cat = allCategories.find(c => c.id === id);
-            if (!cat) return 0;
-            let sum = cat._count?.products || 0;
-            if (childrenMap[id]) {
-                for (const childId of childrenMap[id]) {
-                    sum += getCumulativeCount(childId);
+        if (!minimal) {
+            // Fetch all categories to calculate cumulative item counts efficiently
+            const allCategories = await prisma.category.findMany({
+                where: { is_deleted: false },
+                select: { 
+                    id: true, 
+                    parentId: true, 
+                    _count: { select: { products: { where: { is_deleted: false } } } } 
                 }
-            }
-            return sum;
-        };
+            });
+            
+            const childrenMap = {};
+            allCategories.forEach(cat => {
+                if (cat.parentId) {
+                    if (!childrenMap[cat.parentId]) childrenMap[cat.parentId] = [];
+                    childrenMap[cat.parentId].push(cat.id);
+                }
+            });
+            
+            const getCumulativeCount = (id) => {
+                const cat = allCategories.find(c => c.id === id);
+                if (!cat) return 0;
+                let sum = cat._count?.products || 0;
+                if (childrenMap[id]) {
+                    for (const childId of childrenMap[id]) {
+                        sum += getCumulativeCount(childId);
+                    }
+                }
+                return sum;
+            };
 
-        const userIds = [...new Set(data.flatMap(p => [p.createdBy, p.updatedBy]).filter(Boolean))];
-        const users = await prisma.user.findMany({
-            where: { id: { in: userIds } },
-            select: { id: true, username: true }
-        });
-        const userMap = {};
-        users.forEach(u => {
-            userMap[u.id] = u.username;
-        });
+            const userIds = [...new Set(data.flatMap(p => [p.createdBy, p.updatedBy]).filter(Boolean))];
+            const users = await prisma.user.findMany({
+                where: { id: { in: userIds } },
+                select: { id: true, username: true }
+            });
+            const userMap = {};
+            users.forEach(u => {
+                userMap[u.id] = u.username;
+            });
 
-        const mappedData = data.map(c => ({
-            ...c,
-            itemCount: getCumulativeCount(c.id),
-            createdByName: c.createdBy ? userMap[c.createdBy] || c.createdBy : 'Unknown',
-            updatedByName: c.updatedBy ? userMap[c.updatedBy] || c.updatedBy : '-',
-        }));
+            mappedData = data.map(c => ({
+                ...c,
+                itemCount: getCumulativeCount(c.id),
+                createdByName: c.createdBy ? userMap[c.createdBy] || c.createdBy : 'Unknown',
+                updatedByName: c.updatedBy ? userMap[c.updatedBy] || c.updatedBy : '-',
+            }));
+        }
 
         return { 
             success: true, 

@@ -24,7 +24,7 @@ export const createCustomer = async (data, userId = null) => {
     }
 };
 
-export const getAllCustomers = async (page = 1, limit = 10, search = '', region = '') => {
+export const getAllCustomers = async (page = 1, limit = 10, search = '', region = '', minimal = false) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -43,62 +43,79 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
             where.region = region;
         }
 
-        const [data, total, regionsData] = await Promise.all([
+        const selectFields = minimal ? {
+            id: true,
+            name: true,
+            code: true,
+            region: true
+        } : {
+            id: true,
+            name: true,
+            code: true,
+            region: true,
+            createdAt: true,
+            updatedAt: true,
+            createdBy: true,
+            updatedBy: true,
+            _count: {
+                select: {
+                    brands: { where: { is_deleted: false } }
+                }
+            }
+        };
+
+        const queries = [
             prisma.customer.findMany({
                 where,
                 skip,
                 take,
-                orderBy: {
-                    createdAt: 'desc'
-                },
-                select: {
-                    id: true,
-                    name: true,
-                    code: true,
-                    region: true,
-                    createdAt: true,
-                    updatedAt: true,
-                    createdBy: true,
-                    updatedBy: true,
-                    _count: {
-                        select: {
-                            brands: { where: { is_deleted: false } }
-                        }
-                    }
-                }
+                orderBy: { createdAt: 'desc' },
+                select: selectFields
             }),
-            prisma.customer.count({ where }),
-            prisma.customer.groupBy({
+            prisma.customer.count({ where })
+        ];
+
+        if (!minimal) {
+            queries.push(prisma.customer.groupBy({
                 by: ['region'],
                 where: { is_deleted: false, region: { not: null, not: '' } }
-            })
-        ]);
+            }));
+        }
+
+        const results = await Promise.all(queries);
+        const data = results[0];
+        const total = results[1];
+        const regionsData = minimal ? [] : results[2];
 
         const allRegions = regionsData.map(r => r.region).sort();
         
-        const userIds = [...new Set(data.flatMap(c => [c.createdBy, c.updatedBy]).filter(Boolean))];
-        const users = await prisma.user.findMany({
-            where: { id: { in: userIds } },
-            select: { id: true, username: true }
-        });
-        const userMap = {};
-        users.forEach(u => {
-            userMap[u.id] = u.username;
-        });
+        let formattedData = data;
+        
+        if (!minimal) {
+            const userIds = [...new Set(data.flatMap(c => [c.createdBy, c.updatedBy]).filter(Boolean))];
+            const users = await prisma.user.findMany({
+                where: { id: { in: userIds } },
+                select: { id: true, username: true }
+            });
+            const userMap = {};
+            users.forEach(u => {
+                userMap[u.id] = u.username;
+            });
 
-        const formattedData = data.map(customer => ({
-            id: customer.id,
-            name: customer.name,
-            code: customer.code,
-            region: customer.region,
-            createdAt: customer.createdAt,
-            updatedAt: customer.updatedAt,
-            createdBy: customer.createdBy,
-            updatedBy: customer.updatedBy,
-            createdByName: customer.createdBy ? userMap[customer.createdBy] || customer.createdBy : 'Unknown',
-            updatedByName: customer.updatedBy ? userMap[customer.updatedBy] || customer.updatedBy : '-',
-            brands: customer._count.brands
-        }));
+            formattedData = data.map(customer => ({
+                id: customer.id,
+                name: customer.name,
+                code: customer.code,
+                region: customer.region,
+                createdAt: customer.createdAt,
+                updatedAt: customer.updatedAt,
+                createdBy: customer.createdBy,
+                updatedBy: customer.updatedBy,
+                createdByName: customer.createdBy ? userMap[customer.createdBy] || customer.createdBy : 'Unknown',
+                updatedByName: customer.updatedBy ? userMap[customer.updatedBy] || customer.updatedBy : '-',
+                brands: customer._count.brands
+            }));
+        }
 
         const totalPages = Math.ceil(total / take);
 

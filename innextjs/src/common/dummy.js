@@ -294,7 +294,7 @@ const CUSTOMISATION_SPECS = [
     key: "accessories",
     label: "Accessories",
     type: "customise",
-    options: ["Regular", "Customise"],
+    options: ["Standard", "Customise"],
     detailKey: "accessories_detail",
     required: true,
     placeholder: "Describe accessory customisation\u2026"
@@ -303,7 +303,7 @@ const CUSTOMISATION_SPECS = [
     key: "packing",
     label: "Packing",
     type: "customise",
-    options: ["Regular", "Customise"],
+    options: ["Standard", "Customise"],
     detailKey: "packing_detail",
     required: true,
     placeholder: "Describe packing customisation\u2026"

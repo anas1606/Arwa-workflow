@@ -16,7 +16,7 @@ export const createPackaging = async (data, userId = null) => {
     }
 };
 
-export const getAllPackagings = async (page = 1, limit = 10, search = '', productId = 'ALL') => {
+export const getAllPackagings = async (page = 1, limit = 10, search = '', productId = 'ALL', minimal = false) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -32,41 +32,47 @@ export const getAllPackagings = async (page = 1, limit = 10, search = '', produc
             where.productId = productId;
         }
 
-        const [data, total] = await Promise.all([
-            prisma.packaging.findMany({
-                where,
-                skip,
-                take,
-                orderBy: {
-                    createdAt: 'desc'
-                },
-                include: {
-                    product: {
-                        select: {
-                            id: true,
-                            name: true,
-                        }
+        const queryArgs = {
+            where, skip, take, orderBy: { createdAt: 'desc' }
+        };
+
+        if (minimal) {
+            queryArgs.select = { id: true, name: true, productId: true };
+        } else {
+            queryArgs.include = {
+                product: {
+                    select: {
+                        id: true,
+                        name: true,
                     }
                 }
-            }),
+            };
+        }
+
+        const [data, total] = await Promise.all([
+            prisma.packaging.findMany(queryArgs),
             prisma.packaging.count({ where })
         ]);
 
-        const userIds = [...new Set(data.flatMap(p => [p.createdBy, p.updatedBy]).filter(Boolean))];
-        const users = await prisma.user.findMany({
-            where: { id: { in: userIds } },
-            select: { id: true, username: true }
-        });
-        const userMap = {};
-        users.forEach(u => {
-            userMap[u.id] = u.username;
-        });
+        let formattedData = data;
+        
+        if (!minimal) {
+            const userIds = [...new Set(data.flatMap(p => [p.createdBy, p.updatedBy]).filter(Boolean))];
+            const users = await prisma.user.findMany({
+                where: { id: { in: userIds } },
+                select: { id: true, username: true }
+            });
+            const userMap = {};
+            users.forEach(u => {
+                userMap[u.id] = u.username;
+            });
 
-        const formattedData = data.map(item => ({
-            ...item,
-            createdByName: item.createdBy ? userMap[item.createdBy] || item.createdBy : 'Unknown',
-            updatedByName: item.updatedBy ? userMap[item.updatedBy] || item.updatedBy : '-',
-        }));
+            formattedData = data.map(item => ({
+                ...item,
+                createdByName: item.createdBy ? userMap[item.createdBy] || item.createdBy : 'Unknown',
+                updatedByName: item.updatedBy ? userMap[item.updatedBy] || item.updatedBy : '-',
+            }));
+        }
 
         return { 
             success: true, 

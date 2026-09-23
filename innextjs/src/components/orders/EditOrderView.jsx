@@ -73,7 +73,8 @@ export default function EditOrderView() {
               accessoriesNote: l.accessoriesNote || '',
               packingType: l.packingType || 'STANDARD',
               packingNote: l.packingNote || '',
-              packagingId: l.packagingId || ''
+              packagingId: l.packagingId || '',
+              packagingIdName: l.packaging?.name || ''
             }
           }));
           setLines(mappedLines);

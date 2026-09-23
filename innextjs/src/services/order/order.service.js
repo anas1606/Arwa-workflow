@@ -308,8 +308,7 @@ export const getOrderById = async (id) => {
                                 id: true,
                                 name: true,
                                 code: true,
-                                bodyDesigns: { select: { id: true, name: true, type: true } },
-                                colours: { select: { id: true, name: true, type: true } },
+                                stockQuantity: true,
                             }
                         },
                         bodyDesign: { select: { id: true, name: true } },
