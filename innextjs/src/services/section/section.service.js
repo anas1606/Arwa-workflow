@@ -63,11 +63,11 @@ export const getAllSections = async (page = 1, limit = 10, search = '', boxId = 
         const userIds = [...new Set(data.flatMap(s => [s.createdBy, s.updatedBy]).filter(Boolean))];
         const users = await prisma.user.findMany({
             where: { id: { in: userIds } },
-            select: { id: true, name: true, username: true }
+            select: { id: true, username: true }
         });
         const userMap = {};
         users.forEach(u => {
-            userMap[u.id] = u.name || u.username;
+            userMap[u.id] = u.username;
         });
 
         const totalPages = Math.ceil(total / take);

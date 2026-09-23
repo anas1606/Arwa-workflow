@@ -2,18 +2,18 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 import clsx from 'clsx';
 import { Package, Search, Plus, ArrowLeft, ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
-import AddStock from './modal/AddStock';
-import EditStock from './modal/EditStock';
 import DeleteModal from '@/common/modal/DeleteModal';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 import { toast } from 'sonner';
+import { useRouter } from 'next/router';
 
 import { getBoxesApi, deleteBoxApi, getBoxKpisApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 
 export default function Stock() {
+  const router = useRouter();
   const { canRead, canCreate, canUpdate, canDelete } = usePermission('godown');
   const [boxesData, setBoxesData] = useState([]);
   const [kpiData, setKpiData] = useState(null);
@@ -34,7 +34,6 @@ export default function Stock() {
   const [totalItems, setTotalItems] = useState(0);
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   
-  const [addOpen, setAddOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedBox, setSelectedBox] = useState(null);
@@ -160,9 +159,7 @@ export default function Stock() {
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                setSelectedRowIndex(idx);
-                setSelectedBox(item);
-                if (canUpdate) setEditOpen(true);
+                if (canUpdate) router.push(`/inventory/stock/edit/${item.id}`);
               }}
               disabled={!canUpdate}
               className="p-1.5 text-grey-secondary hover:text-brand-primary hover:bg-brand-light rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
@@ -213,9 +210,9 @@ export default function Stock() {
             <Button
               variant="primary"
               className="w-full sm:w-auto shrink-0"
-              onClick={() => setAddOpen(true)}
+              onClick={() => router.push('/inventory/stock/create')}
               icon={Plus}
-              text="Add Godown"
+              text="Add Stock"
             />
           )}
         </div>
@@ -298,18 +295,6 @@ export default function Stock() {
         />
       </div>
 
-      <AddStock 
-        isOpen={addOpen} 
-        onClose={() => setAddOpen(false)}
-        onSuccess={() => { triggerRefresh(); fetchKpis(); }}
-      />
-
-      <EditStock 
-        isOpen={editOpen} 
-        onClose={() => { setEditOpen(false); setSelectedBox(null); }}
-        box={selectedBox}
-        onSuccess={() => { triggerRefresh(); fetchKpis(); }}
-      />
 
       <DeleteModal
         isOpen={deleteOpen}

@@ -60,11 +60,11 @@ export const getAllTrays = async (page = 1, limit = 10, search = '', sectionId =
         const userIds = [...new Set(data.flatMap(t => [t.createdBy, t.updatedBy]).filter(Boolean))];
         const users = await prisma.user.findMany({
             where: { id: { in: userIds } },
-            select: { id: true, name: true, username: true }
+            select: { id: true, username: true }
         });
         const userMap = {};
         users.forEach(u => {
-            userMap[u.id] = u.name || u.username;
+            userMap[u.id] = u.username;
         });
 
         const totalPages = Math.ceil(total / take);

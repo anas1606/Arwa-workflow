@@ -2,11 +2,28 @@ import prisma from '@/lib/prisma';
 
 export const createBox = async (data, userId = null) => {
     try {
+        const createPayload = {
+            name: data.name,
+            createdBy: userId,
+        };
+
+        if (data.sections && data.sections.length > 0) {
+            createPayload.sections = {
+                create: data.sections.map(section => ({
+                    name: section.name,
+                    createdBy: userId,
+                    trays: section.trays && section.trays.length > 0 ? {
+                        create: section.trays.map(tray => ({
+                            name: tray.name,
+                            createdBy: userId
+                        }))
+                    } : undefined
+                }))
+            };
+        }
+
         const result = await prisma.box.create({
-            data: {
-                name: data.name,
-                createdBy: userId,
-            },
+            data: createPayload,
         });
         return { success: true, data: result };
     } catch (error) {
@@ -57,11 +74,11 @@ export const getAllBoxes = async (page = 1, limit = 10, search = '') => {
         const userIds = [...new Set(data.flatMap(b => [b.createdBy, b.updatedBy]).filter(Boolean))];
         const users = await prisma.user.findMany({
             where: { id: { in: userIds } },
-            select: { id: true, name: true, username: true }
+            select: { id: true, username: true }
         });
         const userMap = {};
         users.forEach(u => {
-            userMap[u.id] = u.name || u.username;
+            userMap[u.id] = u.username;
         });
 
         const totalPages = Math.ceil(total / take);
@@ -165,7 +182,15 @@ export const getBoxById = async (id) => {
 export const updateBox = async (id, data, userId = null) => {
     try {
         const existing = await prisma.box.findUnique({
-            where: { id, is_deleted: false }
+            where: { id, is_deleted: false },
+            include: {
+                sections: {
+                    where: { is_deleted: false },
+                    include: {
+                        trays: { where: { is_deleted: false } }
+                    }
+                }
+            }
         });
 
         if (!existing) {
@@ -176,9 +201,91 @@ export const updateBox = async (id, data, userId = null) => {
         if (data.name !== undefined) updateData.name = data.name;
         if (userId) updateData.updatedBy = userId;
 
-        const result = await prisma.box.update({
-            where: { id },
-            data: updateData
+        const result = await prisma.$transaction(async (tx) => {
+            // 1. Update Box properties
+            const updatedBox = await tx.box.update({
+                where: { id },
+                data: updateData
+            });
+
+            // 2. Process Sections and Trays if provided
+            if (data.sections) {
+                const incomingSections = data.sections;
+                
+                // Identify incoming IDs (string IDs denote existing records)
+                const incomingSectionIds = incomingSections.filter(s => typeof s.id === 'string').map(s => s.id);
+                
+                // Soft delete sections that are missing from the incoming data
+                const sectionsToDelete = existing.sections.filter(s => !incomingSectionIds.includes(s.id));
+                for (const sec of sectionsToDelete) {
+                    await tx.section.update({
+                        where: { id: sec.id },
+                        data: { is_deleted: true, deletedAt: new Date(), deletedBy: userId }
+                    });
+                    // Soft delete associated trays
+                    await tx.tray.updateMany({
+                        where: { sectionId: sec.id, is_deleted: false },
+                        data: { is_deleted: true, deletedAt: new Date(), deletedBy: userId }
+                    });
+                }
+
+                // Process each incoming section
+                for (const sec of incomingSections) {
+                    let sectionId = sec.id;
+                    const isNewSection = typeof sectionId !== 'string' || !existing.sections.find(s => s.id === sectionId);
+
+                    if (isNewSection) {
+                        // Create new section
+                        await tx.section.create({
+                            data: {
+                                name: sec.name,
+                                boxId: id,
+                                createdBy: userId,
+                                trays: sec.trays && sec.trays.length > 0 ? {
+                                    create: sec.trays.map(t => ({ name: t.name, createdBy: userId }))
+                                } : undefined
+                            }
+                        });
+                    } else {
+                        // Update existing section
+                        const existingSec = existing.sections.find(s => s.id === sectionId);
+                        await tx.section.update({
+                            where: { id: sectionId },
+                            data: { name: sec.name, updatedBy: userId }
+                        });
+
+                        // Process trays for this section
+                        if (sec.trays) {
+                            const incomingTrayIds = sec.trays.filter(t => typeof t.id === 'string').map(t => t.id);
+                            const traysToDelete = existingSec.trays.filter(t => !incomingTrayIds.includes(t.id));
+                            
+                            // Delete removed trays
+                            for (const tray of traysToDelete) {
+                                await tx.tray.update({
+                                    where: { id: tray.id },
+                                    data: { is_deleted: true, deletedAt: new Date(), deletedBy: userId }
+                                });
+                            }
+
+                            // Update or Create trays
+                            for (const tray of sec.trays) {
+                                const isNewTray = typeof tray.id !== 'string' || !existingSec.trays.find(t => t.id === tray.id);
+                                if (isNewTray) {
+                                    await tx.tray.create({
+                                        data: { name: tray.name, sectionId: sectionId, createdBy: userId }
+                                    });
+                                } else {
+                                    await tx.tray.update({
+                                        where: { id: tray.id },
+                                        data: { name: tray.name, updatedBy: userId }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+            return updatedBox;
         });
 
         return { success: true, data: result };
