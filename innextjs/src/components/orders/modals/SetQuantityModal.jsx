@@ -9,7 +9,16 @@ export default function SetQuantityModal({ isOpen, onClose, model, onAdd }) {
   
   // Reset quantity when opened with a new model
   useEffect(() => {
-    if (isOpen) setQty(1);
+    if (isOpen) {
+      setQty(1);
+      setTimeout(() => {
+        const el = document.getElementById('set-qty-input');
+        if (el) {
+          el.focus();
+          el.select();
+        }
+      }, 50);
+    }
   }, [isOpen, model]);
 
   if (!isOpen || !model) return null;
@@ -61,12 +70,20 @@ export default function SetQuantityModal({ isOpen, onClose, model, onAdd }) {
           {/* Quantity Input */}
           <div className="mt-1">
             <Input 
+              id="set-qty-input"
               type="number" 
               min="1"
               label="Quantity"
               required={true}
               value={qty}
               onChange={(e) => setQty(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleAdd();
+                }
+              }}
             />
             {Number(qty) > (model.stockQuantity || 0) && (
               <div className="flex items-start gap-2 mt-2 p-2.5 bg-warning/10 text-warning-dark rounded-xl border border-warning/20">

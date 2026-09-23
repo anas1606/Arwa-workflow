@@ -277,9 +277,9 @@ export default function EditProduct({ id }) {
               <div className="px-6 py-4 border-b border-grey-border flex items-center justify-between">
                 <h3 className="text-[15px] font-bold text-grey-text-strong">Variations <span className="text-sm font-normal text-grey-muted ml-1">(Optional)</span></h3>
               </div>
-              <div className="p-6 flex flex-col gap-8">
+              <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-2 ">
                 {/* Body Designs */}
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 ">
                   <label className="text-xs font-bold text-grey-text-strong uppercase tracking-wider mb-1">
                     Body Designs
                   </label>
@@ -292,7 +292,7 @@ export default function EditProduct({ id }) {
                   )}
 
                   {bodyDesigns.map((design, index) => (
-                    <div key={index} className="flex items-center gap-4 group">
+                    <div key={index} className="flex items-center gap-2 group">
                       <div className="flex-1">
                         <Input type="text" placeholder="e.g. Elegant Curves" value={design.name} onChange={(e) => {
                           const newDesigns = [...bodyDesigns];
@@ -343,7 +343,7 @@ export default function EditProduct({ id }) {
                 </div>
 
                 {/* Colours */}
-                <div className="flex flex-col gap-3 pt-6 border-t border-grey-border">
+                <div className="flex flex-col gap-3 pt-8 lg:pt-0 ">
                   <label className="text-xs font-bold text-grey-text-strong uppercase tracking-wider mb-1">
                     Colours
                   </label>
@@ -356,7 +356,7 @@ export default function EditProduct({ id }) {
                   )}
 
                   {colours.map((colour, index) => (
-                    <div key={index} className="flex items-center gap-4 group">
+                    <div key={index} className="flex items-center gap-2 group">
                       <div className="flex-1">
                         <Input type="text" placeholder="e.g. Matte Black" value={colour.name} onChange={(e) => {
                           const newColours = [...colours];

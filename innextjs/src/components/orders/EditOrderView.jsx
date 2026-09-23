@@ -89,6 +89,20 @@ export default function EditOrderView() {
 
   // Keyboard shortcuts for stepper
   useKeyboardShortcuts({
+    onNextStep: () => {
+      if (!isSubmitting && !loading) {
+        if (canProceed()) {
+          handleNext();
+        } else {
+          toast.error('Please complete all required fields in this step first.');
+        }
+      }
+    },
+    onPrevStep: () => {
+      if (!isSubmitting && !loading) {
+        handleBack();
+      }
+    },
     customShortcuts: []
   });
 
