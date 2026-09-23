@@ -35,7 +35,7 @@ function isModelConfigured(model) {
   return MODEL_OPTION_KEYS.every((key) => { const f = model.specs.find((s) => s.key === key); return (f?.options?.length ?? 0) > 0; });
 }
 function modelInitials(code) {
-  return (code.split('-')[0] ?? code).slice(0, 2).toUpperCase();
+  return ((code || 'NA').split('-')[0] || 'NA').slice(0, 2).toUpperCase();
 }
 function blankSpecsFromTemplate() {
   return CUSTOMISATION_SPECS.map((f) => ({ ...f, options: f.options ? [...f.options] : [] }));

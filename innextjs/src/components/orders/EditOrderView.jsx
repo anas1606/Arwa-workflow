@@ -94,7 +94,7 @@ export default function EditOrderView() {
 
   // Actions
   const handleModalAdd = (model, qty) => {
-    const idx = lines.findIndex(l => l.model.code === model.code);
+    const idx = lines.findIndex(l => l.model.id === model.id);
     if (idx >= 0) {
       const newLines = [...lines];
       newLines[idx].quantity += qty;

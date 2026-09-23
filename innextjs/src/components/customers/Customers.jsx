@@ -13,7 +13,7 @@ import clsx from 'clsx';
 import { toast } from 'sonner';
 
 function customerInitials(name) {
-  return name
+  return (name || 'NA')
     .split(/\s+/)
     .slice(0, 2)
     .map((w) => w[0])

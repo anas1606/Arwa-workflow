@@ -50,7 +50,7 @@ export default function SetQuantityModal({ isOpen, onClose, model, onAdd }) {
           {/* Selected Model Card */}
           <div className="bg-white border border-grey-border/60 rounded-xl p-3 flex items-center gap-3">
             <div className="w-10 h-10 rounded bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center shrink-0">
-              {model.code.substring(0, 2)}
+              {(model.code || model.name || 'NA').substring(0, 2)}
             </div>
             <div>
               <p className="font-bold text-sm text-grey-text-strong">{model.name}</p>
