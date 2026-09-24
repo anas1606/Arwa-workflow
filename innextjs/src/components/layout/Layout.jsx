@@ -20,14 +20,26 @@ export function Layout({ children }) {
     { path: '/inventory/product', module: 'products' },
     { path: '/inventory/unit', module: 'units' },
     { path: '/inventory/packaging', module: 'packaging' },
-    { path: '/inventory/stock', module: 'products' },
+    { path: '/inventory/godown', module: 'godown' },
+    { path: '/inventory/stock', module: 'stock' },
     { path: '/users', module: 'users', fallbackModule: 'security_roles' }
   ];
 
   const matchedRoute = ROUTE_PERMISSIONS.find(route => router.pathname === route.path || router.pathname.startsWith(route.path + '/'));
   const moduleKey = matchedRoute ? matchedRoute.module : null;
   const fallbackModuleKey = matchedRoute ? matchedRoute.fallbackModule : null;
-  const isAuthorized = !moduleKey || hasPermission(moduleKey, 'can_read') || (fallbackModuleKey && hasPermission(fallbackModuleKey, 'can_read'));
+
+  let requiredAction = 'can_read';
+  if (router.pathname.endsWith('/create') || router.pathname.endsWith('/new') || router.pathname.endsWith('/add')) {
+    requiredAction = 'can_create';
+  } else if (router.pathname.includes('/edit') || router.pathname.includes('/[')) {
+    // If it's a sub-path like /[id] or /edit, it requires update permission
+    requiredAction = 'can_update';
+  }
+
+  const isAuthorized = !moduleKey || 
+    hasPermission(moduleKey, requiredAction) || 
+    (fallbackModuleKey && hasPermission(fallbackModuleKey, requiredAction));
 
   if (isLoading) {
     return <div className="flex h-dvh items-center justify-center">Loading...</div>;

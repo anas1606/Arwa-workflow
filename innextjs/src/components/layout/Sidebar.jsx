@@ -36,7 +36,8 @@ const operationsNav = [
       { to: '/inventory/unit', label: 'Unit', icon: Ruler, moduleKey: 'units' },
       { to: '/inventory/packaging', label: 'Packaging', icon: Package, moduleKey: 'packaging' },
       { to: '/inventory/customisation', label: 'Customisation', icon: Settings2, moduleKey: 'customisation' },
-      { to: '/inventory/stock', label: 'Stock', icon: Box, moduleKey: 'products' },
+      { to: '/inventory/godown', label: 'Godown', icon: Box, moduleKey: 'godown' },
+      { to: '/inventory/stock', label: 'Stock', icon: Box, moduleKey: 'stock' },
     ],
   },
 ];
