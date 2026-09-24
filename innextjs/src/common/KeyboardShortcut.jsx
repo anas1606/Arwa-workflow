@@ -13,6 +13,7 @@ export const useKeyboardShortcuts = ({
     onDelete,
     onView,
     onRefresh,
+    onSave,
     onToggleSelect,
     onToggleSelectAll,
     searchId = 'page-search-input',
@@ -162,6 +163,13 @@ export const useKeyboardShortcuts = ({
                 }
             }
 
+            // 7.5 Save: Ctrl + S
+            if (e.ctrlKey && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                if (onSave) onSave();
+                return;
+            }
+
             // 8. Table Navigation & Row Actions (Only when NOT typing inside inputs and modal is not open)
             if (!isInputActive && !isModalOpen && items.length > 0) {
                 // Navigate Down: ArrowDown or 'J'
@@ -223,7 +231,7 @@ export const useKeyboardShortcuts = ({
         window.addEventListener('keydown', handleKeyDown);
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, [
-        onAdd, onEdit, onDelete, onView, onRefresh, onToggleSelect, onToggleSelectAll, searchId, onSearchFocus, onEscape,
+        onAdd, onEdit, onDelete, onView, onRefresh, onSave, onToggleSelect, onToggleSelectAll, searchId, onSearchFocus, onEscape,
         onNextPage, onPrevPage, onNextStep, onPrevStep, setPageNo, pageNo, totalPages, items, selectedRowIndex,
         setSelectedRowIndex, isModalOpen, customShortcuts, disabled, disableInputCycling
     ]);
@@ -251,6 +259,7 @@ export const KeyboardShortcutBar = ({
     deleteLabel = 'Delete',
     viewLabel = 'View',
     customActions = [],
+    hideSearch = false,
     className = ''
 }) => {
     const handleFocusSearch = () => {
@@ -292,12 +301,13 @@ export const KeyboardShortcutBar = ({
                 )}
 
                 {/* Search Focus */}
-                <button
-                    type="button"
-                    onClick={handleFocusSearch}
-                    className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 hover:bg-blue-50 border border-gray-200/80 hover:border-blue-300 text-gray-700 hover:text-blue-700 transition-colors shrink-0 cursor-pointer"
-                    title="Search (Ctrl + K or /)"
-                >
+                {!hideSearch && (
+                    <button
+                        type="button"
+                        onClick={handleFocusSearch}
+                        className="flex items-center gap-1 px-2 py-1 rounded-md bg-gray-50 hover:bg-blue-50 border border-gray-200/80 hover:border-blue-300 text-gray-700 hover:text-blue-700 transition-colors shrink-0 cursor-pointer"
+                        title="Search (Ctrl + K or /)"
+                    >
                     <span className="flex items-center gap-0.5">
                         <kbd className="px-1 py-0.2 rounded bg-white border border-gray-300 text-[9px] font-mono font-bold text-gray-600 shadow-2xs">Ctrl</kbd>
                         <span className="text-[9px] text-gray-400">+</span>
@@ -308,6 +318,7 @@ export const KeyboardShortcutBar = ({
                         Search <span className="text-[9px] text-gray-400">(/)</span>
                     </span>
                 </button>
+                )}
 
                 {/* Navigate Rows */}
                 {selectedRowIndex !== undefined && (

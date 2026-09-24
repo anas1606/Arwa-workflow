@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 import { Box, Plus, Minus, X, Trash2, ArrowLeft, ArrowRight, Check, LayoutGrid, Layers } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
@@ -7,7 +8,7 @@ import { createBoxApi } from '@/lib/fetcher';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 
-export default function AddStock() {
+export default function AddGodown() {
   const router = useRouter();
 
   const [step, setStep] = useState(1);
@@ -20,16 +21,102 @@ export default function AddStock() {
 
   const [selectedSectionId, setSelectedSectionId] = useState(null);
 
+  useEffect(() => {
+    if (step === 3 && sections.length > 0 && !selectedSectionId) {
+      setSelectedSectionId(sections[0].id);
+    }
+  }, [step, sections, selectedSectionId]);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useKeyboardShortcuts({
+    onNextStep: () => {
+      if (!isSubmitting) {
+        if (step < 3) {
+          nextStep();
+        } else {
+          handleSubmit();
+        }
+      }
+    },
+    onPrevStep: () => {
+      if (!isSubmitting && step > 1) {
+        prevStep();
+      }
+    },
+    onSave: () => {
+      if (!isSubmitting && name.trim()) {
+        handleSubmit();
+      }
+    },
+    customShortcuts: [
+      {
+        key: 'ArrowRight',
+        altKey: true,
+        action: () => {
+          if (step === 2) {
+            document.getElementById('section-input-0')?.focus();
+          } else if (step === 3) {
+            document.querySelector('input[placeholder="e.g. Row"]')?.focus();
+          }
+        }
+      },
+      {
+        key: 'ArrowLeft',
+        altKey: true,
+        action: () => {
+          if (step === 2) {
+            document.querySelector('input[placeholder="e.g. Room"]')?.focus();
+          } else if (step === 3) {
+            document.querySelector('.section-btn')?.focus();
+          }
+        }
+      },
+      {
+        key: 'ArrowDown',
+        ignoreInInput: true,
+        action: () => {
+          if (step === 3 && sections.length > 0) {
+            const currentIndex = sections.findIndex(s => s.id === selectedSectionId);
+            if (currentIndex >= 0 && currentIndex < sections.length - 1) {
+              const newId = sections[currentIndex + 1].id;
+              setSelectedSectionId(newId);
+              setTimeout(() => document.getElementById(`section-btn-${newId}`)?.focus(), 0);
+            } else if (currentIndex === -1) {
+              const newId = sections[0].id;
+              setSelectedSectionId(newId);
+              setTimeout(() => document.getElementById(`section-btn-${newId}`)?.focus(), 0);
+            }
+          }
+        }
+      },
+      {
+        key: 'ArrowUp',
+        ignoreInInput: true,
+        action: () => {
+          if (step === 3 && sections.length > 0) {
+            const currentIndex = sections.findIndex(s => s.id === selectedSectionId);
+            if (currentIndex > 0) {
+              const newId = sections[currentIndex - 1].id;
+              setSelectedSectionId(newId);
+              setTimeout(() => document.getElementById(`section-btn-${newId}`)?.focus(), 0);
+            }
+          }
+        }
+      }
+    ],
+    disableInputCycling: true
+  });
+
   const handleClose = () => {
-    router.push('/inventory/stock');
+    router.push('/inventory/godown');
   };
 
   const handleGenerateSections = () => {
     const qty = parseInt(sectionQty, 10);
     if (!qty || qty <= 0) return;
 
+    const startIndex = sections.length;
     const newSections = Array.from({ length: qty }, (_, i) => ({
       id: Date.now() + i,
       name: sectionPrefix.trim() ? `${sectionPrefix.trim()} ${sections.length + i + 1}` : `Section ${sections.length + i + 1}`,
@@ -39,14 +126,20 @@ export default function AddStock() {
     }));
     setSections([...sections, ...newSections]);
     setSectionQty('');
+
+    setTimeout(() => {
+      document.getElementById(`section-input-${startIndex}`)?.focus();
+    }, 50);
   };
 
   const handleGenerateTraysForSection = (sectionId) => {
+    let startIndex = 0;
     setSections(sections.map(sec => {
       if (sec.id === sectionId) {
         const qty = parseInt(sec.trayQty, 10);
         if (!qty || qty <= 0) return sec;
 
+        startIndex = sec.trays.length;
         const newTrays = Array.from({ length: qty }, (_, i) => ({
           id: Date.now() + i + Math.random(),
           name: sec.trayPrefix.trim() ? `${sec.trayPrefix.trim()} ${sec.trays.length + i + 1}` : `Tray ${sec.trays.length + i + 1}`
@@ -56,6 +149,10 @@ export default function AddStock() {
       }
       return sec;
     }));
+
+    setTimeout(() => {
+      document.getElementById(`tray-input-${sectionId}-${startIndex}`)?.focus();
+    }, 50);
   };
 
   const updateSectionField = (id, field, value) => {
@@ -93,14 +190,32 @@ export default function AddStock() {
       trays: s.trays.map(t => ({ name: t.name.trim() })).filter(t => t.name)
     })).filter(s => s.name);
 
+    const sectionNames = new Set();
+    for (const s of formattedSections) {
+      if (sectionNames.has(s.name)) {
+        toast.error(`Duplicate section name found: "${s.name}"`);
+        return;
+      }
+      sectionNames.add(s.name);
+      
+      const trayNames = new Set();
+      for (const t of s.trays) {
+        if (trayNames.has(t.name)) {
+          toast.error(`Duplicate tray name found: "${t.name}" in section "${s.name}"`);
+          return;
+        }
+        trayNames.add(t.name);
+      }
+    }
+
     setIsSubmitting(true);
     try {
       const res = await createBoxApi({ name, sections: formattedSections });
       if (res.data?.success) {
-        toast.success(res.data.message || 'Stock Box created successfully');
+        toast.success(res.data.message || 'Godown Box created successfully');
         handleClose();
       } else {
-        toast.error(res.data?.message || 'Failed to create Stock Box');
+        toast.error(res.error?.message || res.data?.message || 'Failed to create Godown Box');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'An error occurred');
@@ -146,10 +261,10 @@ export default function AddStock() {
             onClick={handleClose}
             className="!px-0 !bg-transparent text-grey-muted hover:text-grey-text-strong mt-0.5"
             icon={ArrowLeft}
-            text="Back to inventory"
+            text="Back to godown"
           />
           <div>
-            <h1 className="text-md font-bold text-grey-text-strong leading-tight">Add Stock Setup</h1>
+            <h1 className="text-md font-bold text-grey-text-strong leading-tight">Add Godown Setup</h1>
             <p className="text-sm text-grey-muted mt-1">Configure your new master box and layout.</p>
           </div>
         </div>
@@ -212,6 +327,20 @@ export default function AddStock() {
         </div>
       </div>
 
+      <div className="shrink-0 px-1 pb-2">
+        <KeyboardShortcutBar 
+          hideSearch={true}
+          customActions={[
+            { label: 'Navigate items', keyCombo: ['↓', '↑'] },
+            { label: 'Switch panels', keyCombo: ['Alt', '←', '→'] },
+            { label: 'Delete item', keyCombo: ['Alt', 'Del'] },
+            { label: 'Next / Submit', keyCombo: ['Shift', 'Enter'] },
+            { label: 'Back', keyCombo: ['Ctrl', 'Shift', 'Enter'] },
+            { label: 'Direct Save', keyCombo: ['Ctrl', 'S'] }
+          ]}
+        />
+      </div>
+
       {/* Main Content Area (No max-width, fills screen) */}
       <div className="flex-1 overflow-hidden min-h-0 relative">
 
@@ -228,7 +357,7 @@ export default function AddStock() {
               <div className="p-6 flex flex-col gap-5">
                 <div>
                   <p className="text-sm text-grey-muted mb-6 leading-relaxed">
-                    Enter a unique name for this stock box. This will act as the master container for all the sections and trays you generate in the following steps.
+                    Enter a unique name for this godown box. This will act as the master container for all the sections and trays you generate in the following steps.
                   </p>
                   <Input
                     type="text"
@@ -277,6 +406,7 @@ export default function AddStock() {
                     value={sectionPrefix}
                     onChange={(e) => setSectionPrefix(e.target.value)}
                     placeholder="e.g. Room"
+                    autoFocus
                   />
                   <Input
                     label="Quantity"
@@ -323,14 +453,21 @@ export default function AddStock() {
                             {index + 1}
                           </div>
                           <input
+                            id={`section-input-${index}`}
                             type="text"
                             value={section.name}
                             onChange={(e) => updateSectionField(section.id, 'name', e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.altKey && (e.key === 'Delete' || e.key === 'Backspace' || e.key.toLowerCase() === 'd')) {
+                                e.preventDefault();
+                                deleteSection(section.id);
+                              }
+                            }}
                             className="flex-1 bg-transparent border-none outline-none font-semibold text-grey-text-strong w-full"
                           />
                           <button
                             onClick={() => deleteSection(section.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all shrink-0 bg-white shadow-sm"
+                            className="w-8 h-8 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shrink-0 bg-white shadow-sm"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -364,8 +501,9 @@ export default function AddStock() {
                     sections.map((section) => (
                       <button
                         key={section.id}
+                        id={`section-btn-${section.id}`}
                         onClick={() => setSelectedSectionId(section.id)}
-                        className={`flex items-center justify-between p-3 rounded-lg border text-left transition-all ${selectedSectionId === section.id
+                        className={`section-btn flex items-center justify-between p-3 rounded-lg border text-left transition-all ${selectedSectionId === section.id
                             ? 'bg-primary/5 border-primary shadow-sm'
                             : 'bg-white border-grey-border hover:bg-grey-bg'
                           }`}
@@ -407,6 +545,7 @@ export default function AddStock() {
                               onChange={(e) => updateSectionField(selectedSectionId, 'trayPrefix', e.target.value)}
                               placeholder="e.g. Row"
                               className="bg-grey-bg/20"
+                              autoFocus
                             />
                           </div>
                           <div className="w-24 shrink-0">
@@ -465,14 +604,21 @@ export default function AddStock() {
                                   {tIndex + 1}
                                 </div>
                                 <input
+                                  id={`tray-input-${selectedSectionId}-${tIndex}`}
                                   type="text"
                                   value={tray.name}
                                   onChange={(e) => updateTrayName(selectedSectionId, tray.id, e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.altKey && (e.key === 'Delete' || e.key === 'Backspace' || e.key.toLowerCase() === 'd')) {
+                                      e.preventDefault();
+                                      deleteTray(selectedSectionId, tray.id);
+                                    }
+                                  }}
                                   className="flex-1 bg-transparent border-none outline-none text-sm font-semibold text-grey-text-strong w-full min-w-0"
                                 />
                                 <button
                                   onClick={() => deleteTray(selectedSectionId, tray.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 opacity-0 group-hover:opacity-100 transition-all shrink-0"
+                                  className="w-7 h-7 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shrink-0"
                                 >
                                   <X size={16} />
                                 </button>
@@ -505,7 +651,13 @@ export default function AddStock() {
             <Button variant="secondary" onClick={prevStep} text="Back" className="px-5 h-9 text-sm" />
           )}
           {step < 3 && (
-            <Button variant="secondary" onClick={nextStep} text="Next Step" className="px-5 h-9 text-sm" />
+            <Button 
+              variant="primary" 
+              onClick={nextStep} 
+              text="Next Step" 
+              className="px-5 h-9 text-sm"
+              disabled={(step === 1 && !name.trim()) || (step === 2 && sections.length === 0)}
+            />
           )}
         </div>
       </div>

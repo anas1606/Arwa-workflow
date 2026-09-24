@@ -7,7 +7,31 @@ export const createBox = async (data, userId = null) => {
             createdBy: userId,
         };
 
+        const existingBox = await prisma.box.findFirst({
+            where: { name: data.name, is_deleted: false }
+        });
+        if (existingBox) {
+            return { success: false, message: `Box with name "${data.name}" already exists.` };
+        }
+
         if (data.sections && data.sections.length > 0) {
+            const sectionNames = new Set();
+            for (const section of data.sections) {
+                if (sectionNames.has(section.name)) {
+                    return { success: false, message: `Duplicate section name "${section.name}" in box.` };
+                }
+                sectionNames.add(section.name);
+                if (section.trays && section.trays.length > 0) {
+                    const trayNames = new Set();
+                    for (const tray of section.trays) {
+                        if (trayNames.has(tray.name)) {
+                            return { success: false, message: `Duplicate tray name "${tray.name}" in section "${section.name}".` };
+                        }
+                        trayNames.add(tray.name);
+                    }
+                }
+            }
+
             createPayload.sections = {
                 create: data.sections.map(section => ({
                     name: section.name,
@@ -156,12 +180,20 @@ export const getBoxById = async (id) => {
     try {
         const box = await prisma.box.findUnique({
             where: { id, is_deleted: false },
-            include: {
+            select: {
+                id: true,
+                name: true,
                 sections: {
                     where: { is_deleted: false },
-                    include: {
+                    select: {
+                        id: true,
+                        name: true,
                         trays: {
-                            where: { is_deleted: false }
+                            where: { is_deleted: false },
+                            select: {
+                                id: true,
+                                name: true
+                            }
                         }
                     }
                 }
@@ -198,8 +230,35 @@ export const updateBox = async (id, data, userId = null) => {
         }
 
         const updateData = {};
-        if (data.name !== undefined) updateData.name = data.name;
+        if (data.name !== undefined) {
+            const existingBoxName = await prisma.box.findFirst({
+                where: { name: data.name, is_deleted: false, id: { not: id } }
+            });
+            if (existingBoxName) {
+                return { success: false, message: `Box with name "${data.name}" already exists.` };
+            }
+            updateData.name = data.name;
+        }
         if (userId) updateData.updatedBy = userId;
+
+        if (data.sections) {
+            const sectionNames = new Set();
+            for (const section of data.sections) {
+                if (sectionNames.has(section.name)) {
+                    return { success: false, message: `Duplicate section name "${section.name}" in box.` };
+                }
+                sectionNames.add(section.name);
+                if (section.trays && section.trays.length > 0) {
+                    const trayNames = new Set();
+                    for (const tray of section.trays) {
+                        if (trayNames.has(tray.name)) {
+                            return { success: false, message: `Duplicate tray name "${tray.name}" in section "${section.name}".` };
+                        }
+                        trayNames.add(tray.name);
+                    }
+                }
+            }
+        }
 
         const result = await prisma.$transaction(async (tx) => {
             // 1. Update Box properties
@@ -298,20 +357,47 @@ export const updateBox = async (id, data, userId = null) => {
 export const deleteBox = async (id, deletedBy = null) => {
     try {
         const box = await prisma.box.findUnique({
-            where: { id }
+            where: { id },
+            include: { sections: true }
         });
         
         if (!box || box.is_deleted) {
             return { success: false, message: 'Box not found or has already been deleted' };
         }
 
-        const deletedBox = await prisma.box.update({
-            where: { id },
-            data: {
-                is_deleted: true,
-                deletedAt: new Date(),
-                deletedBy: deletedBy
+        const sectionIds = box.sections.map(s => s.id);
+
+        const deletedBox = await prisma.$transaction(async (tx) => {
+            const b = await tx.box.update({
+                where: { id },
+                data: {
+                    is_deleted: true,
+                    deletedAt: new Date(),
+                    deletedBy: deletedBy
+                }
+            });
+
+            await tx.section.updateMany({
+                where: { boxId: id, is_deleted: false },
+                data: {
+                    is_deleted: true,
+                    deletedAt: new Date(),
+                    deletedBy: deletedBy
+                }
+            });
+
+            if (sectionIds.length > 0) {
+                await tx.tray.updateMany({
+                    where: { sectionId: { in: sectionIds }, is_deleted: false },
+                    data: {
+                        is_deleted: true,
+                        deletedAt: new Date(),
+                        deletedBy: deletedBy
+                    }
+                });
             }
+
+            return b;
         });
 
         return { success: true, data: deletedBox };

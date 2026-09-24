@@ -24,7 +24,11 @@ export default function Home() {
       'categories': '/inventory/category',
       'products': '/inventory/product',
       'units': '/inventory/unit',
-      'users': '/users'
+      'packaging': '/inventory/packaging',
+      'godown': '/inventory/godown',
+      'stock': '/inventory/stock',
+      'users': '/users',
+      'security_roles': '/users'
     };
 
     const permissions = user.security_role?.permissions || [];

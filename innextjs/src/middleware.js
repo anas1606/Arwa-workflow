@@ -16,6 +16,8 @@ const moduleMap = {
     '/api/v1/security_role': 'security_roles',
     '/api/v1/module': 'modules',
     '/api/v1/order': 'orders',
+    '/api/v1/box': 'godown',
+    '/api/v1/stock': 'stock',
 };
 
 export async function middleware(req) {

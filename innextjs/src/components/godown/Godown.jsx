@@ -12,7 +12,7 @@ import { useRouter } from 'next/router';
 import { getBoxesApi, deleteBoxApi, getBoxKpisApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 
-export default function Stock() {
+export default function Godown() {
   const router = useRouter();
   const { canRead, canCreate, canUpdate, canDelete } = usePermission('godown');
   const [boxesData, setBoxesData] = useState([]);
@@ -34,7 +34,6 @@ export default function Stock() {
   const [totalItems, setTotalItems] = useState(0);
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   
-  const [editOpen, setEditOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedBox, setSelectedBox] = useState(null);
   
@@ -91,13 +90,17 @@ export default function Stock() {
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
   useKeyboardShortcuts({
-      onAdd: canCreate ? () => setAddOpen(true) : undefined,
-      onEdit: canUpdate ? (item) => { setSelectedBox(item); setEditOpen(true); } : undefined,
+      onAdd: canCreate ? () => router.push('/inventory/godown/create') : undefined,
+      onEdit: canUpdate ? (item) => router.push(`/inventory/godown/edit/${item.id}`) : undefined,
       onDelete: canDelete ? (item) => { setSelectedBox(item); setDeleteOpen(true); } : undefined,
-      data: boxesData,
-      selectedIndex: selectedRowIndex,
-      setSelectedIndex: setSelectedRowIndex,
+      items: boxesData,
+      selectedRowIndex: selectedRowIndex,
+      setSelectedRowIndex: setSelectedRowIndex,
       onSearchFocus: () => searchInputRef.current?.focus(),
+      onRefresh: () => { fetchBoxes(); fetchKpis(); },
+      pageNo: pageNo,
+      setPageNo: setPageNo,
+      totalPages: totalPages,
   });
 
   const handleDelete = async () => {
@@ -109,7 +112,7 @@ export default function Stock() {
         setDeleteOpen(false);
         triggerRefresh();
       } else {
-        toast.error(res.data?.message || 'Failed to delete godown box');
+        toast.error(res.error?.message || res.data?.message || 'Failed to delete godown box');
       }
     } catch (err) {
       toast.error('An error occurred');
@@ -122,69 +125,89 @@ export default function Stock() {
 
   const columns = [
     {
-      header: 'NAME',
-      render: (item) => (
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-brand-light flex flex-shrink-0 items-center justify-center text-brand-primary font-medium border border-brand-primary/10">
-            <Package size={18} />
-          </div>
-          <div>
-            <div className="font-medium text-grey-primary">{item.name}</div>
-          </div>
+      key: 'name',
+      label: 'Box Name',
+      render: (row) => (
+        <div className="flex items-center gap-2.5">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary-dark">
+            <Package size={18} className="text-primary" />
+          </span>
+          <span className="font-semibold text-grey-text-strong truncate max-w-[180px] sm:max-w-[250px]" title={row.name}>{row.name}</span>
         </div>
-      )
+      ),
     },
     {
-      header: 'SECTIONS',
-      render: (item) => (
-        <span className="text-grey-secondary bg-grey-bg px-2 py-1 rounded-md text-sm">
-          {item.sectionsCount} Sections
+      key: 'sections',
+      label: 'Sections',
+      align: 'center',
+      render: (row) => (
+        <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
+          {row.sectionsCount}
         </span>
-      )
+      ),
     },
     {
-      header: 'TRAYS',
-      render: (item) => (
-        <span className="text-grey-secondary bg-grey-bg px-2 py-1 rounded-md text-sm">
-          {item.traysCount} Trays
+      key: 'trays',
+      label: 'Trays',
+      align: 'center',
+      render: (row) => (
+        <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
+          {row.traysCount}
         </span>
-      )
+      ),
     },
     {
-      header: 'ACTIONS',
-      render: (item, idx) => {
-        const isDropdownOpen = dropdownState === idx;
-        return (
-          <div className="flex items-center justify-end gap-2">
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                if (canUpdate) router.push(`/inventory/stock/edit/${item.id}`);
-              }}
-              disabled={!canUpdate}
-              className="p-1.5 text-grey-secondary hover:text-brand-primary hover:bg-brand-light rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Edit Box"
-            >
-              <Pencil size={16} />
-            </button>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setSelectedRowIndex(idx);
-                setSelectedBox(item);
-                if (canDelete) setDeleteOpen(true);
-              }}
-              disabled={!canDelete}
-              className="p-1.5 text-grey-secondary hover:text-red-600 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Delete Box"
-            >
-              <Trash2 size={16} />
-            </button>
-          </div>
-        );
-      },
+        key: 'createdBy',
+        label: 'Created By',
+        render: (row) => (
+            <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
+                <span className="text-xs text-grey-muted">
+                    {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
+                </span>
+            </div>
+        ),
     },
+    {
+        key: 'updatedBy',
+        label: 'Updated By',
+        render: (row) => (
+            <div className="flex flex-col gap-0.5">
+                <span className="font-semibold text-grey-text-strong">{row.updatedByName === '-' ? '-' : (row.updatedByName || '-')}</span>
+                {row.updatedByName && row.updatedByName !== '-' ? (
+                    <span className="text-xs text-grey-muted">
+                        {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                    </span>
+                ) : null}
+            </div>
+        ),
+    }
   ];
+
+  if (canUpdate || canDelete) {
+      columns.push({
+          key: 'actions',
+          label: 'Action',
+          type: 'action',
+          align: 'center',
+          onClick: (row, e) => {
+              const rect = e.currentTarget.getBoundingClientRect();
+              const dropdownHeight = 85;
+              const spaceBelow = window.innerHeight - rect.bottom;
+              
+              let yPos = rect.bottom + window.scrollY;
+              if (spaceBelow < dropdownHeight) {
+                  yPos = rect.top + window.scrollY - dropdownHeight;
+              }
+              
+              setDropdownState({
+                  row,
+                  x: rect.right - 128,
+                  y: yPos,
+              });
+          },
+      });
+  }
 
   const kpis = [
     { label: 'Total Boxes', value: kpiData?.totalBoxes || 0, tone: 'info', hint: 'Boxes in warehouse' },
@@ -200,7 +223,7 @@ export default function Stock() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
-              Stock
+              Godown
             </h1>
             <p className="mt-1 text-sm leading-snug text-grey-muted">
               Manage your warehouse boxes, sections, and trays
@@ -210,15 +233,15 @@ export default function Stock() {
             <Button
               variant="primary"
               className="w-full sm:w-auto shrink-0"
-              onClick={() => router.push('/inventory/stock/create')}
+              onClick={() => router.push('/inventory/godown/create')}
               icon={Plus}
-              text="Add Stock"
+              text="Add Godown"
             />
           )}
         </div>
 
         {/* KPIs */}
-        <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Stock KPIs">
+        <section className="grid w-full grid-cols-2 gap-2 lg:grid-cols-4" aria-label="Godown KPIs">
           {kpis.map((kpi) => {
             const toneBar = {
               neutral: 'bg-primary',
@@ -249,7 +272,7 @@ export default function Stock() {
         <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Input
-              id="stock-search-input"
+              id="godown-search-input"
               ref={searchInputRef}
               type="text"
               startIcon={Search}
@@ -260,11 +283,11 @@ export default function Stock() {
             />
           </div>
           <KeyboardShortcutBar
-            onAdd={canCreate ? () => setAddOpen(true) : undefined}
-            onEdit={canUpdate ? (item) => { setSelectedBox(item); setEditOpen(true); } : undefined}
+            onAdd={canCreate ? () => router.push('/inventory/godown/create') : undefined}
+            onEdit={canUpdate ? (item) => router.push(`/inventory/godown/edit/${item.id}`) : undefined}
             onDelete={canDelete ? (item) => { setSelectedBox(item); setDeleteOpen(true); } : undefined}
             onRefresh={() => { fetchBoxes(); fetchKpis(); }}
-            searchId="stock-search-input"
+            searchId="godown-search-input"
             pageNo={pageNo}
             totalPages={totalPages}
             selectedItem={boxesData[selectedRowIndex]}
@@ -295,14 +318,46 @@ export default function Stock() {
         />
       </div>
 
+      {dropdownState && (
+        <div
+          className="absolute z-50 bg-white border border-grey-border shadow-lg rounded-md py-1 w-32 flex flex-col"
+          style={{ top: dropdownState.y, left: dropdownState.x }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          {canUpdate && (
+            <button
+              className="text-left px-4 py-2 text-sm text-grey-text hover:bg-grey-bg hover:text-grey-text-strong transition-colors flex items-center gap-2"
+              onClick={() => {
+                router.push(`/inventory/godown/edit/${dropdownState.row.id}`);
+                setDropdownState(null);
+              }}
+            >
+              <Pencil size={14} /> Edit
+            </button>
+          )}
+          {canDelete && (
+            <button
+              className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
+              onClick={() => {
+                setSelectedBox(dropdownState.row);
+                setDeleteOpen(true);
+                setDropdownState(null);
+              }}
+            >
+              <Trash2 size={14} /> Delete
+            </button>
+          )}
+        </div>
+      )}
 
       <DeleteModal
-        isOpen={deleteOpen}
+        open={deleteOpen}
         onClose={() => { setDeleteOpen(false); setSelectedBox(null); }}
         onConfirm={handleDelete}
         title="Delete Box"
-        message={`Are you sure you want to delete the box "${selectedBox?.name}"? This action cannot be undone.`}
-        itemName={selectedBox?.name}
+        item={selectedBox}
+        itemNameKey="name"
+        itemType="box"
       />
     </>
   );
