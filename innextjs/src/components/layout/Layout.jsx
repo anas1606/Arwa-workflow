@@ -22,7 +22,8 @@ export function Layout({ children }) {
     { path: '/inventory/packaging', module: 'packaging' },
     { path: '/inventory/godown', module: 'godown' },
     { path: '/inventory/stock', module: 'stock' },
-    { path: '/users', module: 'users', fallbackModule: 'security_roles' }
+    { path: '/users', module: 'users', fallbackModule: 'security_roles' },
+    { path: '/settings', module: 'settings' }
   ];
 
   const matchedRoute = ROUTE_PERMISSIONS.find(route => router.pathname === route.path || router.pathname.startsWith(route.path + '/'));

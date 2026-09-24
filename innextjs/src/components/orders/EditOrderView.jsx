@@ -136,13 +136,22 @@ export default function EditOrderView() {
     if (idx === 0) return !!customer && !!dueDate && !!priority;
     if (idx === 1) return lines.length > 0;
     if (idx === 2) {
-      return lines.every(l => 
-        l.specs?.bodyDesignId && 
-        l.specs?.colourId && 
-        l.specs?.brandId &&
-        l.specs?.stickerId &&
-        (l.specs?.packingType === 'CUSTOMIZE' || l.specs?.packagingId)
-      );
+      return lines.every(l => {
+        const isAccessoriesValid = (!l.specs?.accessoriesType || l.specs?.accessoriesType === 'STANDARD') ||
+          (l.specs?.accessoriesType === 'CUSTOMIZE' && l.specs?.accessoriesNote && l.specs.accessoriesNote.replace(/<[^>]*>?/gm, '').trim() !== '');
+          
+        const isPackingValid = (!l.specs?.packingType || l.specs?.packingType === 'STANDARD') ? !!l.specs?.packagingId :
+          (l.specs?.packingType === 'CUSTOMIZE' && l.specs?.packingNote && l.specs.packingNote.replace(/<[^>]*>?/gm, '').trim() !== '');
+
+        return !!(
+          l.specs?.bodyDesignId &&
+          l.specs?.colourId &&
+          l.specs?.brandId &&
+          l.specs?.stickerId &&
+          isAccessoriesValid &&
+          isPackingValid
+        );
+      });
     }
     if (idx === 3) return true;
     return true;
@@ -151,6 +160,7 @@ export default function EditOrderView() {
   const canProceed = () => isStepValid(stepIndex);
 
   const handleNext = async () => {
+    if (!canProceed()) return;
     if (stepIndex < WIZARD_STEPS.length - 1) {
       setStepIndex(s => s + 1);
     } else {
@@ -169,12 +179,12 @@ export default function EditOrderView() {
             bodyDesignId: l.specs.bodyDesignId || undefined,
             colourId: l.specs.colourId || undefined,
             brandId: l.specs.brandId || undefined,
-            stickerId: l.specs.stickerId || undefined,
+            stickerId: l.specs.stickerId === 'default' ? undefined : (l.specs.stickerId || undefined),
             accessoriesType: l.specs.accessoriesType || 'STANDARD',
             accessoriesNote: l.specs.accessoriesNote || undefined,
             packingType: l.specs.packingType || 'STANDARD',
             packingNote: l.specs.packingNote || undefined,
-            packagingId: l.specs.packagingId || undefined
+            packagingId: l.specs.packagingId === 'default' ? undefined : (l.specs.packagingId || undefined)
           }))
         };
         const res = await updateOrderApi(id, payload);

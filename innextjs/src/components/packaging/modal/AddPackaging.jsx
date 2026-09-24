@@ -5,7 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { toast } from 'sonner';
-import { createPackagingApi, getProductsApi } from '@/lib/fetcher';
+import { createPackagingApi, getCustomersApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -20,7 +20,7 @@ function getModalRoot() {
 
 export default function AddPackaging({ open, onClose, onAdd }) {
   const [name, setName] = useState('');
-  const [product, setProduct] = useState(null);
+  const [customer, setCustomer] = useState(null);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -44,22 +44,22 @@ export default function AddPackaging({ open, onClose, onAdd }) {
     };
   }, [open, shouldRender]);
 
-  const loadProductOptions = async (inputValue) => {
+  const loadCustomerOptions = async (inputValue) => {
     try {
-      const res = await getProductsApi(1, 20, inputValue, 'ACTIVE');
+      const res = await getCustomersApi(1, 20, inputValue, 'ALL', true);
       if (res.data && res.data.success) {
-        return res.data.data.data.map(p => ({ label: p.name, value: p.id }));
+        return res.data.data.data.map(c => ({ label: c.name, value: c.id }));
       }
       return [];
     } catch (error) {
-      console.error('Failed to fetch products', error);
+      console.error('Failed to fetch customers', error);
       return [];
     }
   };
 
   const reset = () => {
     setName('');
-    setProduct(null);
+    setCustomer(null);
     setError(null);
   };
 
@@ -96,7 +96,7 @@ export default function AddPackaging({ open, onClose, onAdd }) {
   const submit = async (e) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    if (!trimmedName || !product) {
+    if (!trimmedName || !customer) {
       setError('All fields are required.');
       return;
     }
@@ -106,7 +106,7 @@ export default function AddPackaging({ open, onClose, onAdd }) {
     try {
       const payload = {
         name: trimmedName,
-        productId: product.value,
+        customerId: customer.value,
       };
       const res = await createPackagingApi(payload);
       if (res.data && res.data.success) {
@@ -170,13 +170,13 @@ export default function AddPackaging({ open, onClose, onAdd }) {
               autoFocus
             />
             <AsyncSelectInput
-              id="packaging-product"
-              label={<span>Product <span className="text-danger-main">*</span></span>}
-              value={product}
-              onChange={(selected) => setProduct(selected)}
-              loadOptions={loadProductOptions}
+              id="packaging-customer"
+              label={<span>Customer <span className="text-danger-main">*</span></span>}
+              value={customer}
+              onChange={(selected) => setCustomer(selected)}
+              loadOptions={loadCustomerOptions}
               defaultOptions={true}
-              placeholder="Select a product"
+              placeholder="Select a customer"
             />
             {error ? (
               <p className="text-sm font-medium text-danger-dark" role="alert">

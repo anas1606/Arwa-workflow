@@ -25,6 +25,7 @@ model Customer {
   deletedBy  String?   @map("deleted_by")
   brands     Brand[]
   orders     Order[]
+  packagings Packaging[]
 }
 
 model Brand {
@@ -109,12 +110,12 @@ model Product {
   deletedAt         DateTime?           @map("deleted_at")
   deletedBy         String?             @map("deleted_by")
   lowStockThreshold Float               @default(10) @map("low_stock_threshold")
-  packagings        Packaging[]
   category          Category?           @relation(fields: [categoryId], references: [id])
   unit              Unit?               @relation(fields: [unitId], references: [id])
   bodyDesigns       ProductBodyDesign[]
   colours           ProductColour[]
   orderLines        OrderLine[]
+  stocks            Stock[]
 }
 
 model User {
@@ -159,6 +160,19 @@ model Module {
   permissions RolePermission[]
 }
 
+model Setting {
+  id         String    @id @default(uuid())
+  key        String    @unique
+  value      String
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+}
+
 model RolePermission {
   id               String       @id @default(uuid())
   security_role_id String
@@ -196,7 +210,7 @@ model ProductColour {
 model Packaging {
   id         String    @id @default(uuid())
   name       String
-  productId  String    @map("product_id")
+  customerId String    @map("customer_id")
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
   updatedAt  DateTime  @updatedAt @map("updated_at")
@@ -204,7 +218,7 @@ model Packaging {
   is_deleted Boolean   @default(false)
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
-  product    Product   @relation(fields: [productId], references: [id])
+  customer   Customer  @relation(fields: [customerId], references: [id])
   orderLines OrderLine[]
 }
 
@@ -341,3 +355,19 @@ model Tray {
   section    Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
+
+model Stock {
+  id         String    @id @default(uuid())
+  productId  String    @map("product_id")
+  quantity   Float     @default(0)
+
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+
+  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+}

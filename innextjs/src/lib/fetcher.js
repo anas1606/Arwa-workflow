@@ -2,6 +2,15 @@ import { fetchData, fetchDataWithHeaders, postData, postDataWithHeaders, userput
 import axios from "axios";
 
 // customer
+export const getSettingsListApi = async (page = 1, limit = 10, search = '') => {
+  const params = { page, limit };
+  if (search) params.search = search;
+  return await fetchDataWithParams('settings', params);
+};
+export const createSettingApi = (payload) => postData('settings', payload);
+export const updateSettingApi = async (id, payload) => await putData(`settings/${id}`, payload);
+export const deleteSettingApi = (id) => deleteData(`settings/${id}`);
+export const getSettingByIdApi = async (id) => await fetchData(`settings/${id}`);
 export const getCustomersApi = async (page = 1, limit = 10, search = '', region = '', minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
@@ -179,10 +188,10 @@ export const deleteSecurityRoleApi = (id, deletedBy = null) => deleteData(`secur
 export const getModulesApi = async () => fetchData('module');
 
 // packaging
-export const getPackagingsApi = async (page = 1, limit = 10, search = '', productId = 'ALL', minimal = false) => {
+export const getPackagingsApi = async (page = 1, limit = 10, search = '', customerId = 'ALL', minimal = false) => {
   const params = { page, limit };
   if (search) params.search = search;
-  if (productId && productId !== 'ALL') params.productId = productId;
+  if (customerId && customerId !== 'ALL') params.customerId = customerId;
   if (minimal) params.minimal = true;
   return await fetchDataWithParams('packaging', params);
 };

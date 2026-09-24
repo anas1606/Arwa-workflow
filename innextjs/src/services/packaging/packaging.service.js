@@ -5,8 +5,18 @@ export const createPackaging = async (data, userId = null) => {
         const result = await prisma.packaging.create({
             data: {
                 name: data.name,
-                productId: data.productId,
+                customerId: data.customerId,
                 createdBy: userId || data.createdBy || null,
+            },
+            select: {
+                id: true,
+                name: true,
+                customerId: true,
+                createdAt: true,
+                createdBy: true,
+                updatedAt: true,
+                updatedBy: true,
+                customer: { select: { id: true, name: true } }
             }
         });
         return { success: true, data: result };
@@ -16,7 +26,7 @@ export const createPackaging = async (data, userId = null) => {
     }
 };
 
-export const getAllPackagings = async (page = 1, limit = 10, search = '', productId = 'ALL', minimal = false) => {
+export const getAllPackagings = async (page = 1, limit = 10, search = '', customerId = 'ALL', minimal = false) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -28,8 +38,8 @@ export const getAllPackagings = async (page = 1, limit = 10, search = '', produc
             ];
         }
 
-        if (productId && productId !== 'ALL') {
-            where.productId = productId;
+        if (customerId && customerId !== 'ALL') {
+            where.customerId = customerId;
         }
 
         const queryArgs = {
@@ -37,10 +47,17 @@ export const getAllPackagings = async (page = 1, limit = 10, search = '', produc
         };
 
         if (minimal) {
-            queryArgs.select = { id: true, name: true, productId: true };
+            queryArgs.select = { id: true, name: true, customerId: true };
         } else {
-            queryArgs.include = {
-                product: {
+            queryArgs.select = {
+                id: true,
+                name: true,
+                customerId: true,
+                createdAt: true,
+                createdBy: true,
+                updatedAt: true,
+                updatedBy: true,
+                customer: {
                     select: {
                         id: true,
                         name: true,
@@ -96,8 +113,15 @@ export const getPackagingById = async (id) => {
     try {
         const packaging = await prisma.packaging.findFirst({
             where: { id, is_deleted: false },
-            include: {
-                product: {
+            select: {
+                id: true,
+                name: true,
+                customerId: true,
+                createdAt: true,
+                createdBy: true,
+                updatedAt: true,
+                updatedBy: true,
+                customer: {
                     select: {
                         id: true,
                         name: true,
@@ -128,8 +152,18 @@ export const updatePackaging = async (data, userId = null) => {
             where: { id: data.id },
             data: {
                 name: data.name !== undefined ? data.name : existingPackaging.name,
-                productId: data.productId !== undefined ? data.productId : existingPackaging.productId,
+                customerId: data.customerId !== undefined ? data.customerId : existingPackaging.customerId,
                 updatedBy: userId || data.updatedBy || null,
+            },
+            select: {
+                id: true,
+                name: true,
+                customerId: true,
+                createdAt: true,
+                createdBy: true,
+                updatedAt: true,
+                updatedBy: true,
+                customer: { select: { id: true, name: true } }
             }
         });
         return { success: true, data: result };
@@ -155,6 +189,10 @@ export const deletePackaging = async (id, deletedBy) => {
                 is_deleted: true,
                 deletedAt: new Date(),
                 deletedBy: deletedBy || null,
+            },
+            select: {
+                id: true,
+                name: true
             }
         });
         return { success: true, data: result };

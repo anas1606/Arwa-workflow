@@ -2,7 +2,7 @@ import React, { useState, useEffect, useId } from 'react';
 import { createPortal } from 'react-dom';
 import { X, Printer, Pencil, Box, Package, User, Hash, Calendar, Loader2, Layers, Sparkles, AlertTriangle } from 'lucide-react';
 import Button from '@/common/buttons/Button';
-import { getOrderByIdApi } from '@/lib/fetcher';
+import { getOrderByIdApi, getSettingsListApi } from '@/lib/fetcher';
 import clsx from 'clsx';
 import { StatusBadge, OrderTypeBadge } from '../badges';
 
@@ -28,6 +28,22 @@ export default function OrderDetailsModal({
   const [isAnimatingOut, setIsAnimatingOut] = useState(false);
   const [fullOrder, setFullOrder] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [defaultStickerLabel, setDefaultStickerLabel] = useState('Loading default sticker...');
+  const [defaultPackagingLabel, setDefaultPackagingLabel] = useState('Loading default packaging...');
+
+  useEffect(() => {
+    if (open) {
+      getSettingsListApi(1, 100).then(res => {
+        if (res.data?.success) {
+          const settings = res.data.data.data;
+          const sLabel = settings.find(s => s.key === 'DEFAULT_STICKER_LABEL')?.value;
+          const pLabel = settings.find(s => s.key === 'DEFAULT_PACKAGING_LABEL')?.value;
+          setDefaultStickerLabel(sLabel || 'Arwa Default Sticker');
+          setDefaultPackagingLabel(pLabel || 'Standard');
+        }
+      });
+    }
+  }, [open]);
 
   useEffect(() => {
     let timer;
@@ -187,7 +203,7 @@ export default function OrderDetailsModal({
                              {line.brand && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Brand:</span>{line.brand.brandname || line.brand.name}</span>}
                              {line.sticker
                                ? <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{line.sticker.name}</span>
-                               : <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>Arwa Default Sticker</span>
+                               : <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{defaultStickerLabel}</span>
                              }
                           </div>
                           
@@ -206,11 +222,11 @@ export default function OrderDetailsModal({
                               {/* Packing Badge */}
                               {line.packingType === 'CUSTOMIZE' ? (
                                 <span className="badge bg-primary/10 text-primary-dark border border-primary/20">
-                                  <Sparkles className="h-3 w-3 shrink-0" aria-hidden /> Custom Packing
+                                  <Sparkles className="h-3 w-3 shrink-0" aria-hidden /> Custom Packing {line.packaging?.name ? `(${line.packaging.name})` : `(${defaultPackagingLabel})`}
                                 </span>
                               ) : (
                                 <span className="badge bg-grey-surface text-grey-text-strong border border-grey-border">
-                                  <Layers className="h-3 w-3 shrink-0" aria-hidden /> Packing: {line.packaging?.name || 'Standard'}
+                                  <Layers className="h-3 w-3 shrink-0" aria-hidden /> Packing: {line.packaging?.name || defaultPackagingLabel}
                                 </span>
                               )}
                             </div>

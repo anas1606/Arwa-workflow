@@ -17,7 +17,8 @@ import {
   Ruler,
   User,
   LogOut,
-  Users
+  Users,
+  Settings
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -48,6 +49,7 @@ const masterNav = [
 
 const adminNav = [
   { to: '/users', label: 'Users & Roles', icon: Users, moduleKey: 'users', fallbackModuleKey: 'security_roles' },
+  { to: '/settings', label: 'Settings', icon: Settings, moduleKey: 'settings' },
 ];
 
 const allNav = [
