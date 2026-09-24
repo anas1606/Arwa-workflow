@@ -31,6 +31,22 @@ function ProductOrderTable({ productGroup, columns, query, activeFilters, onInit
     fetchProductOrders();
   }, [fetchProductOrders]);
 
+  const productSpecificColumns = React.useMemo(() => {
+    return columns.map(col => {
+      if (['orderType', 'qty', 'products'].includes(col.key)) {
+        return {
+          ...col,
+          render: (row) => {
+            const productLines = (row.orderLines || []).filter(l => l.product?.id === productGroup.id || l.productId === productGroup.id);
+            const specificType = productLines.length > 0 ? productLines[0].orderType : row.orderType;
+            return col.render({ ...row, orderType: specificType, orderLines: productLines });
+          }
+        };
+      }
+      return col;
+    });
+  }, [columns, productGroup.id]);
+
   return (
     <section className="card-panel !p-0 w-full overflow-hidden bg-white shadow-sm border border-grey-border rounded-lg">
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-grey-border/60 bg-grey-bg/50 px-4 py-3">
@@ -56,7 +72,7 @@ function ProductOrderTable({ productGroup, columns, query, activeFilters, onInit
         </div>
       </div>
       <CommonTable
-        columns={columns}
+        columns={productSpecificColumns}
         data={orders}
         isLoading={isLoading}
         emptyState="No orders for this product."

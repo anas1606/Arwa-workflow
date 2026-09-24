@@ -10,7 +10,7 @@ import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShor
 const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false });
 import 'react-quill-new/dist/quill.snow.css';
 
-import { getBrandsApi, getStickersApi, getPackagingsApi, getBodyDesignsApi, getColoursApi } from '@/lib/fetcher';
+import { getBrandsApi, getStickersApi, getStickersByBrandIdApi, getPackagingsApi, getBodyDesignsApi, getColoursApi, getSettingsListApi } from '@/lib/fetcher';
 
 export default function SpecsStep({
   customer,
@@ -21,6 +21,34 @@ export default function SpecsStep({
   setActiveSpecLineIndex
 }) {
   const activeLine = lines[activeSpecLineIndex];
+
+  // Global Settings for defaults
+  const [defaultStickerLabel, setDefaultStickerLabel] = React.useState('Loading default sticker...');
+  const [defaultPackagingLabel, setDefaultPackagingLabel] = React.useState('Loading default packaging...');
+
+  useEffect(() => {
+    const fetchSettings = async () => {
+      try {
+        const res = await getSettingsListApi(1, 100);
+        if (res.data?.success) {
+          const settings = res.data.data.data;
+          const stickerSetting = settings.find(s => s.key === 'DEFAULT_STICKER_LABEL');
+          const packagingSetting = settings.find(s => s.key === 'DEFAULT_PACKAGING_LABEL');
+          
+          setDefaultStickerLabel(stickerSetting ? stickerSetting.value : 'Error: Sticker Default Missing');
+          setDefaultPackagingLabel(packagingSetting ? packagingSetting.value : 'Error: Packaging Default Missing');
+        } else {
+          setDefaultStickerLabel('Error: Failed to load settings');
+          setDefaultPackagingLabel('Error: Failed to load settings');
+        }
+      } catch (err) { 
+        console.error('Failed to fetch settings:', err); 
+        setDefaultStickerLabel('Error: Failed to load settings');
+        setDefaultPackagingLabel('Error: Failed to load settings');
+      }
+    };
+    fetchSettings();
+  }, []);
 
   const loadBodyDesignOptions = React.useCallback(async (inputValue, productId) => {
     if (!productId) return [];
@@ -56,26 +84,31 @@ export default function SpecsStep({
   }, []);
 
   const loadStickerOptions = React.useCallback(async (inputValue, brandId) => {
-    if (!brandId) return [{ label: 'Arwa Default Sticker', value: 'default' }];
+    if (!brandId) return [{ label: defaultStickerLabel, value: 'default' }];
     try {
-      const res = await getStickersApi(1, 10, inputValue, brandId);
+      const res = await getStickersByBrandIdApi(brandId);
       if (res.data?.success) {
-        return [{ label: 'Arwa Default Sticker', value: 'default' }, ...(res.data.data.data || []).map(s => ({ label: s.name, value: s.id }))];
+        let stickers = res.data.data || [];
+        if (inputValue) {
+          stickers = stickers.filter(s => s.name.toLowerCase().includes(inputValue.toLowerCase()));
+        }
+        return [{ label: defaultStickerLabel, value: 'default' }, ...stickers.map(s => ({ label: s.name, value: s.id }))];
       }
     } catch (err) { console.error(err); }
-    return [{ label: 'Arwa Default Sticker', value: 'default' }];
-  }, []);
+    return [{ label: defaultStickerLabel, value: 'default' }];
+  }, [defaultStickerLabel]);
 
-  const loadPackagingOptions = React.useCallback(async (inputValue, productId) => {
-    if (!productId) return [];
+  const loadPackagingOptions = React.useCallback(async (inputValue, customerId) => {
+    if (!customerId) return [{ label: defaultPackagingLabel, value: 'default' }];
     try {
-      const res = await getPackagingsApi(1, 10, inputValue, productId, true);
+      const res = await getPackagingsApi(1, 10, inputValue, customerId, true);
       if (res.data?.success) {
-        return (res.data.data.data || []).map(p => ({ label: p.name, value: p.id }));
+        let pkgs = (res.data.data.data || []).map(p => ({ label: p.name, value: p.id }));
+        return [{ label: defaultPackagingLabel, value: 'default' }, ...pkgs];
       }
     } catch (err) { console.error(err); }
-    return [];
-  }, []);
+    return [{ label: defaultPackagingLabel, value: 'default' }];
+  }, [defaultPackagingLabel]);
 
   const isLineComplete = (line) => {
     const isAccessoriesValid = (!line.specs?.accessoriesType || line.specs?.accessoriesType === 'STANDARD') ||
@@ -108,6 +141,10 @@ export default function SpecsStep({
         stickerIdName: prevLine.specs.stickerIdName,
         accessoriesType: prevLine.specs.accessoriesType,
         accessoriesNote: prevLine.specs.accessoriesNote,
+        packingType: prevLine.specs.packingType,
+        packingNote: prevLine.specs.packingNote,
+        packagingId: prevLine.specs.packagingId,
+        packagingIdName: prevLine.specs.packagingIdName,
       }
     };
     setLines(newLines);
@@ -127,6 +164,10 @@ export default function SpecsStep({
           stickerIdName: activeLineSpecs.stickerIdName,
           accessoriesType: activeLineSpecs.accessoriesType,
           accessoriesNote: activeLineSpecs.accessoriesNote,
+          packingType: activeLineSpecs.packingType,
+          packingNote: activeLineSpecs.packingNote,
+          packagingId: activeLineSpecs.packagingId,
+          packagingIdName: activeLineSpecs.packagingIdName,
         }
       };
     });
@@ -350,7 +391,7 @@ export default function SpecsStep({
                         onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'stickerId', opt?.value || '', opt ? [opt] : [])}
                         loadOptions={(inputValue) => loadStickerOptions(inputValue, activeLine?.specs?.brandId)}
                         defaultOptions={true}
-                        key={`sticker-${activeLine?.specs?.brandId}`}
+                        key={`sticker-${activeLine?.specs?.brandId}-${defaultStickerLabel}`}
                       />
                     </div>
                 </div>
@@ -378,18 +419,12 @@ export default function SpecsStep({
                       ))}
                     </div>
                     {activeLine?.specs?.accessoriesType === 'CUSTOMIZE' && (
-                      <div className="mt-3 rounded-lg bg-white overflow-hidden [&_.ql-toolbar]:bg-grey-bg/50 [&_.ql-toolbar]:border-grey-border/60 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-grey-border/60 [&_.ql-container]:rounded-b-lg [&_.ql-editor]:min-h-[80px] [&_.ql-editor]:text-sm shadow-sm border border-grey-border/60">
-                        <ReactQuill
-                          theme="snow"
+                      <div className="mt-3">
+                        <textarea
+                          className="w-full text-sm border border-grey-border/60 rounded-lg p-3 min-h-[80px] bg-white text-grey-text-strong placeholder:text-grey-muted focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
                           value={activeLine?.specs?.accessoriesNote || ''}
-                          onChange={value => handleUpdateSpec(activeSpecLineIndex, 'accessoriesNote', value)}
-                          placeholder={`Describe accessories customisation...`}
-                          modules={{
-                            toolbar: [
-                              ['bold', 'italic'],
-                              [{ 'list': 'bullet' }]
-                            ],
-                          }}
+                          onChange={e => handleUpdateSpec(activeSpecLineIndex, 'accessoriesNote', e.target.value)}
+                          placeholder="Describe accessories customisation..."
                         />
                       </div>
                     )}
@@ -413,18 +448,24 @@ export default function SpecsStep({
                       ))}
                     </div>
                     {activeLine?.specs?.packingType === 'CUSTOMIZE' ? (
-                      <div className="rounded-lg bg-white overflow-hidden [&_.ql-toolbar]:bg-grey-bg/50 [&_.ql-toolbar]:border-grey-border/60 [&_.ql-toolbar]:rounded-t-lg [&_.ql-container]:border-grey-border/60 [&_.ql-container]:rounded-b-lg [&_.ql-editor]:min-h-[80px] [&_.ql-editor]:text-sm shadow-sm">
-                        <ReactQuill
-                          theme="snow"
+                      <div className="flex flex-col gap-3">
+                        <div>
+                          <AsyncSelectInput
+                            className="!text-sm bg-white"
+                            value={activeLine?.specs?.packagingId ? { label: activeLine?.specs?.packagingIdName || 'Selected', value: activeLine?.specs?.packagingId } : null}
+                            onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'packagingId', opt?.value || '', opt ? [opt] : [])}
+                            loadOptions={(inputValue) => loadPackagingOptions(inputValue, customer?.id)}
+                            defaultOptions={true}
+                            isClearable={true}
+                            placeholder="Select Package (Optional)"
+                            key={`pkg-cust-${customer?.id}-${defaultPackagingLabel}`}
+                          />
+                        </div>
+                        <textarea
+                          className="w-full text-sm border border-grey-border/60 rounded-lg p-3 min-h-[80px] bg-white text-grey-text-strong placeholder:text-grey-muted focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary shadow-sm"
                           value={activeLine?.specs?.packingNote || ''}
-                          onChange={value => handleUpdateSpec(activeSpecLineIndex, 'packingNote', value)}
-                          placeholder={`Describe packing customisation...`}
-                          modules={{
-                            toolbar: [
-                              ['bold', 'italic'],
-                              [{ 'list': 'bullet' }]
-                            ],
-                          }}
+                          onChange={e => handleUpdateSpec(activeSpecLineIndex, 'packingNote', e.target.value)}
+                          placeholder="Describe packing customisation..."
                         />
                       </div>
                     ) : (
@@ -434,10 +475,11 @@ export default function SpecsStep({
                           className="!text-sm bg-white"
                           value={activeLine?.specs?.packagingId ? { label: activeLine?.specs?.packagingIdName || 'Selected', value: activeLine?.specs?.packagingId } : null}
                           onChange={opt => handleUpdateSpec(activeSpecLineIndex, 'packagingId', opt?.value || '', opt ? [opt] : [])}
-                          loadOptions={(inputValue) => loadPackagingOptions(inputValue, activeLine?.model?.id)}
+                          loadOptions={(inputValue) => loadPackagingOptions(inputValue, customer?.id)}
                           defaultOptions={true}
+                          isClearable={true}
                           placeholder="Select Standard Package"
-                          key={`pkg-${activeLine?.model?.id}`}
+                          key={`pkg-${customer?.id}-${defaultPackagingLabel}`}
                         />
                       </div>
                     )}

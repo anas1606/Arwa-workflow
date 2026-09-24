@@ -13,6 +13,7 @@ export default function AsyncSelectInput({
   placeholder = 'Select...',
   value,
   onChange,
+  isClearable = true,
   ...props
 }) {
   const generatedId = useId();
@@ -133,6 +134,7 @@ export default function AsyncSelectInput({
         onInputChange={handleInputChange}
         menuPortalTarget={typeof document !== 'undefined' ? document.body : null}
         menuPosition="fixed"
+        isClearable={isClearable}
         {...props}
       />
       {error && <span className="mt-1 block text-xs font-semibold text-danger-main">{error}</span>}

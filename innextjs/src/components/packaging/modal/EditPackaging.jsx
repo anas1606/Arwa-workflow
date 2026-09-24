@@ -5,7 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { toast } from 'sonner';
-import { updatePackagingApi, getProductsApi } from '@/lib/fetcher';
+import { updatePackagingApi, getCustomersApi, getPackagingByIdApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -20,9 +20,10 @@ function getModalRoot() {
 
 export default function EditPackaging({ open, onClose, onEdit, packaging }) {
   const [name, setName] = useState('');
-  const [product, setProduct] = useState(null);
+  const [customer, setCustomer] = useState(null);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   const titleId = useId();
   const [shouldRender, setShouldRender] = useState(false);
@@ -34,14 +35,31 @@ export default function EditPackaging({ open, onClose, onEdit, packaging }) {
       setShouldRender(true);
       setIsAnimatingOut(false);
       if (packaging) {
-        setName(packaging.name || '');
-        if (packaging.product) {
-          setProduct({ label: packaging.product.name, value: packaging.product.id });
-        } else if (packaging.productId) {
-          setProduct({ label: 'Unknown Product', value: packaging.productId });
-        } else {
-          setProduct(null);
-        }
+        const fetchPackaging = async () => {
+          setIsLoading(true);
+          try {
+            const res = await getPackagingByIdApi(packaging.id);
+            if (res.data && res.data.success) {
+              const data = res.data.data;
+              setName(data.name || '');
+              if (data.customer) {
+                setCustomer({ label: data.customer.name, value: data.customer.id });
+              } else if (data.customerId) {
+                setCustomer({ label: 'Unknown Customer', value: data.customerId });
+              } else {
+                setCustomer(null);
+              }
+            } else {
+              toast.error(res.data?.message || 'Failed to fetch packaging details');
+            }
+          } catch (e) {
+            console.error(e);
+            toast.error('Failed to load packaging details');
+          } finally {
+            setIsLoading(false);
+          }
+        };
+        fetchPackaging();
       }
     } else if (shouldRender) {
       setIsAnimatingOut(true);
@@ -54,15 +72,15 @@ export default function EditPackaging({ open, onClose, onEdit, packaging }) {
     };
   }, [open, shouldRender, packaging]);
 
-  const loadProductOptions = async (inputValue) => {
+  const loadCustomerOptions = async (inputValue) => {
     try {
-      const res = await getProductsApi(1, 20, inputValue, 'ACTIVE');
+      const res = await getCustomersApi(1, 20, inputValue, 'ALL', true);
       if (res.data && res.data.success) {
-        return res.data.data.data.map(p => ({ label: p.name, value: p.id }));
+        return res.data.data.data.map(c => ({ label: c.name, value: c.id }));
       }
       return [];
     } catch (error) {
-      console.error('Failed to fetch products', error);
+      console.error('Failed to fetch customers', error);
       return [];
     }
   };
@@ -100,7 +118,7 @@ export default function EditPackaging({ open, onClose, onEdit, packaging }) {
   const submit = async (e) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    if (!trimmedName || !product) {
+    if (!trimmedName || !customer) {
       setError('All fields are required.');
       return;
     }
@@ -110,7 +128,7 @@ export default function EditPackaging({ open, onClose, onEdit, packaging }) {
     try {
       const payload = {
         name: trimmedName,
-        productId: product.value,
+        customerId: customer.value,
       };
       const res = await updatePackagingApi(packaging.id, payload);
       if (res.data && res.data.success) {
@@ -163,35 +181,48 @@ export default function EditPackaging({ open, onClose, onEdit, packaging }) {
           </button>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
-          <form id="packaging-edit-form" className="flex flex-col gap-4" onSubmit={submit}>
-            <Input
-              type="text"
-              id="edit-packaging-name"
-              label={<span>Packaging name <span className="text-danger-main">*</span></span>}
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="e.g. Box"
-              autoFocus
-            />
-            <AsyncSelectInput
-              id="edit-packaging-product"
-              label={<span>Product <span className="text-danger-main">*</span></span>}
-              value={product}
-              onChange={(selected) => setProduct(selected)}
-              loadOptions={loadProductOptions}
-              defaultOptions={true}
-              placeholder="Select a product"
-            />
-            {error ? (
-              <p className="text-sm font-medium text-danger-dark" role="alert">
-                {error}
-              </p>
-            ) : null}
-          </form>
+          {isLoading ? (
+            <div className="flex flex-col gap-4 animate-pulse">
+              <div className="flex flex-col gap-2">
+                <div className="h-4 w-32 bg-grey-bg rounded"></div>
+                <div className="h-10 w-full bg-grey-bg rounded-md"></div>
+              </div>
+              <div className="flex flex-col gap-2">
+                <div className="h-4 w-28 bg-grey-bg rounded"></div>
+                <div className="h-10 w-full bg-grey-bg rounded-md"></div>
+              </div>
+            </div>
+          ) : (
+            <form id="packaging-edit-form" className="flex flex-col gap-4" onSubmit={submit}>
+              <Input
+                type="text"
+                id="edit-packaging-name"
+                label={<span>Packaging name <span className="text-danger-main">*</span></span>}
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="e.g. Box"
+                autoFocus
+              />
+              <AsyncSelectInput
+                id="edit-packaging-customer"
+                label={<span>Customer <span className="text-danger-main">*</span></span>}
+                value={customer}
+                onChange={(selected) => setCustomer(selected)}
+                loadOptions={loadCustomerOptions}
+                defaultOptions={true}
+                placeholder="Select a customer"
+              />
+              {error ? (
+                <p className="text-sm font-medium text-danger-dark" role="alert">
+                  {error}
+                </p>
+              ) : null}
+            </form>
+          )}
         </div>
         <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-grey-border px-4 py-3 sm:flex-row sm:justify-end">
-          <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" />
-          <Button variant="primary" type="submit" form="packaging-edit-form" className="flex-1" text={isSubmitting ? "Saving..." : "Save packaging"} disabled={isSubmitting} />
+          <Button variant="secondary" className="flex-1" onClick={handleClose} text="Cancel" disabled={isLoading} />
+          <Button variant="primary" type="submit" form="packaging-edit-form" className="flex-1" text={isSubmitting ? "Saving..." : "Save packaging"} disabled={isSubmitting || isLoading} />
         </div>
       </div>
     </div>,

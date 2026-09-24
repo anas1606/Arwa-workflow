@@ -137,7 +137,7 @@ export default function ReviewStep({
                       <div>
                         <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon mb-0.5">Packing</p>
                         <p className="text-sm font-bold text-grey-text-strong">
-                          {line.specs?.packingType === 'CUSTOMIZE' ? 'Customise' : (line.specs?.packagingIdName || 'Standard')}
+                          {line.specs?.packingType === 'CUSTOMIZE' ? `Customise ${line.specs?.packagingIdName ? `(${line.specs.packagingIdName})` : ''}` : (line.specs?.packagingIdName || 'Standard')}
                         </p>
                       </div>
                     </div>

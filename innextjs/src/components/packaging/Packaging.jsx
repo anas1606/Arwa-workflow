@@ -10,7 +10,7 @@ import EditPackaging from './modal/EditPackaging';
 import DeleteModal from '@/common/modal/DeleteModal';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { getPackagingsApi, deletePackagingApi, updatePackagingApi, getProductsApi } from '@/lib/fetcher';
+import { getPackagingsApi, deletePackagingApi, updatePackagingApi, getCustomersApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
@@ -19,7 +19,7 @@ export default function Packaging() {
   const [packagingsData, setPackagingsData] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
-  const [productFilter, setProductFilter] = useState(null);
+  const [customerFilter, setCustomerFilter] = useState(null);
   const searchInputRef = useRef(null);
   const filterSelectRef = useRef(null);
 
@@ -46,11 +46,11 @@ export default function Packaging() {
 
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
-  const loadProductOptions = async (inputValue) => {
+  const loadCustomerOptions = async (inputValue) => {
     try {
-      const res = await getProductsApi(1, 20, inputValue, 'ACTIVE');
+      const res = await getCustomersApi(1, 20, inputValue, 'ALL', true);
       if (res.data && res.data.success) {
-        return res.data.data.data.map(p => ({ label: p.name, value: p.id }));
+        return res.data.data.data.map(c => ({ label: c.name, value: c.id }));
       }
       return [];
     } catch (e) {
@@ -88,7 +88,7 @@ export default function Packaging() {
   const fetchPackagings = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getPackagingsApi(pageNo, pageSize, query, productFilter ? productFilter.value : 'ALL');
+      const response = await getPackagingsApi(pageNo, pageSize, query, customerFilter ? customerFilter.value : 'ALL');
       if (response.data && response.data.success) {
         setPackagingsData(response.data.data.data || []);
         setTotalItems(response.data.data.pagination?.total || 0);
@@ -104,7 +104,7 @@ export default function Packaging() {
     } finally {
       setIsLoading(false);
     }
-  }, [pageNo, pageSize, query, productFilter, refreshTrigger]);
+  }, [pageNo, pageSize, query, customerFilter, refreshTrigger]);
 
   useEffect(() => {
     fetchPackagings();
@@ -147,9 +147,9 @@ export default function Packaging() {
       ),
     },
     {
-      key: 'product',
-      label: 'PRODUCT NAME',
-      render: (row) => <span className="text-sm text-grey-text">{row.product?.name || '-'}</span>,
+      key: 'customer',
+      label: 'CUSTOMER NAME',
+      render: (row) => <span className="text-sm text-grey-text">{row.customer?.name || '-'}</span>,
     },
     {
       key: 'createdBy',
@@ -238,11 +238,11 @@ export default function Packaging() {
             />
             <div className="shrink-0 sm:w-56" ref={filterSelectRef} tabIndex={-1}>
               <AsyncSelectInput
-                value={productFilter}
-                onChange={(selected) => setProductFilter(selected)}
-                loadOptions={loadProductOptions}
+                value={customerFilter}
+                onChange={(selected) => setCustomerFilter(selected)}
+                loadOptions={loadCustomerOptions}
                 defaultOptions={true}
-                placeholder="All products"
+                placeholder="All customers"
                 isClearable={true}
               />
             </div>
