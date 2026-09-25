@@ -135,12 +135,30 @@ export default function OrderDetailsModal({
         
         {/* Body - Scrollable */}
         <div className="flex-1 overflow-y-auto p-6 flex flex-col gap-6 relative">
-          {loading && (
-             <div className="absolute inset-0 bg-white/50 backdrop-blur-sm z-10 flex items-center justify-center">
-               <Loader2 className="animate-spin text-primary" size={32} />
+          {loading ? (
+             <div className="flex flex-col gap-6 animate-pulse">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                  {[1, 2, 3, 4].map(i => (
+                    <div key={i} className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col justify-center gap-2 h-[88px]">
+                      <div className="h-3 w-20 bg-gray-200 rounded"></div>
+                      <div className="h-5 w-28 bg-gray-200 rounded"></div>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="bg-white rounded-xl border border-grey-surface/60 shadow-sm overflow-hidden">
+                  <div className="p-4 border-b border-grey-surface/60 bg-grey-bg/30">
+                    <div className="h-4 w-24 bg-gray-200 rounded"></div>
+                  </div>
+                  <div className="p-4 flex flex-col gap-4">
+                     <div className="h-16 w-full bg-gray-200 rounded"></div>
+                     <div className="h-16 w-full bg-gray-200 rounded"></div>
+                     <div className="h-16 w-full bg-gray-200 rounded"></div>
+                  </div>
+                </div>
              </div>
-          )}
-          
+          ) : (
+            <>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
               <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><User size={14}/> Customer</p>
@@ -263,6 +281,8 @@ export default function OrderDetailsModal({
               </table>
             </div>
           </div>
+            </>
+          )}
         </div>
         
         {/* Footer - Fixed */}

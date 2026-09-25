@@ -312,3 +312,20 @@ export const deleteTrayApi = (id, deletedBy = null) => deleteData(`tray/${id}`, 
 
 // stock
 export const updateStockApi = (payload) => putData('stock', payload);
+
+// BOM
+export const getBomsApi = async (page = 1, limit = 10, search = '') => {
+  return await fetchDataWithParams('bom', { page, limit, search });
+};
+
+export const getBomByIdApi = async (id) => {
+  return await fetchData(`bom/${id}`);
+};
+
+export const createBomApi = (payload) => postData("bom", payload);
+
+export const updateBomApi = async (id, payload) => {
+  return await putData(`bom/${id}`, { id, ...payload });
+};
+
+export const deleteBomApi = (id, deletedBy = null) => deleteData(`bom/${id}`, { data: { deletedBy } });
