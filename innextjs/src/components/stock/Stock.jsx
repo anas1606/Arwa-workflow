@@ -4,12 +4,13 @@ import { ChevronRight, ChevronDown, ChevronLeft, Plus, Search } from 'lucide-rea
 import CommonTable from '@/common/table/CommonTable';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
-import { KeyboardShortcutBar } from '@/common/KeyboardShortcut';
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 import { usePermission } from '@/hooks/usePermission';
+import UpdateStock from './modal/UpdateStock';
 
 export default function Stock() {
-    const { canCreate } = usePermission('stock');
-
+    const { canUpdate } = usePermission('stock');
+    const { canUpdate: canUpdateProduct } = usePermission('products');
     const [categoriesData, setCategoriesData] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [expandedNodes, setExpandedNodes] = useState(new Set());
@@ -22,6 +23,9 @@ export default function Stock() {
     const [totalProducts, setTotalProducts] = useState(0);
 
     const [loadedCounts, setLoadedCounts] = useState({});
+    
+    const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+    const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
     const loadInitialData = async (page = 1) => {
         setIsLoading(true);
@@ -206,6 +210,30 @@ export default function Stock() {
         return result;
     }, [categoriesData, expandedNodes, inputValue, loadedCounts, loadingChildren]);
 
+    const handleNextPage = () => {
+        if (apiPagination.page < apiPagination.totalPages) {
+            loadInitialData(apiPagination.page + 1);
+        }
+    };
+
+    const handlePrevPage = () => {
+        if (apiPagination.page > 1) {
+            loadInitialData(apiPagination.page - 1);
+        }
+    };
+
+    useKeyboardShortcuts({
+        onRefresh: () => loadInitialData(apiPagination.page),
+        searchId: "stock-search-input",
+        onNextPage: handleNextPage,
+        onPrevPage: handlePrevPage,
+        pageNo: apiPagination.page,
+        totalPages: apiPagination.totalPages,
+        items: flattenedData,
+        selectedRowIndex,
+        setSelectedRowIndex,
+    });
+
     const columns = [
         {
             key: 'name',
@@ -342,11 +370,11 @@ export default function Stock() {
                             Manage and view stock levels hierarchically by category and product.
                         </p>
                     </div>
-                    {canCreate && (
+                    {canUpdate && canUpdateProduct && (
                         <Button
                             variant="primary"
                             className="w-full sm:w-auto shrink-0"
-                            onClick={() => {}}
+                            onClick={() => setIsUpdateModalOpen(true)}
                             icon={Plus}
                             text="Update Stock"
                         />
@@ -389,6 +417,8 @@ export default function Stock() {
                         searchId="stock-search-input"
                         pageNo={apiPagination.page}
                         totalPages={apiPagination.totalPages}
+                        selectedItem={flattenedData[selectedRowIndex]}
+                        selectedRowIndex={selectedRowIndex}
                     />
                 </div>
 
@@ -417,9 +447,16 @@ export default function Stock() {
                                 setApiPagination(result.data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 });
                             });
                         }}
+                        selectedRowIndex={selectedRowIndex}
                     />
                 </div>
             </div>
+
+            <UpdateStock
+                isOpen={isUpdateModalOpen}
+                onClose={() => setIsUpdateModalOpen(false)}
+                onUpdate={() => loadInitialData(apiPagination.page)}
+            />
         </>
     );
 }

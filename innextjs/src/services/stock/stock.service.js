@@ -139,3 +139,28 @@ export const getStockCategories = async (page = 1, limit = 20, search = '', pare
         return { success: false, message: 'Failed to fetch stock categories' };
     }
 };
+
+export const updateStock = async (productId, quantity, userId = null) => {
+    try {
+        const product = await prisma.product.findUnique({
+            where: { id: productId, is_deleted: false }
+        });
+
+        if (!product) {
+            return { success: false, message: 'Product not found' };
+        }
+
+        const updatedProduct = await prisma.product.update({
+            where: { id: productId },
+            data: {
+                stockQuantity: parseFloat(quantity),
+                updatedBy: userId
+            }
+        });
+
+        return { success: true, data: updatedProduct, message: 'Stock updated successfully' };
+    } catch (error) {
+        console.error('Error in updateStock service:', error);
+        return { success: false, message: 'Failed to update stock' };
+    }
+};
