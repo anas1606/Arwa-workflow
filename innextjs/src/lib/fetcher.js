@@ -309,3 +309,6 @@ export const updateTrayApi = async (id, payload) => {
 };
 
 export const deleteTrayApi = (id, deletedBy = null) => deleteData(`tray/${id}`, { data: { deletedBy } });
+
+// stock
+export const updateStockApi = (payload) => putData('stock', payload);
