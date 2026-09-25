@@ -64,7 +64,7 @@ export default function UsersTabs() {
     useKeyboardShortcuts({
         onAdd: canAdd ? () => {
             if (activeTab === 'users') setAddUserOpen(true);
-            else router.push('/users/roles/add');
+            else router.push('/users/roles/create');
         } : undefined,
         onRefresh: triggerRefresh,
         searchId: "users-search-input",
@@ -120,7 +120,7 @@ export default function UsersTabs() {
                         className="w-full sm:w-auto shrink-0"
                         onClick={() => {
                             if (activeTab === 'users') setAddUserOpen(true);
-                            else router.push('/users/roles/add');
+                            else router.push('/users/roles/create');
                         }}
                         icon={Plus}
                         text={config.addText}
@@ -180,7 +180,7 @@ export default function UsersTabs() {
                 <KeyboardShortcutBar
                     onAdd={canAdd ? () => {
                         if (activeTab === 'users') setAddUserOpen(true);
-                        else router.push('/users/roles/add');
+                        else router.push('/users/roles/create');
                     } : undefined}
                     onRefresh={triggerRefresh}
                     searchId="users-search-input"

@@ -67,14 +67,14 @@ export default function EditOrderView() {
               colourIdName: l.colour?.name || '',
               brandId: l.brandId || '',
               brandIdName: l.brand?.brandname || l.brand?.name || '',
-              stickerId: l.stickerId || 'default',
-              stickerIdName: l.sticker?.name || 'Arwa Default Sticker',
+              stickerId: l.isDefaultSticker ? 'default' : (l.stickerId || ''),
+              stickerIdName: l.isDefaultSticker ? 'Arwa Default Sticker' : (l.sticker?.name || ''),
               accessoriesType: l.accessoriesType || 'STANDARD',
               accessoriesNote: l.accessoriesNote || '',
               packingType: l.packingType || 'STANDARD',
               packingNote: l.packingNote || '',
-              packagingId: l.packagingId || '',
-              packagingIdName: l.packaging?.name || ''
+              packagingId: l.isDefaultPackaging ? 'default' : (l.packagingId || ''),
+              packagingIdName: l.isDefaultPackaging ? 'Default Packaging' : (l.packaging?.name || '')
             }
           }));
           setLines(mappedLines);
@@ -179,12 +179,12 @@ export default function EditOrderView() {
             bodyDesignId: l.specs.bodyDesignId || undefined,
             colourId: l.specs.colourId || undefined,
             brandId: l.specs.brandId || undefined,
-            stickerId: l.specs.stickerId === 'default' ? undefined : (l.specs.stickerId || undefined),
+            stickerId: l.specs.stickerId === 'default' ? 'default' : (l.specs.stickerId || undefined),
             accessoriesType: l.specs.accessoriesType || 'STANDARD',
             accessoriesNote: l.specs.accessoriesNote || undefined,
             packingType: l.specs.packingType || 'STANDARD',
             packingNote: l.specs.packingNote || undefined,
-            packagingId: l.specs.packagingId === 'default' ? undefined : (l.specs.packagingId || undefined)
+            packagingId: l.specs.packagingId === 'default' ? 'default' : (l.specs.packagingId || undefined)
           }))
         };
         const res = await updateOrderApi(id, payload);

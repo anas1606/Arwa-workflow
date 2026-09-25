@@ -64,7 +64,7 @@ export default function Dashboard() {
         </div>
         <div className="flex w-full flex-wrap gap-2 sm:w-auto sm:justify-end">
           {canCreateOrder && (
-            <Button href="/orders/new" variant="primary" icon={Plus} className="w-full sm:w-auto">
+            <Button href="/orders/create" variant="primary" icon={Plus} className="w-full sm:w-auto">
               New order
             </Button>
           )}

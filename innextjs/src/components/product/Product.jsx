@@ -71,7 +71,7 @@ export default function Product() {
   }, [dropdownState]);
 
   useKeyboardShortcuts({
-      onAdd: canCreate ? () => router.push('/inventory/product/add') : undefined,
+      onAdd: canCreate ? () => router.push('/inventory/product/create') : undefined,
       onEdit: canUpdate ? (item) => router.push(`/inventory/product/edit/${item.id}`) : undefined,
       onDelete: canDelete ? (item) => { setProductToDelete(item); setDeleteModalOpen(true); } : undefined,
       onRefresh: () => { fetchProducts(); fetchKpis(); },
@@ -329,7 +329,7 @@ export default function Product() {
             <Button
               variant="primary"
               className="w-full sm:w-auto shrink-0"
-              onClick={() => router.push('/inventory/product/add')}
+              onClick={() => router.push('/inventory/product/create')}
               icon={Plus}
               text="Add product"
             />
@@ -424,7 +424,7 @@ export default function Product() {
             />
           </div>
           <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/inventory/product/add') : undefined}
+            onAdd={canCreate ? () => router.push('/inventory/product/create') : undefined}
             onEdit={canUpdate ? (item) => router.push(`/inventory/product/edit/${item.id}`) : undefined}
             onDelete={canDelete ? (item) => { setProductToDelete(item); setDeleteModalOpen(true); } : undefined}
             onRefresh={() => { fetchProducts(); fetchKpis(); }}

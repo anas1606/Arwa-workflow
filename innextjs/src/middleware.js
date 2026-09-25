@@ -18,6 +18,7 @@ const moduleMap = {
     '/api/v1/order': 'orders',
     '/api/v1/box': 'godown',
     '/api/v1/stock': 'stock',
+    '/api/v1/settings': 'settings',
 };
 
 export async function middleware(req) {

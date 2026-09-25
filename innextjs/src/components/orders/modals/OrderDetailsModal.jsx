@@ -203,7 +203,9 @@ export default function OrderDetailsModal({
                              {line.brand && <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Brand:</span>{line.brand.brandname || line.brand.name}</span>}
                              {line.sticker
                                ? <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{line.sticker.name}</span>
-                               : <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{defaultStickerLabel}</span>
+                               : line.isDefaultSticker 
+                                  ? <span className="bg-grey-bg px-2 py-1 rounded border border-grey-surface text-grey-text-dark"><span className="text-grey-icon mr-1">Sticker:</span>{defaultStickerLabel}</span>
+                                  : null
                              }
                           </div>
                           
@@ -222,11 +224,11 @@ export default function OrderDetailsModal({
                               {/* Packing Badge */}
                               {line.packingType === 'CUSTOMIZE' ? (
                                 <span className="badge bg-primary/10 text-primary-dark border border-primary/20">
-                                  <Sparkles className="h-3 w-3 shrink-0" aria-hidden /> Custom Packing {line.packaging?.name ? `(${line.packaging.name})` : `(${defaultPackagingLabel})`}
+                                  <Sparkles className="h-3 w-3 shrink-0" aria-hidden /> Custom Packing {line.packaging?.name ? `(${line.packaging.name})` : line.isDefaultPackaging ? `(${defaultPackagingLabel})` : ''}
                                 </span>
                               ) : (
                                 <span className="badge bg-grey-surface text-grey-text-strong border border-grey-border">
-                                  <Layers className="h-3 w-3 shrink-0" aria-hidden /> Packing: {line.packaging?.name || defaultPackagingLabel}
+                                  <Layers className="h-3 w-3 shrink-0" aria-hidden /> Packing: {line.packaging?.name || (line.isDefaultPackaging ? defaultPackagingLabel : 'Standard')}
                                 </span>
                               )}
                             </div>

@@ -27,7 +27,8 @@ async function main() {
     { module_key: 'bom', name: 'BOM' },
     { module_key: 'packaging', name: 'Packaging' },
     { module_key: 'godown', name: 'Godown' },
-    { module_key: 'stock', name: 'Stock' },
+    { module_key: 'stock', name: 'Stock Management' },
+    { module_key: 'settings', name: 'Settings' },
   ];
 
   for (const mod of modulesToCreate) {

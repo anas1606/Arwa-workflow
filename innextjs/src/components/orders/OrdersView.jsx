@@ -114,8 +114,8 @@ export default function OrdersView() {
   }, [actionMenu]);
 
 useKeyboardShortcuts({
-      onAdd: () => router.push('/orders/new'),
-      onEdit: (item) => router.push(`/orders/${item.id}/edit`),
+      onAdd: () => router.push('/orders/create'),
+      onEdit: (item) => router.push(`/orders/edit/${item.id}`),
       onDelete: (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); },
       onRefresh: fetchOrders,
       searchId: "search-orders",
@@ -285,7 +285,7 @@ useKeyboardShortcuts({
         <div className="flex items-center justify-end gap-3 text-grey-icon">
           <button onClick={(e) => { e.stopPropagation(); window.print(); }} className="hover:text-grey-text-strong transition-colors"><Printer size={18} /></button>
           {canUpdate && (
-            <button onClick={(e) => { e.stopPropagation(); router.push(`/orders/${row.id}/edit`); }} className="hover:text-grey-text-strong transition-colors"><Pencil size={18} /></button>
+            <button onClick={(e) => { e.stopPropagation(); router.push(`/orders/edit/${row.id}`); }} className="hover:text-grey-text-strong transition-colors"><Pencil size={18} /></button>
           )}
         </div>
       ),
@@ -329,7 +329,7 @@ useKeyboardShortcuts({
             {canCreate && (
               <Button
                 variant="primary"
-                onClick={() => router.push('/orders/new')}
+                onClick={() => router.push('/orders/create')}
                 icon={Plus}
                 text="Add new order"
               />
@@ -437,8 +437,8 @@ useKeyboardShortcuts({
 
           {/* Hints */}
          <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/orders/new') : undefined}
-            onEdit={canUpdate ? (item) => router.push(`/orders/${item.id}/edit`) : undefined}
+            onAdd={canCreate ? () => router.push('/orders/create') : undefined}
+            onEdit={canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined}
             onRefresh={fetchOrders}
             searchId="search-orders"
             pageNo={viewMode === 'orders' ? pageNo : productPageNo}
@@ -491,7 +491,7 @@ useKeyboardShortcuts({
         open={isDetailsModalOpen}
         selectedOrder={selectedOrder}
         onClose={() => setIsDetailsModalOpen(false)}
-        onEdit={() => { setIsDetailsModalOpen(false); router.push(`/orders/${selectedOrder?.id}/edit`); }}
+        onEdit={() => { setIsDetailsModalOpen(false); router.push(`/orders/edit/${selectedOrder?.id}`); }}
       />
 
       <DeleteModal
@@ -526,7 +526,7 @@ useKeyboardShortcuts({
           <Button
             variant="ghost"
             className="w-full !justify-start !rounded-none !px-4 !py-2 hover:!bg-grey-bg !text-grey-text !min-h-0 !h-auto !font-medium border-0"
-            onClick={() => { setSelectedOrder(actionMenu.row); router.push(`/orders/${actionMenu.row.id}/edit`); setActionMenu(null); }}
+            onClick={() => { setSelectedOrder(actionMenu.row); router.push(`/orders/edit/${actionMenu.row.id}`); setActionMenu(null); }}
             icon={() => <Pencil size={16} className="text-grey-icon" />}
             text="Edit"
           />

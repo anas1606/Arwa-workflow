@@ -80,11 +80,13 @@ export const createOrder = async (data, userId = null) => {
                     colourId: line.colourId || null,
                     brandId: line.brandId || null,
                     stickerId: (line.stickerId && line.stickerId !== 'default') ? line.stickerId : null,
+                    isDefaultSticker: line.stickerId === 'default',
                     accessoriesType: line.accessoriesType !== undefined ? line.accessoriesType : undefined,
                     accessoriesNote: line.accessoriesNote || null,
                     packingType: line.packingType !== undefined ? line.packingType : undefined,
                     packingNote: line.packingNote || null,
-                    packagingId: line.packagingId || null,
+                    packagingId: (line.packagingId && line.packagingId !== 'default') ? line.packagingId : null,
+                    isDefaultPackaging: line.packagingId === 'default',
                     orderType: line.orderType || 'STANDARD',
                     createdBy: userId || null,
                 }));
@@ -303,6 +305,8 @@ export const getOrderById = async (id) => {
                         colourId: true,
                         brandId: true,
                         stickerId: true,
+                        isDefaultPackaging: true,
+                        isDefaultSticker: true,
                         product: {
                             select: {
                                 id: true,
@@ -397,11 +401,13 @@ export const updateOrder = async (id, data, userId = null) => {
                     colourId: line.colourId || null,
                     brandId: line.brandId || null,
                     stickerId: (line.stickerId && line.stickerId !== 'default') ? line.stickerId : null,
+                    isDefaultSticker: line.stickerId === 'default',
                     accessoriesType: line.accessoriesType !== undefined ? line.accessoriesType : undefined,
                     accessoriesNote: line.accessoriesNote || null,
                     packingType: line.packingType !== undefined ? line.packingType : undefined,
                     packingNote: line.packingNote || null,
-                    packagingId: line.packagingId || null,
+                    packagingId: (line.packagingId && line.packagingId !== 'default') ? line.packagingId : null,
+                    isDefaultPackaging: line.packagingId === 'default',
                     orderType: line.orderType || 'STANDARD',
                     createdBy: userId || null, // Assuming the order lines are recreated
                 }));

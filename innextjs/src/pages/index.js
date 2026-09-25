@@ -28,7 +28,8 @@ export default function Home() {
       'godown': '/inventory/godown',
       'stock': '/inventory/stock',
       'users': '/users',
-      'security_roles': '/users'
+      'security_roles': '/users',
+      'settings': '/settings'
     };
 
     const permissions = user.security_role?.permissions || [];
