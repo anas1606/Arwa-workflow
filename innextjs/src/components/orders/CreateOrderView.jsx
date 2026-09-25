@@ -129,12 +129,12 @@ export default function CreateOrderView() {
             bodyDesignId: l.specs.bodyDesignId || undefined,
             colourId: l.specs.colourId || undefined,
             brandId: l.specs.brandId || undefined,
-            stickerId: l.specs.stickerId === 'default' ? undefined : (l.specs.stickerId || undefined),
+            stickerId: l.specs.stickerId === 'default' ? 'default' : (l.specs.stickerId || undefined),
             accessoriesType: l.specs.accessoriesType || 'STANDARD',
             accessoriesNote: l.specs.accessoriesNote || undefined,
             packingType: l.specs.packingType || 'STANDARD',
             packingNote: l.specs.packingNote || undefined,
-            packagingId: l.specs.packagingId === 'default' ? undefined : (l.specs.packagingId || undefined)
+            packagingId: l.specs.packagingId === 'default' ? 'default' : (l.specs.packagingId || undefined)
           }))
         };
         const res = await createOrderApi(payload);

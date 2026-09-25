@@ -115,7 +115,6 @@ model Product {
   bodyDesigns       ProductBodyDesign[]
   colours           ProductColour[]
   orderLines        OrderLine[]
-  stocks            Stock[]
 }
 
 model User {
@@ -284,6 +283,7 @@ model OrderLine {
   colourId     String? @map("colour_id")
   brandId      String? @map("brand_id")
   stickerId    String? @map("sticker_id")
+  isDefaultSticker   Boolean @default(false) @map("is_default_sticker")
   
   accessoriesType CustomisationType @default(STANDARD) @map("accessories_type")
   accessoriesNote String?           @db.Text @map("accessories_note")
@@ -291,6 +291,7 @@ model OrderLine {
   packingType     CustomisationType @default(STANDARD) @map("packing_type")
   packingNote     String?           @db.Text @map("packing_note")
   packagingId     String?           @map("packaging_id")
+  isDefaultPackaging Boolean @default(false) @map("is_default_packaging")
   orderType       CustomisationType @default(STANDARD) @map("order_type")
 
   createdAt  DateTime  @default(now()) @map("created_at")
@@ -353,21 +354,4 @@ model Tray {
   deletedBy  String?   @map("deleted_by")
 
   section    Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
-}
-
-
-model Stock {
-  id         String    @id @default(uuid())
-  productId  String    @map("product_id")
-  quantity   Float     @default(0)
-
-  createdAt  DateTime  @default(now()) @map("created_at")
-  createdBy  String?   @map("created_by")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  updatedBy  String?   @map("updated_by")
-  is_deleted Boolean   @default(false)
-  deletedAt  DateTime? @map("deleted_at")
-  deletedBy  String?   @map("deleted_by")
-
-  product    Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
 }

@@ -548,7 +548,7 @@ export default function Customisation() {
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
 
   useKeyboardShortcuts({
-      onAdd: canCreateProduct ? () => router.push('/inventory/product/add') : undefined,
+      onAdd: canCreateProduct ? () => router.push('/inventory/product/create') : undefined,
       searchId: "customisation-search",
       setPageNo,
       pageNo,
@@ -639,7 +639,7 @@ export default function Customisation() {
             <p className="mt-1 text-sm leading-snug text-grey-muted">Customer brands, panel stickers, and product model options for order specs.</p>
           </div>
           {canCreateProduct && (
-            <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add Product" onClick={() => router.push('/inventory/product/add')} />
+            <Button variant="primary" className="w-full sm:w-auto shrink-0" icon={Plus} text="Add Product" onClick={() => router.push('/inventory/product/create')} />
           )}
         </div>
 
@@ -797,7 +797,7 @@ export default function Customisation() {
             </div>
           </div>
           <KeyboardShortcutBar
-            onAdd={canCreateProduct ? () => router.push('/inventory/product/add') : undefined}
+            onAdd={canCreateProduct ? () => router.push('/inventory/product/create') : undefined}
             searchId="customisation-search"
             pageNo={pageNo}
             totalPages={totalPages}

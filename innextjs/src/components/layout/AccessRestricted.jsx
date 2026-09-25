@@ -1,6 +1,6 @@
 import React from 'react';
 import Head from 'next/head';
-import { ShieldAlert, ArrowLeft, LayoutDashboard } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, Home } from 'lucide-react';
 import { useRouter } from 'next/router';
 import Button from '@/common/buttons/Button';
 
@@ -33,9 +33,9 @@ export default function AccessRestricted() {
             />
             <Button
               variant="primary"
-              onClick={() => router.push('/dashboard')}
-              startIcon={LayoutDashboard}
-              text="Dashboard"
+              onClick={() => router.push('/')}
+              startIcon={Home}
+              text="Home"
               className="w-full sm:w-auto"
             />
           </div>
