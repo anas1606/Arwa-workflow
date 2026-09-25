@@ -232,6 +232,16 @@ export default function Stock() {
         items: flattenedData,
         selectedRowIndex,
         setSelectedRowIndex,
+        onEdit: (item) => {
+            if (item.rowType === 'category' && item.hasChildren) {
+                toggleExpand(item.rawId, { stopPropagation: () => {} });
+            } else if (item.rowType === 'load-more') {
+                setLoadedCounts(prev => ({
+                    ...prev,
+                    [item.categoryId]: (prev[item.categoryId] || 5) + 10
+                }));
+            }
+        }
     });
 
     const columns = [
@@ -438,13 +448,14 @@ export default function Stock() {
                         onPageChange={(p) => loadInitialData(p)}
                         onPageSizeChange={(limit) => {
                             setApiPagination(prev => ({ ...prev, limit, page: 1 }));
-                            // the state update above won't immediately reflect in loadInitialData without a useEffect,
-                            // but for simplicity we can just fetch it manually here
+                            setIsLoading(true);
                             fetch(`/api/v1/stock?parentId=null&page=1&limit=${limit}`, {
                                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                             }).then(res => res.json()).then(result => {
                                 setCategoriesData(result.data?.data || []);
                                 setApiPagination(result.data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 });
+                            }).finally(() => {
+                                setIsLoading(false);
                             });
                         }}
                         selectedRowIndex={selectedRowIndex}
