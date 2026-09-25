@@ -115,6 +115,8 @@ model Product {
   bodyDesigns       ProductBodyDesign[]
   colours           ProductColour[]
   orderLines        OrderLine[]
+  bomsAsMainProduct Bom[]               @relation("MainProductBoms")
+  bomsAsComponent   BomItem[]           @relation("BomItemProducts")
 }
 
 model User {
@@ -354,4 +356,37 @@ model Tray {
   deletedBy  String?   @map("deleted_by")
 
   section    Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+}
+
+model Bom {
+  id          String     @id @default(uuid())
+  name        String
+  productId   String     @map("product_id")
+  note        String?    @db.Text
+  
+  createdAt   DateTime   @default(now()) @map("created_at")
+  createdBy   String?    @map("created_by")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  updatedBy   String?    @map("updated_by")
+  is_deleted  Boolean    @default(false)
+  deletedAt   DateTime?  @map("deleted_at")
+  deletedBy   String?    @map("deleted_by")
+
+  product     Product    @relation("MainProductBoms", fields: [productId], references: [id])
+  items       BomItem[]
+}
+
+model BomItem {
+  id          String     @id @default(uuid())
+  bomId       String     @map("bom_id")
+  productId   String     @map("product_id")
+  quantity    Float      @default(1)
+  
+  createdAt   DateTime   @default(now()) @map("created_at")
+  createdBy   String?    @map("created_by")
+  updatedAt   DateTime   @updatedAt @map("updated_at")
+  updatedBy   String?    @map("updated_by")
+
+  bom         Bom        @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  product     Product    @relation("BomItemProducts", fields: [productId], references: [id])
 }

@@ -114,9 +114,10 @@ export default function OrdersView() {
   }, [actionMenu]);
 
 useKeyboardShortcuts({
-      onAdd: () => router.push('/orders/create'),
-      onEdit: (item) => router.push(`/orders/edit/${item.id}`),
-      onDelete: (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); },
+      onAdd: canCreate ? () => router.push('/orders/create') : undefined,
+      onView: canRead ? (item) => { setSelectedOrder(item); setIsDetailsModalOpen(true); } : undefined,
+      onEdit: canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined,
+      onDelete: canDelete ? (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); } : undefined,
       onRefresh: fetchOrders,
       searchId: "search-orders",
       pageNo: viewMode === 'orders' ? pageNo : productPageNo,
@@ -438,6 +439,7 @@ useKeyboardShortcuts({
           {/* Hints */}
          <KeyboardShortcutBar
             onAdd={canCreate ? () => router.push('/orders/create') : undefined}
+            onView={canRead ? (item) => { setSelectedOrder(item); setIsDetailsModalOpen(true); } : undefined}
             onEdit={canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined}
             onRefresh={fetchOrders}
             searchId="search-orders"
