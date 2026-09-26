@@ -67,7 +67,12 @@ export default function EditProduct({ id }) {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('Product name is required.');
+      toast.error('Product name is required.');
+      return;
+    }
+
+    if (!category || !category.value) {
+      toast.error('Category is required.');
       return;
     }
     
@@ -219,6 +224,7 @@ export default function EditProduct({ id }) {
                   onChange={(opt) => setCategory(opt || null)}
                   placeholder="Select category"
                   defaultOptions={true}
+                  required
                   loadOptions={async (input) => {
                     const res = await getCategoriesApi(1, 10, input, 'ACTIVE');
                     if (res.data?.success) {
@@ -431,11 +437,6 @@ export default function EditProduct({ id }) {
               </div>
             </div>
 
-            {error && (
-              <p className="text-sm font-medium text-danger-dark" role="alert">
-                {error}
-              </p>
-            )}
           </form>
           )}
         </div>

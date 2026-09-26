@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     try {
         switch (method) {
             case 'GET': {
-                const { page = 1, limit = 20, search = '', parentId } = req.query;
+                const { page = 1, limit = 10, search = '', parentId } = req.query;
                 const result = await getStockCategories(page, limit, search, parentId);
                 if (result.success) {
                     return successResponse(res, 'Fetched successfully', result.data);

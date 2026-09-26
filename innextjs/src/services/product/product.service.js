@@ -27,14 +27,15 @@ export const createProduct = async (data, userId = null) => {
                 throw new Error('A product with this name already exists');
             }
 
-            // Validate Category and Unit if provided
-            if (data.categoryId) {
-                const category = await tx.category.findUnique({
-                    where: { id: data.categoryId }
-                });
-                if (!category || category.is_deleted) {
-                    throw new Error('The specified category does not exist or has been deleted');
-                }
+            // Validate Category
+            if (!data.categoryId) {
+                throw new Error('Category is required');
+            }
+            const category = await tx.category.findUnique({
+                where: { id: data.categoryId }
+            });
+            if (!category || category.is_deleted) {
+                throw new Error('The specified category does not exist or has been deleted');
             }
 
             if (data.unitId) {
@@ -52,7 +53,7 @@ export const createProduct = async (data, userId = null) => {
                     code: data.code || null,
                     stockQuantity: data.stockQuantity !== undefined ? data.stockQuantity : undefined,
                     lowStockThreshold: data.lowStockThreshold !== undefined ? data.lowStockThreshold : undefined,
-                    categoryId: data.categoryId || null,
+                    categoryId: data.categoryId,
                     unitId: data.unitId || null,
                     isActive: data.isActive !== undefined ? data.isActive : undefined,
                     createdBy: userId || data.createdBy || null,

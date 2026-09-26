@@ -100,7 +100,7 @@ model Product {
   code              String?             @unique
   stockQuantity     Float               @default(0) @map("stock_quantity")
   isActive          Boolean             @default(true) @map("is_active")
-  categoryId        String?             @map("category_id")
+  categoryId        String              @map("category_id")
   unitId            String?             @map("unit_id")
   createdAt         DateTime            @default(now()) @map("created_at")
   createdBy         String?             @map("created_by")
@@ -110,7 +110,7 @@ model Product {
   deletedAt         DateTime?           @map("deleted_at")
   deletedBy         String?             @map("deleted_by")
   lowStockThreshold Float               @default(10) @map("low_stock_threshold")
-  category          Category?           @relation(fields: [categoryId], references: [id])
+  category          Category           @relation(fields: [categoryId], references: [id])
   unit              Unit?               @relation(fields: [unitId], references: [id])
   bodyDesigns       ProductBodyDesign[]
   colours           ProductColour[]

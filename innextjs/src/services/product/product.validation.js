@@ -7,7 +7,7 @@ export const createProductSchema = z.object({
   code: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   stockQuantity: z.number().nonnegative('Stock quantity must be positive').optional().default(0),
   lowStockThreshold: z.number().min(0).optional().default(10),
-  categoryId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
+  categoryId: z.string({ required_error: 'Category is required' }).min(1, 'Category cannot be empty'),
   unitId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   isActive: z.boolean().optional().default(true),
   bodyDesigns: z.array(
@@ -30,7 +30,7 @@ export const updateProductSchema = z.object({
   code: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   stockQuantity: z.number().min(0, { message: 'Stock Quantity must be a positive number' }).optional(),
   lowStockThreshold: z.number().min(0).optional().default(10),
-  categoryId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
+  categoryId: z.string().min(1, 'Category cannot be empty').optional(),
   unitId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   isActive: z.boolean().optional(),
   bodyDesigns: z.array(

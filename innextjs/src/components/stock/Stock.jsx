@@ -16,7 +16,7 @@ export default function Stock() {
     const [expandedNodes, setExpandedNodes] = useState(new Set());
     const [inputValue, setInputValue] = useState('');
     const [loadingChildren, setLoadingChildren] = useState(new Set());
-    const [apiPagination, setApiPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
+    const [apiPagination, setApiPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
     
     // Stats for KPIs
     const [totalStock, setTotalStock] = useState(0);
@@ -38,7 +38,7 @@ export default function Stock() {
             
             setTotalProducts(result.data?.kpis?.totalProducts || 0);
             setTotalStock(result.data?.kpis?.totalStock || 0);
-            setApiPagination(result.data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 });
+            setApiPagination(result.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
             setCategoriesData(data);
         } catch (error) {
             console.error('Failed to fetch stock categories:', error);
@@ -160,7 +160,7 @@ export default function Stock() {
                 const prodsToRender = inputValue ? (nodeMatches ? node.products : matchingProducts) : node.products;
                 
                 if (prodsToRender?.length > 0) {
-                    const limit = loadedCounts[node.id] || 5;
+                    const limit = loadedCounts[node.id] || 10;
                     const visibleProds = inputValue ? prodsToRender : prodsToRender.slice(0, limit);
                     
                     visibleProds.forEach(prod => {
@@ -453,7 +453,7 @@ export default function Stock() {
                                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                             }).then(res => res.json()).then(result => {
                                 setCategoriesData(result.data?.data || []);
-                                setApiPagination(result.data?.pagination || { page: 1, limit: 20, total: 0, totalPages: 1 });
+                                setApiPagination(result.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
                             }).finally(() => {
                                 setIsLoading(false);
                             });
