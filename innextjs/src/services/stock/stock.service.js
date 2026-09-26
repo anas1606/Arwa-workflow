@@ -1,6 +1,6 @@
 import prisma from '@/lib/prisma';
 
-export const getStockCategories = async (page = 1, limit = 20, search = '', parentId = undefined) => {
+export const getStockCategories = async (page = 1, limit = 10, search = '', parentId = undefined) => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
