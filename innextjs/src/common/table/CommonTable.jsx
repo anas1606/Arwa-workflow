@@ -15,7 +15,8 @@ export default function CommonTable({
     },
     onPageChange,
     onPageSizeChange,
-    selectedRowIndex
+    selectedRowIndex,
+    hidePagination = false
 }) {
     const { totalItems, pageSize, pageNo, totalPages } = pagination;
     const isEmpty = !data || data.length === 0;
@@ -100,9 +101,9 @@ export default function CommonTable({
     };
 
     return (
-        <div className="card-panel flex flex-col relative overflow-hidden p-0 w-full border-none">
-            <div className="overflow-x-auto">
-                <table className="w-full text-sm text-left">
+        <div className={`card-panel flex flex-col relative overflow-hidden p-0 w-full border-none ${data.length === 0 ? 'h-full' : ''}`}>
+            <div className={`overflow-x-auto flex-1 min-h-0 bg-white ${data.length === 0 ? 'h-full' : ''}`}>
+                <table className={`w-full text-sm text-left ${data.length === 0 && !isLoading ? 'h-full' : ''}`}>
                     {/* HEADER */}
                     <thead className="bg-white">
                         <tr>
@@ -132,10 +133,14 @@ export default function CommonTable({
                                 </tr>
                             ))
                         ) : data.length === 0 ? (
-                            <tr>
-                                <td colSpan={columns.length} className="text-center py-10 text-grey-muted">
-                                    <div className="flex flex-col items-center gap-2">
-                                        <span className="text-sm font-medium">{emptyState}</span>
+                            <tr className="h-full">
+                                <td colSpan={columns.length} className="text-center py-16 text-grey-muted bg-white h-full align-middle">
+                                    <div className="flex flex-col items-center justify-center gap-2 h-full">
+                                        {typeof emptyState === 'string' ? (
+                                            <span className="text-sm font-medium">{emptyState}</span>
+                                        ) : (
+                                            emptyState
+                                        )}
                                     </div>
                                 </td>
                             </tr>
@@ -166,8 +171,9 @@ export default function CommonTable({
             </div>
 
             {/* ================= FOOTER / PAGINATION ================= */}
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-white/40 bg-white/60 backdrop-blur-md mt-auto shadow-sm">
-                <div className="text-sm text-grey-text-light whitespace-nowrap">
+            {!hidePagination && (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-grey-border bg-white mt-auto shadow-sm shrink-0">
+                    <div className="text-sm text-grey-text-light whitespace-nowrap">
                     Showing <b className="text-grey-text-strong">{data?.length || 0}</b> of <b className="text-grey-text-strong">{totalItems}</b>
                 </div>
 
@@ -230,6 +236,7 @@ export default function CommonTable({
                     </div>
                 </div>
             </div>
+            )}
         </div>
     );
 }
