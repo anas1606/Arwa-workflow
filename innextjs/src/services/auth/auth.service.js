@@ -39,14 +39,6 @@ export const loginUser = async (identifier, password) => {
         
         // Decrypt the password sent by the frontend
         const decryptedLoginPassword = decryptString(password);
-        
-        console.log("Login Debug:", {
-            identifier,
-            storedEncrypted: user.password,
-            sentEncrypted: password,
-            decryptedStoredPassword,
-            decryptedLoginPassword
-        });
 
         if (decryptedLoginPassword !== decryptedStoredPassword) {
             return { success: false, message: 'Invalid credentials' };

@@ -329,3 +329,8 @@ export const updateBomApi = async (id, payload) => {
 };
 
 export const deleteBomApi = (id, deletedBy = null) => deleteData(`bom/${id}`, { data: { deletedBy } });
+
+// Production
+export const getProductionBomApi = async (productId, quantity, page = 1, limit = 10) => {
+  return await fetchDataWithParams('production/bom-requirements', { productId, quantity, page, limit });
+};

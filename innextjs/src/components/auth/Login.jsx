@@ -9,8 +9,8 @@ import { User, Lock, LogIn } from 'lucide-react';
 import { encryptString } from '@/lib/encryption';
 
 export default function Login() {
-    const [identifier, setIdentifier] = useState('');
-    const [password, setPassword] = useState('');
+    const [identifier, setIdentifier] = useState('admin');
+    const [password, setPassword] = useState('admin123');
     const [error, setError] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const router = useRouter();
