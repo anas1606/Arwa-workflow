@@ -27,19 +27,38 @@ export default function Stock() {
     const [selectedRowIndex, setSelectedRowIndex] = useState(0);
     const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
 
-    const loadInitialData = async (page = 1) => {
+    const loadInitialData = async (page = 1, searchQuery = inputValue, currentLimit = apiPagination.limit) => {
         setIsLoading(true);
         try {
-            const res = await fetch(`/api/v1/stock?parentId=null&page=${page}&limit=${apiPagination.limit}`, {
+            const searchParam = searchQuery ? `&search=${encodeURIComponent(searchQuery)}` : '';
+            const parentParam = searchQuery ? '' : '&parentId=null';
+            const res = await fetch(`/api/v1/stock?page=${page}&limit=${currentLimit}${parentParam}${searchParam}`, {
                 headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
             });
             const result = await res.json();
             const data = result.data?.data || [];
+            const products = result.data?.products || [];
             
             setTotalProducts(result.data?.kpis?.totalProducts || 0);
             setTotalStock(result.data?.kpis?.totalStock || 0);
             setApiPagination(result.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
-            setCategoriesData(data);
+            
+            if (searchQuery && products.length > 0) {
+                const searchData = [...data];
+                const searchTotalStock = products.reduce((acc, p) => acc + (p.stockQuantity || 0), 0);
+                searchData.push({
+                    id: 'search-products',
+                    name: 'Matching Products',
+                    hasChildren: true,
+                    products: products,
+                    children: [],
+                    totalStock: searchTotalStock
+                });
+                setExpandedNodes(prev => new Set(prev).add('cat-search-products'));
+                setCategoriesData(searchData);
+            } else {
+                setCategoriesData(data);
+            }
         } catch (error) {
             console.error('Failed to fetch stock categories:', error);
         } finally {
@@ -48,8 +67,11 @@ export default function Stock() {
     };
 
     useEffect(() => {
-        loadInitialData(1);
-    }, []);
+        const timeout = setTimeout(() => {
+            loadInitialData(1, inputValue);
+        }, 300);
+        return () => clearTimeout(timeout);
+    }, [inputValue]);
 
     const toggleExpand = async (id, e) => {
         e.stopPropagation();
@@ -223,7 +245,7 @@ export default function Stock() {
     };
 
     useKeyboardShortcuts({
-        onRefresh: () => loadInitialData(apiPagination.page),
+        onRefresh: () => loadInitialData(apiPagination.page, inputValue),
         searchId: "stock-search-input",
         onNextPage: handleNextPage,
         onPrevPage: handlePrevPage,
@@ -445,18 +467,10 @@ export default function Stock() {
                             totalItems: apiPagination.total, 
                             totalPages: apiPagination.totalPages 
                         }}
-                        onPageChange={(p) => loadInitialData(p)}
+                        onPageChange={(p) => loadInitialData(p, inputValue)}
                         onPageSizeChange={(limit) => {
                             setApiPagination(prev => ({ ...prev, limit, page: 1 }));
-                            setIsLoading(true);
-                            fetch(`/api/v1/stock?parentId=null&page=1&limit=${limit}`, {
-                                headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
-                            }).then(res => res.json()).then(result => {
-                                setCategoriesData(result.data?.data || []);
-                                setApiPagination(result.data?.pagination || { page: 1, limit: 10, total: 0, totalPages: 1 });
-                            }).finally(() => {
-                                setIsLoading(false);
-                            });
+                            loadInitialData(1, inputValue, limit);
                         }}
                         selectedRowIndex={selectedRowIndex}
                     />
