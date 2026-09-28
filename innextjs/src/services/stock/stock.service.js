@@ -38,7 +38,25 @@ export const getStockCategories = async (page = 1, limit = 10, search = '', pare
         // Fetch products ONLY for the specific parentId being expanded!
         // We do NOT fetch products if parentId is null (root level)
         let nodeProducts = [];
-        if (parentId !== undefined && parentId !== null && parentId !== 'null' && !search) {
+        if (search) {
+            nodeProducts = await prisma.product.findMany({
+                where: { 
+                    is_deleted: false,
+                    OR: [
+                        { name: { contains: search, mode: 'insensitive' } },
+                        { code: { contains: search, mode: 'insensitive' } }
+                    ]
+                },
+                select: {
+                    id: true,
+                    name: true,
+                    code: true,
+                    categoryId: true,
+                    stockQuantity: true,
+                    unit: { select: { shortName: true } }
+                }
+            });
+        } else if (parentId !== undefined && parentId !== null && parentId !== 'null') {
             nodeProducts = await prisma.product.findMany({
                 where: { categoryId: parentId, is_deleted: false },
                 select: {
