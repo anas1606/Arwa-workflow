@@ -33,6 +33,7 @@ export default function Category() {
     const [kpiData, setKpiData] = useState({ total: 0, root: 0, active: 0, inactive: 0 });
 
     const [loadedChildren, setLoadedChildren] = useState({});
+    const [loadingChildren, setLoadingChildren] = useState(new Set());
 
     const fetchCategories = async () => {
         setIsLoading(true);
@@ -126,7 +127,18 @@ export default function Category() {
     const toggleExpand = async (id, e) => {
         e.stopPropagation();
 
-        if (!expandedCategories.has(id) && !loadedChildren[id] && !query) {
+        setExpandedCategories(prev => {
+            const next = new Set(prev);
+            if (next.has(id)) {
+                next.delete(id);
+            } else {
+                next.add(id);
+            }
+            return next;
+        });
+
+        if (!expandedCategories.has(id) && !loadedChildren[id] && !query && !loadingChildren.has(id)) {
+            setLoadingChildren(prev => new Set(prev).add(id));
             try {
                 const response = await getCategoriesApi(1, 100, '', 'ALL', id);
                 if (response.data && response.data.success) {
@@ -138,19 +150,14 @@ export default function Category() {
             } catch (err) {
                 console.error("Failed to load children", err);
                 toast.error("Failed to load child categories");
-                return;
+            } finally {
+                setLoadingChildren(prev => {
+                    const next = new Set(prev);
+                    next.delete(id);
+                    return next;
+                });
             }
         }
-
-        setExpandedCategories(prev => {
-            const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
-            } else {
-                next.add(id);
-            }
-            return next;
-        });
     };
 
     // API already filters based on query and status, so we don't need a local filteredData
@@ -158,23 +165,36 @@ export default function Category() {
 
     const flattenedCategories = useMemo(() => {
         if (query || statusFilter !== 'ALL') {
-            return categoriesData.map(c => ({ ...c, depth: 0, hasChildren: false }));
+            return categoriesData.map(c => ({ ...c, depth: 0, hasChildren: false, rowType: 'category' }));
         }
 
         const result = [];
         const traverse = (node, depth) => {
             const hasChildren = node._count?.children > 0;
-            result.push({ ...node, depth, hasChildren });
+            result.push({ ...node, depth, hasChildren, rowType: 'category', isLoadingChildren: loadingChildren.has(node.id) });
             
             if (expandedCategories.has(node.id) && hasChildren) {
-                const children = loadedChildren[node.id] || [];
-                children.forEach(child => traverse(child, depth + 1));
+                if (loadingChildren.has(node.id)) {
+                    result.push({
+                        id: `skel-1-${node.id}`,
+                        rowType: 'skeleton',
+                        depth: depth + 1
+                    });
+                    result.push({
+                        id: `skel-2-${node.id}`,
+                        rowType: 'skeleton',
+                        depth: depth + 1
+                    });
+                } else {
+                    const children = loadedChildren[node.id] || [];
+                    children.forEach(child => traverse(child, depth + 1));
+                }
             }
         };
 
         categoriesData.forEach(root => traverse(root, 0));
         return result;
-    }, [categoriesData, loadedChildren, query, statusFilter, expandedCategories]);
+    }, [categoriesData, loadedChildren, query, statusFilter, expandedCategories, loadingChildren]);
 
     const paginatedData = flattenedCategories;
 
@@ -271,29 +291,45 @@ export default function Category() {
         {
             key: 'name',
             label: 'Category',
-            render: (row) => (
-                <div
-                    className="flex items-center gap-2"
-                    style={{ paddingLeft: `${row.depth * 20}px` }}
-                >
-                    {row.hasChildren ? (
-                        <button
-                            onClick={(e) => toggleExpand(row.id, e)}
-                            className="p-1 hover:bg-grey-border rounded text-grey-icon"
+            render: (row) => {
+                if (row.rowType === 'skeleton') {
+                    return (
+                        <div
+                            className="flex items-center gap-2 py-1.5"
+                            style={{ paddingLeft: `${row.depth * 20}px` }}
                         >
-                            {expandedCategories.has(row.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
-                        </button>
-                    ) : (
-                        <span className="w-6 inline-block" />
-                    )}
-                    <span className="font-semibold text-grey-text-strong truncate max-w-[200px]" title={row.name}>{row.name}</span>
-                </div>
-            ),
+                            <div className="w-3 h-4 border-l-2 border-b-2 border-grey-border rounded-bl-sm -mt-3 mr-1 opacity-60" />
+                            <div className="w-6 h-6 rounded-md bg-grey-border opacity-50 animate-pulse" />
+                            <div className="h-4 w-32 bg-grey-border rounded opacity-50 animate-pulse" />
+                        </div>
+                    );
+                }
+                return (
+                    <div
+                        className="flex items-center gap-2"
+                        style={{ paddingLeft: `${row.depth * 20}px` }}
+                    >
+                        {row.hasChildren ? (
+                            <button
+                                onClick={(e) => toggleExpand(row.id, e)}
+                                disabled={row.isLoadingChildren}
+                                className={`p-1 rounded text-grey-icon ${row.isLoadingChildren ? 'opacity-50 cursor-not-allowed' : 'hover:bg-grey-border'}`}
+                            >
+                                {expandedCategories.has(row.id) ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
+                            </button>
+                        ) : (
+                            <span className="w-6 inline-block" />
+                        )}
+                        <span className="font-semibold text-grey-text-strong truncate max-w-[200px]" title={row.name}>{row.name}</span>
+                    </div>
+                );
+            },
         },
         {
             key: 'parent',
             label: 'Parent Category',
             render: (row) => {
+                if (row.rowType === 'skeleton') return null;
                 return <span className="text-sm text-grey-text">{row.parent ? row.parent.name : '-'}</span>;
             },
         },
@@ -303,6 +339,7 @@ export default function Category() {
             ...(canUpdate ? {
                 type: 'toggle',
                 onChange: async (row, newValue) => {
+                if (row.rowType === 'skeleton') return;
                 // Optimistic UI update
                 const updateState = (items) => items.map(c => c.id === row.id ? { ...c, isActive: newValue } : c);
                 const revertState = (items) => items.map(c => c.id === row.id ? { ...c, isActive: !newValue } : c);
@@ -342,44 +379,56 @@ export default function Category() {
                 }
             }
         } : {
-            render: (row) => (
-                <span className={`badge ${row.isActive ? 'bg-success-subtle text-success-text' : 'bg-danger-subtle text-danger-text'}`}>
-                    {row.isActive ? 'Active' : 'Inactive'}
-                </span>
-            )
+            render: (row) => {
+                if (row.rowType === 'skeleton') return null;
+                return (
+                    <span className={`badge ${row.isActive ? 'bg-success-subtle text-success-text' : 'bg-danger-subtle text-danger-text'}`}>
+                        {row.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                );
+            }
         }),
         },
         {
             key: 'itemCount',
             label: 'Items',
             align: 'center',
-            render: (row) => <span className="text-sm text-grey-text">{row.itemCount || 0}</span>,
+            render: (row) => {
+                if (row.rowType === 'skeleton') return null;
+                return <span className="text-sm text-grey-text">{row.itemCount || 0}</span>;
+            },
         },
         {
             key: 'createdBy',
             label: 'Created By',
-            render: (row) => (
-                <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
-                    <span className="text-xs text-grey-muted">
-                        {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
-                    </span>
-                </div>
-            ),
+            render: (row) => {
+                if (row.rowType === 'skeleton') return null;
+                return (
+                    <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
+                        <span className="text-xs text-grey-muted">
+                            {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
+                        </span>
+                    </div>
+                );
+            },
         },
         {
             key: 'updatedBy',
             label: 'Updated By',
-            render: (row) => (
-                <div className="flex flex-col gap-0.5">
-                    <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
-                    {row.updatedBy ? (
-                        <span className="text-xs text-grey-muted">
-                            {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
-                        </span>
-                    ) : null}
-                </div>
-            ),
+            render: (row) => {
+                if (row.rowType === 'skeleton') return null;
+                return (
+                    <div className="flex flex-col gap-0.5">
+                        <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
+                        {row.updatedBy ? (
+                            <span className="text-xs text-grey-muted">
+                                {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                            </span>
+                        ) : null}
+                    </div>
+                );
+            },
         }
     ];
 
@@ -390,6 +439,7 @@ export default function Category() {
             type: 'action',
             align: 'center',
             onClick: (row, e) => {
+                if (row.rowType === 'skeleton') return;
                 const rect = e.currentTarget.getBoundingClientRect();
                 const dropdownHeight = 160; // Approximate height of 4 menu items
                 const spaceBelow = window.innerHeight - rect.bottom;

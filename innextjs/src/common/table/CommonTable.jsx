@@ -59,6 +59,13 @@ export default function CommonTable({
     };
 
     const renderCell = (col, row, index) => {
+        if (row.rowType === 'skeleton' && col.key !== 'name') {
+            return <div className="h-4 bg-grey-border rounded w-1/2 opacity-50 animate-pulse"></div>;
+        }
+        if (row.rowType === 'load-more' && col.key !== 'name') {
+            return null;
+        }
+
         if (col.render) return col.render(row, index);
         const value = getNestedValue(row, col.key);
 
