@@ -1,4 +1,4 @@
-import { getBoxKpis } from '@/services/box/box.service';
+import { getAreaKpis } from '@/services/area/area.service';
 import { successResponse, errorResponse } from '@/lib/response';
 
 export default async function handler(req, res) {
@@ -7,7 +7,7 @@ export default async function handler(req, res) {
     }
 
     try {
-        const result = await getBoxKpis();
+        const result = await getAreaKpis();
         
         if (result.success) return successResponse(res, 'Box KPIs fetched successfully', result.data);
         return errorResponse(res, 'Failed to fetch Box KPIs', result.message);

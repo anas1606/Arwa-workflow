@@ -4,7 +4,7 @@ import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShor
 import { Box, Plus, Minus, X, Trash2, ArrowLeft, ArrowRight, Check, LayoutGrid, Layers } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
-import { createBoxApi } from '@/lib/fetcher';
+import { createAreaApi } from '@/lib/fetcher';
 import { toast } from 'sonner';
 import clsx from 'clsx';
 
@@ -181,7 +181,7 @@ export default function AddGodown() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Box name is required');
+      toast.error('Area name is required');
       return;
     }
 
@@ -210,12 +210,12 @@ export default function AddGodown() {
 
     setIsSubmitting(true);
     try {
-      const res = await createBoxApi({ name, sections: formattedSections });
+      const res = await createAreaApi({ name, sections: formattedSections });
       if (res.data?.success) {
-        toast.success(res.data.message || 'Godown Box created successfully');
+        toast.success(res.data.message || 'Godown Area created successfully');
         handleClose();
       } else {
-        toast.error(res.error?.message || res.data?.message || 'Failed to create Godown Box');
+        toast.error(res.error?.message || res.data?.message || 'Failed to create Godown Area');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'An error occurred');
@@ -226,7 +226,7 @@ export default function AddGodown() {
 
   const nextStep = () => {
     if (step === 1 && !name.trim()) {
-      toast.error('Please enter a Box name to continue');
+      toast.error('Please enter a Area name to continue');
       return;
     }
     if (step === 2 && sections.length === 0) {
@@ -265,7 +265,7 @@ export default function AddGodown() {
           />
           <div>
             <h1 className="text-md font-bold text-grey-text-strong leading-tight">Add Godown Setup</h1>
-            <p className="text-sm text-grey-muted mt-1">Configure your new master box and layout.</p>
+            <p className="text-sm text-grey-muted mt-1">Configure your new master area and layout.</p>
           </div>
         </div>
         <div className="flex items-center">
@@ -284,8 +284,8 @@ export default function AddGodown() {
         <div className="w-full bg-white rounded-xl shadow-sm border border-grey-surface p-1">
           <div className="grid grid-cols-3">
             {[
-              { num: 1, title: 'Box Details', desc: 'Name your master container' },
-              { num: 2, title: 'Sections', desc: 'Generate box sections' },
+              { num: 1, title: 'Area Details', desc: 'Name your master container' },
+              { num: 2, title: 'Sections', desc: 'Generate area sections' },
               { num: 3, title: 'Trays', desc: 'Allocate trays to sections' }
             ].map((s, idx) => {
               const isActive = step === s.num;
@@ -344,24 +344,24 @@ export default function AddGodown() {
       {/* Main Content Area (No max-width, fills screen) */}
       <div className="flex-1 overflow-hidden min-h-0 relative">
 
-        {/* STEP 1: BOX DETAILS */}
+        {/* STEP 1: AREA DETAILS */}
         {step === 1 && (
           <div className="h-full overflow-y-auto custom-scrollbar p-4 flex flex-col animate-in fade-in slide-in-from-right-4 duration-200">
             <div className="w-full max-w-xl bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden m-auto shrink-0">
               <div className="bg-grey-bg/50 px-5 py-3 border-b border-grey-border flex items-center justify-between">
                 <h3 className="font-bold text-grey-text-strong flex items-center gap-2 text-base">
                   <Box size={18} className="text-primary" />
-                  Box Configuration
+                  Area Configuration
                 </h3>
               </div>
               <div className="p-6 flex flex-col gap-5">
                 <div>
                   <p className="text-sm text-grey-muted mb-6 leading-relaxed">
-                    Enter a unique name for this godown box. This will act as the master container for all the sections and trays you generate in the following steps.
+                    Enter a unique name for this godown area. This will act as the master container for all the sections and trays you generate in the following steps.
                   </p>
                   <Input
                     type="text"
-                    label="Box Name *"
+                    label="Area Name *"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Warehouse Alpha"

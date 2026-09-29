@@ -23,6 +23,10 @@ export const getCustomerByIdApi = async (id) => {
   return await fetchData(`customer/${id}`);
 };
 
+export const getCustomerKpisApi = async () => {
+  return await fetchData('customer/kpi');
+};
+
 export const createCustomerApi = (payload) => postData("customer", payload);
 export const updateCustomerApi = async (id, payload) => {
   return await putData(`customer/${id}`, { id, ...payload });
@@ -105,6 +109,10 @@ export const getUnitsApi = async (page = 1, limit = 10, search = '', status = 'A
   if (search) params.search = search;
   if (status && status !== 'ALL') params.status = status;
   return await fetchDataWithParams('unit', params);
+};
+
+export const getUnitKpisApi = async () => {
+  return await fetchData('unit/kpi');
 };
 
 export const getUnitByIdApi = async (id) => {
@@ -252,30 +260,30 @@ export const updateOrderApi = async (id, payload) => {
 export const deleteOrderApi = (id, deletedBy = null) => deleteData(`order/${id}`, { data: { deletedBy } });
 
 // Box (Godown)
-export const getBoxesApi = async (page = 1, limit = 10, search = '') => {
-  return await fetchDataWithParams('box', { page, limit, search });
+export const getAreasApi = async (page = 1, limit = 10, search = '') => {
+  return await fetchDataWithParams('area', { page, limit, search });
 };
 
-export const getBoxByIdApi = async (id) => {
-  return await fetchData(`box/${id}`);
+export const getAreaByIdApi = async (id) => {
+  return await fetchData(`area/${id}`);
 };
 
-export const createBoxApi = (payload) => postData("box", payload);
+export const createAreaApi = (payload) => postData("area", payload);
 
-export const updateBoxApi = async (id, payload) => {
-  return await putData(`box/${id}`, { id, ...payload });
+export const updateAreaApi = async (id, payload) => {
+  return await putData(`area/${id}`, { id, ...payload });
 };
 
-export const deleteBoxApi = (id, deletedBy = null) => deleteData(`box/${id}`, { data: { deletedBy } });
+export const deleteAreaApi = (id, deletedBy = null) => deleteData(`area/${id}`, { data: { deletedBy } });
 
-export const getBoxKpisApi = async () => {
-  return await fetchData('box/kpi');
+export const getAreaKpisApi = async () => {
+  return await fetchData('area/kpi');
 };
 
 // Section
-export const getSectionsApi = async (page = 1, limit = 10, search = '', boxId = null) => {
+export const getSectionsApi = async (page = 1, limit = 10, search = '', areaId = null) => {
   const params = { page, limit, search };
-  if (boxId) params.boxId = boxId;
+  if (areaId) params.areaId = areaId;
   return await fetchDataWithParams('section', params);
 };
 

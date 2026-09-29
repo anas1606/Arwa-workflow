@@ -9,54 +9,54 @@ datasource db {
 }
 
 model Customer {
-  id         String    @id @default(uuid())
+  id         String      @id @default(uuid())
   name       String
-  email      String?   @unique
+  email      String?     @unique
   phone      String?
-  balance    Float     @default(0)
+  balance    Float       @default(0)
   code       String?
   region     String?
-  createdAt  DateTime  @default(now()) @map("created_at")
-  createdBy  String?   @map("created_by")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  updatedBy  String?   @map("updated_by")
-  is_deleted Boolean   @default(false)
-  deletedAt  DateTime? @map("deleted_at")
-  deletedBy  String?   @map("deleted_by")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  createdBy  String?     @map("created_by")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  updatedBy  String?     @map("updated_by")
+  is_deleted Boolean     @default(false)
+  deletedAt  DateTime?   @map("deleted_at")
+  deletedBy  String?     @map("deleted_by")
   brands     Brand[]
   orders     Order[]
   packagings Packaging[]
 }
 
 model Brand {
-  id          String    @id @default(uuid())
+  id          String      @id @default(uuid())
   customer_id String
   brandname   String
   description String?
-  createdAt   DateTime  @default(now()) @map("created_at")
-  createdBy   String?   @map("created_by")
-  updatedAt   DateTime  @updatedAt @map("updated_at")
-  updatedBy   String?   @map("updated_by")
-  is_deleted  Boolean   @default(false)
-  deletedAt   DateTime? @map("deleted_at")
-  deletedBy   String?   @map("deleted_by")
-  customer    Customer  @relation(fields: [customer_id], references: [id])
+  createdAt   DateTime    @default(now()) @map("created_at")
+  createdBy   String?     @map("created_by")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+  updatedBy   String?     @map("updated_by")
+  is_deleted  Boolean     @default(false)
+  deletedAt   DateTime?   @map("deleted_at")
+  deletedBy   String?     @map("deleted_by")
+  customer    Customer    @relation(fields: [customer_id], references: [id])
   stickers    Sticker[]
   orderLines  OrderLine[]
 }
 
 model Sticker {
-  id         String    @id @default(uuid())
+  id         String      @id @default(uuid())
   brand_id   String
   name       String
-  createdAt  DateTime  @default(now()) @map("created_at")
-  createdBy  String?   @map("created_by")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  updatedBy  String?   @map("updated_by")
-  is_deleted Boolean   @default(false)
-  deletedAt  DateTime? @map("deleted_at")
-  deletedBy  String?   @map("deleted_by")
-  brand      Brand     @relation(fields: [brand_id], references: [id])
+  createdAt  DateTime    @default(now()) @map("created_at")
+  createdBy  String?     @map("created_by")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  updatedBy  String?     @map("updated_by")
+  is_deleted Boolean     @default(false)
+  deletedAt  DateTime?   @map("deleted_at")
+  deletedBy  String?     @map("deleted_by")
+  brand      Brand       @relation(fields: [brand_id], references: [id])
   orderLines OrderLine[]
 }
 
@@ -110,7 +110,7 @@ model Product {
   deletedAt         DateTime?           @map("deleted_at")
   deletedBy         String?             @map("deleted_by")
   lowStockThreshold Float               @default(10) @map("low_stock_threshold")
-  category          Category           @relation(fields: [categoryId], references: [id])
+  category          Category            @relation(fields: [categoryId], references: [id])
   unit              Unit?               @relation(fields: [unitId], references: [id])
   bodyDesigns       ProductBodyDesign[]
   colours           ProductColour[]
@@ -189,37 +189,37 @@ model RolePermission {
 }
 
 model ProductBodyDesign {
-  id        String       @id @default(uuid())
-  productId String       @map("product_id")
-  name      String
-  type      StandardType
-  createdAt DateTime     @default(now()) @map("created_at")
-  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id         String       @id @default(uuid())
+  productId  String       @map("product_id")
+  name       String
+  type       StandardType
+  createdAt  DateTime     @default(now()) @map("created_at")
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderLines OrderLine[]
 }
 
 model ProductColour {
-  id        String       @id @default(uuid())
-  productId String       @map("product_id")
-  name      String
-  type      StandardType
-  createdAt DateTime     @default(now()) @map("created_at")
-  product   Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+  id         String       @id @default(uuid())
+  productId  String       @map("product_id")
+  name       String
+  type       StandardType
+  createdAt  DateTime     @default(now()) @map("created_at")
+  product    Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
   orderLines OrderLine[]
 }
 
 model Packaging {
-  id         String    @id @default(uuid())
+  id         String      @id @default(uuid())
   name       String
-  customerId String    @map("customer_id")
-  createdAt  DateTime  @default(now()) @map("created_at")
-  createdBy  String?   @map("created_by")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  updatedBy  String?   @map("updated_by")
-  is_deleted Boolean   @default(false)
-  deletedAt  DateTime? @map("deleted_at")
-  deletedBy  String?   @map("deleted_by")
-  customer   Customer  @relation(fields: [customerId], references: [id])
+  customerId String      @map("customer_id")
+  createdAt  DateTime    @default(now()) @map("created_at")
+  createdBy  String?     @map("created_by")
+  updatedAt  DateTime    @updatedAt @map("updated_at")
+  updatedBy  String?     @map("updated_by")
+  is_deleted Boolean     @default(false)
+  deletedAt  DateTime?   @map("deleted_at")
+  deletedBy  String?     @map("deleted_by")
+  customer   Customer    @relation(fields: [customerId], references: [id])
   orderLines OrderLine[]
 }
 
@@ -254,15 +254,15 @@ enum OrderStatus {
 }
 
 model Order {
-  id         String   @id @default(uuid())
-  orderNumber String  @unique @default(uuid()) // fallback since we don't have a sequence setup, we can use an auto-increment or similar if needed. For now uuid.
-  customerId String   @map("customer_id")
-  dueDate    DateTime @map("due_date")
-  priority   Priority @default(NORMAL)
-  remark     String?  @db.Text
-  status     OrderStatus @default(DRAFT) 
-  orderType  OrderType   @default(STANDARD) @map("order_type")
-  
+  id          String      @id @default(uuid())
+  orderNumber String      @unique @default(uuid()) // fallback since we don't have a sequence setup, we can use an auto-increment or similar if needed. For now uuid.
+  customerId  String      @map("customer_id")
+  dueDate     DateTime    @map("due_date")
+  priority    Priority    @default(NORMAL)
+  remark      String?     @db.Text
+  status      OrderStatus @default(DRAFT)
+  orderType   OrderType   @default(STANDARD) @map("order_type")
+
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
   updatedAt  DateTime  @updatedAt @map("updated_at")
@@ -276,30 +276,30 @@ model Order {
 }
 
 model OrderLine {
-  id           String @id @default(uuid())
-  orderId      String @map("order_id")
-  productId    String @map("product_id")
-  quantity     Float  @default(1)
+  id        String @id @default(uuid())
+  orderId   String @map("order_id")
+  productId String @map("product_id")
+  quantity  Float  @default(1)
 
-  bodyDesignId String? @map("body_design_id")
-  colourId     String? @map("colour_id")
-  brandId      String? @map("brand_id")
-  stickerId    String? @map("sticker_id")
-  isDefaultSticker   Boolean @default(false) @map("is_default_sticker")
-  
+  bodyDesignId     String? @map("body_design_id")
+  colourId         String? @map("colour_id")
+  brandId          String? @map("brand_id")
+  stickerId        String? @map("sticker_id")
+  isDefaultSticker Boolean @default(false) @map("is_default_sticker")
+
   accessoriesType CustomisationType @default(STANDARD) @map("accessories_type")
-  accessoriesNote String?           @db.Text @map("accessories_note")
-  
-  packingType     CustomisationType @default(STANDARD) @map("packing_type")
-  packingNote     String?           @db.Text @map("packing_note")
-  packagingId     String?           @map("packaging_id")
-  isDefaultPackaging Boolean @default(false) @map("is_default_packaging")
-  orderType       CustomisationType @default(STANDARD) @map("order_type")
+  accessoriesNote String?           @map("accessories_note") @db.Text
 
-  createdAt  DateTime  @default(now()) @map("created_at")
-  createdBy  String?   @map("created_by")
-  updatedAt  DateTime  @updatedAt @map("updated_at")
-  updatedBy  String?   @map("updated_by")
+  packingType        CustomisationType @default(STANDARD) @map("packing_type")
+  packingNote        String?           @map("packing_note") @db.Text
+  packagingId        String?           @map("packaging_id")
+  isDefaultPackaging Boolean           @default(false) @map("is_default_packaging")
+  orderType          CustomisationType @default(STANDARD) @map("order_type")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by")
 
   order      Order              @relation(fields: [orderId], references: [id], onDelete: Cascade)
   product    Product            @relation(fields: [productId], references: [id])
@@ -310,10 +310,10 @@ model OrderLine {
   packaging  Packaging?         @relation(fields: [packagingId], references: [id])
 }
 
-model Box {
-  id         String    @id @default(uuid())
-  name       String
-  
+model Area {
+  id   String @id @default(uuid())
+  name String
+
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
   updatedAt  DateTime  @updatedAt @map("updated_at")
@@ -322,14 +322,14 @@ model Box {
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
 
-  sections   Section[]
+  sections Section[]
 }
 
 model Section {
-  id         String    @id @default(uuid())
-  name       String
-  boxId      String    @map("box_id")
-  
+  id     String @id @default(uuid())
+  name   String
+  areaId String @map("area_id")
+
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
   updatedAt  DateTime  @updatedAt @map("updated_at")
@@ -338,15 +338,15 @@ model Section {
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
 
-  box        Box       @relation(fields: [boxId], references: [id], onDelete: Cascade)
-  trays      Tray[]
+  area  Area   @relation(fields: [areaId], references: [id], onDelete: Cascade)
+  trays Tray[]
 }
 
 model Tray {
-  id         String    @id @default(uuid())
-  name       String
-  sectionId  String    @map("section_id")
-  
+  id        String @id @default(uuid())
+  name      String
+  sectionId String @map("section_id")
+
   createdAt  DateTime  @default(now()) @map("created_at")
   createdBy  String?   @map("created_by")
   updatedAt  DateTime  @updatedAt @map("updated_at")
@@ -355,38 +355,38 @@ model Tray {
   deletedAt  DateTime? @map("deleted_at")
   deletedBy  String?   @map("deleted_by")
 
-  section    Section   @relation(fields: [sectionId], references: [id], onDelete: Cascade)
+  section Section @relation(fields: [sectionId], references: [id], onDelete: Cascade)
 }
 
 model Bom {
-  id          String     @id @default(uuid())
-  name        String
-  productId   String     @map("product_id")
-  note        String?    @db.Text
-  
-  createdAt   DateTime   @default(now()) @map("created_at")
-  createdBy   String?    @map("created_by")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  updatedBy   String?    @map("updated_by")
-  is_deleted  Boolean    @default(false)
-  deletedAt   DateTime?  @map("deleted_at")
-  deletedBy   String?    @map("deleted_by")
+  id        String  @id @default(uuid())
+  name      String
+  productId String  @map("product_id")
+  note      String? @db.Text
 
-  product     Product    @relation("MainProductBoms", fields: [productId], references: [id])
-  items       BomItem[]
+  createdAt  DateTime  @default(now()) @map("created_at")
+  createdBy  String?   @map("created_by")
+  updatedAt  DateTime  @updatedAt @map("updated_at")
+  updatedBy  String?   @map("updated_by")
+  is_deleted Boolean   @default(false)
+  deletedAt  DateTime? @map("deleted_at")
+  deletedBy  String?   @map("deleted_by")
+
+  product Product   @relation("MainProductBoms", fields: [productId], references: [id])
+  items   BomItem[]
 }
 
 model BomItem {
-  id          String     @id @default(uuid())
-  bomId       String     @map("bom_id")
-  productId   String     @map("product_id")
-  quantity    Float      @default(1)
-  
-  createdAt   DateTime   @default(now()) @map("created_at")
-  createdBy   String?    @map("created_by")
-  updatedAt   DateTime   @updatedAt @map("updated_at")
-  updatedBy   String?    @map("updated_by")
+  id        String @id @default(uuid())
+  bomId     String @map("bom_id")
+  productId String @map("product_id")
+  quantity  Float  @default(1)
 
-  bom         Bom        @relation(fields: [bomId], references: [id], onDelete: Cascade)
-  product     Product    @relation("BomItemProducts", fields: [productId], references: [id])
+  createdAt DateTime @default(now()) @map("created_at")
+  createdBy String?  @map("created_by")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  updatedBy String?  @map("updated_by")
+
+  bom     Bom     @relation(fields: [bomId], references: [id], onDelete: Cascade)
+  product Product @relation("BomItemProducts", fields: [productId], references: [id])
 }

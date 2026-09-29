@@ -9,7 +9,7 @@ import EditUnit from './modal/EditUnit';
 import DeleteModal from '@/common/modal/DeleteModal';
 import clsx from 'clsx';
 import { toast } from 'sonner';
-import { getUnitsApi, deleteUnitApi, updateUnitApi } from '@/lib/fetcher';
+import { getUnitsApi, deleteUnitApi, updateUnitApi, getUnitKpisApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 
@@ -81,7 +81,6 @@ export default function Unit() {
         setUnitsData(response.data.data.data || []);
         setTotalItems(response.data.data.pagination?.total || 0);
         setTotalPages(response.data.data.pagination?.totalPages || 1);
-        setStats(response.data.data.stats || { active: 0, inactive: 0, total: 0 });
       } else {
         setUnitsData([]);
         setTotalItems(0);
@@ -95,9 +94,24 @@ export default function Unit() {
     }
   }, [pageNo, pageSize, query, statusFilter, refreshTrigger]);
 
+  const fetchKpis = useCallback(async () => {
+    try {
+      const response = await getUnitKpisApi();
+      if (response.data && response.data.success) {
+        setStats(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch unit KPIs:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchUnits();
   }, [fetchUnits]);
+
+  useEffect(() => {
+    fetchKpis();
+  }, [fetchKpis, refreshTrigger]);
 
   const triggerRefresh = () => setRefreshTrigger(prev => prev + 1);
 
@@ -166,7 +180,7 @@ export default function Unit() {
     },
     {
       label: 'Most used',
-      value: 'Dozen',
+      value: isLoading ? '...' : (stats.mostUsedUnit || 'None'),
       hint: 'Popular quantity',
       tone: 'info',
     },

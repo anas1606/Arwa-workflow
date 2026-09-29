@@ -1,5 +1,5 @@
-import { createBox, getAllBoxes } from '@/services/box/box.service';
-import { createBoxSchema } from '@/services/box/box.validation';
+import { createArea, getAllAreas } from '@/services/area/area.service';
+import { createAreaSchema } from '@/services/area/area.validation';
 import { successResponse, errorResponse } from '@/lib/response';
 
 export default async function handler(req, res) {
@@ -9,13 +9,13 @@ export default async function handler(req, res) {
         switch (method) {
             case 'GET': {
                 const { page = 1, limit = 10, search = '' } = req.query;
-                const result = await getAllBoxes(page, limit, search);
-                if (result.success) return successResponse(res, 'Boxes fetched successfully', result.data);
-                return errorResponse(res, 'Failed to fetch Boxes', result.message);
+                const result = await getAllAreas(page, limit, search);
+                if (result.success) return successResponse(res, 'Areas fetched successfully', result.data);
+                return errorResponse(res, 'Failed to fetch Areas', result.message);
             }
 
             case 'POST': {
-                const validationResult = createBoxSchema.safeParse(req.body);
+                const validationResult = createAreaSchema.safeParse(req.body);
                 if (!validationResult.success) {
                     const errors = validationResult.error?.errors || validationResult.error?.issues || [];
                     const errorMessage = errors.map(err => err.message).join(', ');
@@ -23,9 +23,9 @@ export default async function handler(req, res) {
                 }
 
                 const userId = req.headers['x-user-id']; // Example logic, adapt based on auth system
-                const result = await createBox(validationResult.data, userId);
-                if (result.success) return successResponse(res, 'Box created successfully', result.data, null, 201);
-                return errorResponse(res, 'Failed to create Box', result.message);
+                const result = await createArea(validationResult.data, userId);
+                if (result.success) return successResponse(res, 'Area created successfully', result.data, null, 201);
+                return errorResponse(res, 'Failed to create Area', result.message);
             }
 
             default:
@@ -33,7 +33,7 @@ export default async function handler(req, res) {
                 return errorResponse(res, `Method ${method} Not Allowed`, null, 405);
         }
     } catch (error) {
-        console.error('API Error in Box index route:', error);
+        console.error('API Error in Area index route:', error);
         return errorResponse(res, 'Internal Server Error', error.message, 500);
     }
 }
