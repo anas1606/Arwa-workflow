@@ -2,7 +2,7 @@ import React, { useState, useMemo, useRef, useEffect, useCallback } from 'react'
 import Head from 'next/head';
 import { Building2, MapPin, Search, Plus, ArrowLeft, ArrowRight, Pencil, Trash2 } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
-import { CUSTOMERS, DUMMY_ORDERS } from '@/common/dummy';
+import { CUSTOMERS } from '@/common/dummy';
 import AddCustomer from './modal/AddCustomer';
 import EditCustomer from './modal/EditCustomer';
 import DeleteModal from '@/common/modal/DeleteModal';
@@ -21,7 +21,7 @@ function customerInitials(name) {
     .toUpperCase();
 }
 
-import { getCustomersApi, deleteCustomerApi } from '@/lib/fetcher';
+import { getCustomersApi, deleteCustomerApi, getCustomerKpisApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 
 export default function Customers() {
@@ -87,8 +87,22 @@ export default function Customers() {
     }
   }, [pageNo, pageSize, query, regionFilter, refreshTrigger]);
 
+  const [kpiData, setKpiData] = useState({ totalCustomers: 0, totalRegions: 0, totalBrands: 0, withOrders: 0 });
+
+  const fetchKpis = async () => {
+    try {
+      const response = await getCustomerKpisApi();
+      if (response.data && response.data.success) {
+        setKpiData(response.data.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch KPIs:', error);
+    }
+  };
+
   useEffect(() => {
     fetchCustomers();
+    fetchKpis();
   }, [fetchCustomers]);
 
   const paginatedData = customersData;
@@ -115,43 +129,28 @@ export default function Customers() {
     setPageNo(1);
   }, [query, regionFilter]);
 
-  // Calculate KPIs
-  const orderCountByCustomer = useMemo(() => {
-    const map = new Map();
-    for (const order of DUMMY_ORDERS) {
-      map.set(order.customerName, (map.get(order.customerName) ?? 0) + 1);
-    }
-    return map;
-  }, []);
-
-  const totalBrands = customersData.reduce((sum, c) => sum + (typeof c.brands === 'number' ? c.brands : (c.brands?.length || 0)), 0);
-  
-  const withOrders = customersData.filter(
-    (c) => (orderCountByCustomer.get(c.name) ?? 0) > 0,
-  ).length;
-
   const kpis = [
     {
       label: 'Total customers',
-      value: isLoading ? '...' : String(customersData.length),
+      value: String(kpiData.totalCustomers),
       hint: 'Accounts in master data',
       tone: 'neutral',
     },
     {
       label: 'Regions',
-      value: isLoading ? '...' : String(globalRegions.length),
+      value: String(kpiData.totalRegions),
       hint: 'Geographic coverage',
       tone: 'info',
     },
     {
       label: 'Brands',
-      value: isLoading ? '...' : String(totalBrands),
+      value: String(kpiData.totalBrands),
       hint: 'Linked brand names',
       tone: 'neutral',
     },
     {
       label: 'With orders',
-      value: isLoading ? '...' : String(withOrders),
+      value: String(kpiData.withOrders),
       hint: 'Linked to production orders',
       tone: 'warning',
     },
@@ -224,14 +223,11 @@ export default function Customers() {
       key: 'orders',
       label: 'Orders',
       align: 'center',
-      render: (row) => {
-        const orders = orderCountByCustomer.get(row.name) ?? 0;
-        return (
-          <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
-            {orders}
-          </span>
-        );
-      },
+      render: (row) => (
+        <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
+          {row.orders || 0}
+        </span>
+      ),
     },
     {
         key: 'createdBy',

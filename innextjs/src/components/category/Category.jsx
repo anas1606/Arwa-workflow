@@ -354,7 +354,6 @@ export default function Category() {
                 try {
                     const response = await updateCategoryApi(row.id, { isActive: newValue });
                     if (response.data && response.data.success) {
-                        refreshData();
                         fetchKpis();
                         toast.success('Category status updated');
                     } else {

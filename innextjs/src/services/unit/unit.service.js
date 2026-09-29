@@ -45,7 +45,7 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
             where.status = false;
         }
 
-        const [data, total, activeCount, inactiveCount] = await Promise.all([
+        const [data, total] = await Promise.all([
             prisma.unit.findMany({
                 where,
                 skip,
@@ -58,6 +58,9 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
                     name: true,
                     shortName: true,
                     quantityUnit: true,
+                    _count: {
+                        select: { products: { where: { is_deleted: false } } }
+                    },
                     status: true,
                     createdAt: true,
                     updatedAt: true,
@@ -65,10 +68,7 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
                     updatedBy: true,
                 }
             }),
-            
-            prisma.unit.count({ where }),
-            prisma.unit.count({ where: { is_deleted: false, status: true } }),
-            prisma.unit.count({ where: { is_deleted: false, status: false } })
+            prisma.unit.count({ where })
         ]);
 
         const userIds = [...new Set(data.flatMap(u => [u.createdBy, u.updatedBy]).filter(Boolean))];
@@ -83,6 +83,7 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
 
         const mappedData = data.map(unit => ({
             ...unit,
+            productCount: unit._count?.products || 0,
             createdByName: unit.createdBy ? userMap[unit.createdBy] || unit.createdBy : 'Unknown',
             updatedByName: unit.updatedBy ? userMap[unit.updatedBy] || unit.updatedBy : '-',
         }));
@@ -96,17 +97,39 @@ export const getAllUnits = async (page = 1, limit = 10, search = '', status = 'A
                     page: parseInt(page), 
                     limit: parseInt(limit), 
                     totalPages: Math.ceil(total / limit) 
-                },
-                stats: {
-                    active: activeCount,
-                    inactive: inactiveCount,
-                    total: activeCount + inactiveCount
                 }
             } 
         };
     } catch (error) {
         console.error('Error in getAllUnits service:', error);
-        return { success: false, message: 'An internal server error occurred while fetching units.' };
+        return { success: false, message: error.message || 'An internal server error occurred while fetching units.' };
+    }
+};
+
+export const getUnitKpis = async () => {
+    try {
+        const [activeCount, inactiveCount, mostUsedUnit] = await Promise.all([
+            prisma.unit.count({ where: { is_deleted: false, status: true } }),
+            prisma.unit.count({ where: { is_deleted: false, status: false } }),
+            prisma.unit.findFirst({
+                where: { is_deleted: false },
+                orderBy: { products: { _count: 'desc' } },
+                select: { name: true }
+            })
+        ]);
+
+        return {
+            success: true,
+            data: {
+                active: activeCount,
+                inactive: inactiveCount,
+                total: activeCount + inactiveCount,
+                mostUsedUnit: mostUsedUnit ? mostUsedUnit.name : 'None'
+            }
+        };
+    } catch (error) {
+        console.error('Error in getUnitKpis service:', error);
+        return { success: false, message: 'An internal error occurred while fetching unit KPIs' };
     }
 };
 

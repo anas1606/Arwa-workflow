@@ -1,24 +1,24 @@
 import prisma from '@/lib/prisma';
 
-export const createBox = async (data, userId = null) => {
+export const createArea = async (data, userId = null) => {
     try {
         const createPayload = {
             name: data.name,
             createdBy: userId,
         };
 
-        const existingBox = await prisma.box.findFirst({
+        const existingArea = await prisma.area.findFirst({
             where: { name: data.name, is_deleted: false }
         });
-        if (existingBox) {
-            return { success: false, message: `Box with name "${data.name}" already exists.` };
+        if (existingArea) {
+            return { success: false, message: `Area with name "${data.name}" already exists.` };
         }
 
         if (data.sections && data.sections.length > 0) {
             const sectionNames = new Set();
             for (const section of data.sections) {
                 if (sectionNames.has(section.name)) {
-                    return { success: false, message: `Duplicate section name "${section.name}" in box.` };
+                    return { success: false, message: `Duplicate section name "${section.name}" in area.` };
                 }
                 sectionNames.add(section.name);
                 if (section.trays && section.trays.length > 0) {
@@ -46,17 +46,17 @@ export const createBox = async (data, userId = null) => {
             };
         }
 
-        const result = await prisma.box.create({
+        const result = await prisma.area.create({
             data: createPayload,
         });
         return { success: true, data: result };
     } catch (error) {
-        console.error('Error in createBox service:', error);
-        return { success: false, message: 'An internal server error occurred while creating box.' };
+        console.error('Error in createArea service:', error);
+        return { success: false, message: 'An internal server error occurred while creating area.' };
     }
 };
 
-export const getAllBoxes = async (page = 1, limit = 10, search = '') => {
+export const getAllAreas = async (page = 1, limit = 10, search = '') => {
     try {
         const skip = (page - 1) * limit;
         const take = parseInt(limit);
@@ -67,7 +67,7 @@ export const getAllBoxes = async (page = 1, limit = 10, search = '') => {
         }
 
         const [data, total] = await Promise.all([
-            prisma.box.findMany({
+            prisma.area.findMany({
                 where,
                 skip,
                 take,
@@ -92,7 +92,7 @@ export const getAllBoxes = async (page = 1, limit = 10, search = '') => {
                     }
                 }
             }),
-            prisma.box.count({ where })
+            prisma.area.count({ where })
         ]);
 
         const userIds = [...new Set(data.flatMap(b => [b.createdBy, b.updatedBy]).filter(Boolean))];
@@ -107,15 +107,15 @@ export const getAllBoxes = async (page = 1, limit = 10, search = '') => {
 
         const totalPages = Math.ceil(total / take);
 
-        const mappedData = data.map(box => ({
-            id: box.id,
-            name: box.name,
-            sectionsCount: box.sections.length,
-            traysCount: box.sections.reduce((acc, s) => acc + s._count.trays, 0),
-            createdAt: box.createdAt,
-            updatedAt: box.updatedAt,
-            createdByName: box.createdBy ? userMap[box.createdBy] || box.createdBy : 'Unknown',
-            updatedByName: box.updatedBy ? userMap[box.updatedBy] || box.updatedBy : '-',
+        const mappedData = data.map(area => ({
+            id: area.id,
+            name: area.name,
+            sectionsCount: area.sections.length,
+            traysCount: area.sections.reduce((acc, s) => acc + s._count.trays, 0),
+            createdAt: area.createdAt,
+            updatedAt: area.updatedAt,
+            createdByName: area.createdBy ? userMap[area.createdBy] || area.createdBy : 'Unknown',
+            updatedByName: area.updatedBy ? userMap[area.updatedBy] || area.updatedBy : '-',
         }));
 
         return { 
@@ -131,16 +131,16 @@ export const getAllBoxes = async (page = 1, limit = 10, search = '') => {
             } 
         };
     } catch (error) {
-        console.error('Error in getAllBoxes service:', error);
-        return { success: false, message: 'An internal server error occurred while fetching boxes.' };
+        console.error('Error in getAllAreas service:', error);
+        return { success: false, message: 'An internal server error occurred while fetching areas.' };
     }
 };
 
-export const getBoxKpis = async () => {
+export const getAreaKpis = async () => {
     try {
-        const [totalBoxes, boxesWithoutSections] = await Promise.all([
-            prisma.box.count({ where: { is_deleted: false } }),
-            prisma.box.count({ 
+        const [totalAreas, areasWithoutSections] = await Promise.all([
+            prisma.area.count({ where: { is_deleted: false } }),
+            prisma.area.count({ 
                 where: { 
                     is_deleted: false,
                     sections: { none: { is_deleted: false } }
@@ -164,21 +164,21 @@ export const getBoxKpis = async () => {
         return {
             success: true,
             data: {
-                totalBoxes,
+                totalAreas,
                 totalSections,
                 totalTrays,
-                boxesWithoutSections
+                areasWithoutSections
             }
         };
     } catch (error) {
-        console.error('Error in getBoxKpis service:', error);
-        return { success: false, message: 'An internal error occurred while fetching box KPIs' };
+        console.error('Error in getAreaKpis service:', error);
+        return { success: false, message: 'An internal error occurred while fetching area KPIs' };
     }
 };
 
-export const getBoxById = async (id) => {
+export const getAreaById = async (id) => {
     try {
-        const box = await prisma.box.findUnique({
+        const box = await prisma.area.findUnique({
             where: { id, is_deleted: false },
             select: {
                 id: true,
@@ -201,19 +201,19 @@ export const getBoxById = async (id) => {
         });
 
         if (!box) {
-            return { success: false, message: 'Box not found' };
+            return { success: false, message: 'Area not found' };
         }
 
         return { success: true, data: box };
     } catch (error) {
-        console.error('Error in getBoxById service:', error);
-        return { success: false, message: 'An internal server error occurred while fetching the box.' };
+        console.error('Error in getAreaById service:', error);
+        return { success: false, message: 'An internal server error occurred while fetching the area.' };
     }
 };
 
-export const updateBox = async (id, data, userId = null) => {
+export const updateArea = async (id, data, userId = null) => {
     try {
-        const existing = await prisma.box.findUnique({
+        const existing = await prisma.area.findUnique({
             where: { id, is_deleted: false },
             include: {
                 sections: {
@@ -226,16 +226,16 @@ export const updateBox = async (id, data, userId = null) => {
         });
 
         if (!existing) {
-            return { success: false, message: 'Box not found' };
+            return { success: false, message: 'Area not found' };
         }
 
         const updateData = {};
         if (data.name !== undefined) {
-            const existingBoxName = await prisma.box.findFirst({
+            const existingAreaName = await prisma.area.findFirst({
                 where: { name: data.name, is_deleted: false, id: { not: id } }
             });
-            if (existingBoxName) {
-                return { success: false, message: `Box with name "${data.name}" already exists.` };
+            if (existingAreaName) {
+                return { success: false, message: `Area with name "${data.name}" already exists.` };
             }
             updateData.name = data.name;
         }
@@ -245,7 +245,7 @@ export const updateBox = async (id, data, userId = null) => {
             const sectionNames = new Set();
             for (const section of data.sections) {
                 if (sectionNames.has(section.name)) {
-                    return { success: false, message: `Duplicate section name "${section.name}" in box.` };
+                    return { success: false, message: `Duplicate section name "${section.name}" in area.` };
                 }
                 sectionNames.add(section.name);
                 if (section.trays && section.trays.length > 0) {
@@ -261,8 +261,8 @@ export const updateBox = async (id, data, userId = null) => {
         }
 
         const result = await prisma.$transaction(async (tx) => {
-            // 1. Update Box properties
-            const updatedBox = await tx.box.update({
+            // 1. Update Area properties
+            const updatedBox = await tx.area.update({
                 where: { id },
                 data: updateData
             });
@@ -298,7 +298,7 @@ export const updateBox = async (id, data, userId = null) => {
                         await tx.section.create({
                             data: {
                                 name: sec.name,
-                                boxId: id,
+                                areaId: id,
                                 createdBy: userId,
                                 trays: sec.trays && sec.trays.length > 0 ? {
                                     create: sec.trays.map(t => ({ name: t.name, createdBy: userId }))
@@ -349,26 +349,26 @@ export const updateBox = async (id, data, userId = null) => {
 
         return { success: true, data: result };
     } catch (error) {
-        console.error('Error in updateBox service:', error);
-        return { success: false, message: 'An internal server error occurred while updating box.' };
+        console.error('Error in updateArea service:', error);
+        return { success: false, message: 'An internal server error occurred while updating area.' };
     }
 };
 
-export const deleteBox = async (id, deletedBy = null) => {
+export const deleteArea = async (id, deletedBy = null) => {
     try {
-        const box = await prisma.box.findUnique({
+        const box = await prisma.area.findUnique({
             where: { id },
             include: { sections: true }
         });
         
-        if (!box || box.is_deleted) {
-            return { success: false, message: 'Box not found or has already been deleted' };
+        if (!box || area.is_deleted) {
+            return { success: false, message: 'Area not found or has already been deleted' };
         }
 
-        const sectionIds = box.sections.map(s => s.id);
+        const sectionIds = area.sections.map(s => s.id);
 
-        const deletedBox = await prisma.$transaction(async (tx) => {
-            const b = await tx.box.update({
+        const deletedArea = await prisma.$transaction(async (tx) => {
+            const b = await tx.area.update({
                 where: { id },
                 data: {
                     is_deleted: true,
@@ -378,7 +378,7 @@ export const deleteBox = async (id, deletedBy = null) => {
             });
 
             await tx.section.updateMany({
-                where: { boxId: id, is_deleted: false },
+                where: { areaId: id, is_deleted: false },
                 data: {
                     is_deleted: true,
                     deletedAt: new Date(),
@@ -400,9 +400,9 @@ export const deleteBox = async (id, deletedBy = null) => {
             return b;
         });
 
-        return { success: true, data: deletedBox };
+        return { success: true, data: deletedArea };
     } catch (error) {
-        console.error('Error deleting box:', error);
+        console.error('Error deleting area:', error);
         return { success: false, message: 'An internal error occurred while deleting the box' };
     }
 };

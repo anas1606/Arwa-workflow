@@ -9,13 +9,13 @@ import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShor
 import { toast } from 'sonner';
 import { useRouter } from 'next/router';
 
-import { getBoxesApi, deleteBoxApi, getBoxKpisApi } from '@/lib/fetcher';
+import { getAreasApi, deleteAreaApi, getAreaKpisApi } from '@/lib/fetcher';
 import { usePermission } from '@/hooks/usePermission';
 
 export default function Godown() {
   const router = useRouter();
   const { canRead, canCreate, canUpdate, canDelete } = usePermission('godown');
-  const [boxesData, setBoxesData] = useState([]);
+  const [areasData, setAreasData] = useState([]);
   const [kpiData, setKpiData] = useState(null);
   
   const [inputValue, setInputValue] = useState('');
@@ -35,7 +35,7 @@ export default function Godown() {
   const [selectedRowIndex, setSelectedRowIndex] = useState(0);
   
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedBox, setSelectedBox] = useState(null);
+  const [selectedArea, setSelectedArea] = useState(null);
   
   const [dropdownState, setDropdownState] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -53,28 +53,28 @@ export default function Godown() {
 
   const fetchKpis = async () => {
     try {
-      const res = await getBoxKpisApi();
+      const res = await getAreaKpisApi();
       if (res.data?.success) {
         setKpiData(res.data.data);
       }
     } catch (err) {
-      console.error('Failed to fetch Box KPIs:', err);
+      console.error('Failed to fetch Area KPIs:', err);
     }
   };
 
-  const fetchBoxes = useCallback(async () => {
+  const fetchAreas = useCallback(async () => {
     setIsLoading(true);
     try {
-      const response = await getBoxesApi(pageNo, pageSize, query);
+      const response = await getAreasApi(pageNo, pageSize, query);
       if (response.data && response.data.success) {
-        setBoxesData(response.data.data.data || []);
+        setAreasData(response.data.data.data || []);
         setTotalItems(response.data.data.pagination?.totalItems || 0);
       } else {
-        setBoxesData([]);
+        setAreasData([]);
         setTotalItems(0);
       }
     } catch (error) {
-      console.error('Failed to fetch boxes:', error);
+      console.error('Failed to fetch areas:', error);
     } finally {
       setIsLoading(false);
     }
@@ -82,37 +82,37 @@ export default function Godown() {
 
   useEffect(() => {
     if (canRead) {
-      fetchBoxes();
+      fetchAreas();
       fetchKpis();
     }
-  }, [fetchBoxes, canRead]);
+  }, [fetchAreas, canRead]);
 
   const totalPages = Math.ceil(totalItems / pageSize) || 1;
 
   useKeyboardShortcuts({
       onAdd: canCreate ? () => router.push('/inventory/godown/create') : undefined,
       onEdit: canUpdate ? (item) => router.push(`/inventory/godown/edit/${item.id}`) : undefined,
-      onDelete: canDelete ? (item) => { setSelectedBox(item); setDeleteOpen(true); } : undefined,
-      items: boxesData,
+      onDelete: canDelete ? (item) => { setSelectedArea(item); setDeleteOpen(true); } : undefined,
+      items: areasData,
       selectedRowIndex: selectedRowIndex,
       setSelectedRowIndex: setSelectedRowIndex,
       onSearchFocus: () => searchInputRef.current?.focus(),
-      onRefresh: () => { fetchBoxes(); fetchKpis(); },
+      onRefresh: () => { fetchAreas(); fetchKpis(); },
       pageNo: pageNo,
       setPageNo: setPageNo,
       totalPages: totalPages,
   });
 
   const handleDelete = async () => {
-    if (!selectedBox?.id) return;
+    if (!selectedArea?.id) return;
     try {
-      const res = await deleteBoxApi(selectedBox.id);
+      const res = await deleteAreaApi(selectedArea.id);
       if (res.data?.success) {
-        toast.success(res.data.message || 'Godown Box deleted successfully');
+        toast.success(res.data.message || 'Godown Area deleted successfully');
         setDeleteOpen(false);
         triggerRefresh();
       } else {
-        toast.error(res.error?.message || res.data?.message || 'Failed to delete godown box');
+        toast.error(res.error?.message || res.data?.message || 'Failed to delete godown area');
       }
     } catch (err) {
       toast.error('An error occurred');
@@ -126,7 +126,7 @@ export default function Godown() {
   const columns = [
     {
       key: 'name',
-      label: 'Box Name',
+      label: 'Area Name',
       render: (row) => (
         <div className="flex items-center gap-2.5">
           <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary-dark">
@@ -210,10 +210,10 @@ export default function Godown() {
   }
 
   const kpis = [
-    { label: 'Total Boxes', value: kpiData?.totalBoxes || 0, tone: 'info', hint: 'Boxes in warehouse' },
+    { label: 'Total Areas', value: kpiData?.totalAreas || 0, tone: 'info', hint: 'Areas in warehouse' },
     { label: 'Total Sections', value: kpiData?.totalSections || 0, tone: 'success', hint: 'Active sections' },
     { label: 'Total Trays', value: kpiData?.totalTrays || 0, tone: 'neutral', hint: 'Available trays' },
-    { label: 'Empty Boxes', value: kpiData?.boxesWithoutSections || 0, tone: 'warning', hint: 'Boxes missing sections' },
+    { label: 'Empty Areas', value: kpiData?.areasWithoutSections || 0, tone: 'warning', hint: 'Areas missing sections' },
   ];
 
   return (
@@ -226,7 +226,7 @@ export default function Godown() {
               Godown
             </h1>
             <p className="mt-1 text-sm leading-snug text-grey-muted">
-              Manage your warehouse boxes, sections, and trays
+              Manage your warehouse areas, sections, and trays
             </p>
           </div>
           {canCreate && (
@@ -278,30 +278,30 @@ export default function Godown() {
               startIcon={Search}
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder="Search boxes..."
+              placeholder="Search areas..."
               className="flex-1 min-w-0"
             />
           </div>
           <KeyboardShortcutBar
             onAdd={canCreate ? () => router.push('/inventory/godown/create') : undefined}
             onEdit={canUpdate ? (item) => router.push(`/inventory/godown/edit/${item.id}`) : undefined}
-            onDelete={canDelete ? (item) => { setSelectedBox(item); setDeleteOpen(true); } : undefined}
-            onRefresh={() => { fetchBoxes(); fetchKpis(); }}
+            onDelete={canDelete ? (item) => { setSelectedArea(item); setDeleteOpen(true); } : undefined}
+            onRefresh={() => { fetchAreas(); fetchKpis(); }}
             searchId="godown-search-input"
             pageNo={pageNo}
             totalPages={totalPages}
-            selectedItem={boxesData[selectedRowIndex]}
+            selectedItem={areasData[selectedRowIndex]}
             selectedRowIndex={selectedRowIndex}
-            addLabel="Add Box"
+            addLabel="Add Area"
           />
         </div>
 
         {/* Table */}
         <CommonTable
           columns={columns}
-          data={boxesData}
+          data={areasData}
           isLoading={isLoading}
-          emptyState="No boxes match your search."
+          emptyState="No areas match your search."
           pagination={{
             totalItems,
             pageSize,
@@ -339,7 +339,7 @@ export default function Godown() {
             <button
               className="text-left px-4 py-2 text-sm text-danger-main hover:bg-danger-bg transition-colors flex items-center gap-2"
               onClick={() => {
-                setSelectedBox(dropdownState.row);
+                setSelectedArea(dropdownState.row);
                 setDeleteOpen(true);
                 setDropdownState(null);
               }}
@@ -352,12 +352,12 @@ export default function Godown() {
 
       <DeleteModal
         open={deleteOpen}
-        onClose={() => { setDeleteOpen(false); setSelectedBox(null); }}
+        onClose={() => { setDeleteOpen(false); setSelectedArea(null); }}
         onConfirm={handleDelete}
-        title="Delete Box"
-        item={selectedBox}
+        title="Delete Area"
+        item={selectedArea}
         itemNameKey="name"
-        itemType="box"
+        itemType="area"
       />
     </>
   );

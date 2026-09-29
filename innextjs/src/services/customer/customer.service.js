@@ -59,7 +59,8 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
             updatedBy: true,
             _count: {
                 select: {
-                    brands: { where: { is_deleted: false } }
+                    brands: { where: { is_deleted: false } },
+                    orders: { where: { is_deleted: false } }
                 }
             }
         };
@@ -113,7 +114,8 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
                 updatedBy: customer.updatedBy,
                 createdByName: customer.createdBy ? userMap[customer.createdBy] || customer.createdBy : 'Unknown',
                 updatedByName: customer.updatedBy ? userMap[customer.updatedBy] || customer.updatedBy : '-',
-                brands: customer._count.brands
+                brands: customer._count.brands,
+                orders: customer._count.orders
             }));
         }
 
@@ -134,6 +136,38 @@ export const getAllCustomers = async (page = 1, limit = 10, search = '', region 
         };
     } catch (error) {
         console.error('Error in getAllCustomers service:', error);
+        return { success: false, message: error.message };
+    }
+};
+
+export const getCustomerKpis = async () => {
+    try {
+        const [totalCustomers, regionsGroups, totalBrands, withOrders] = await Promise.all([
+            prisma.customer.count({ where: { is_deleted: false } }),
+            prisma.customer.groupBy({
+                by: ['region'],
+                where: { is_deleted: false, region: { not: null, not: '' } }
+            }),
+            prisma.brand.count({ where: { is_deleted: false } }),
+            prisma.customer.count({
+                where: {
+                    is_deleted: false,
+                    orders: { some: { is_deleted: false } }
+                }
+            })
+        ]);
+
+        return {
+            success: true,
+            data: {
+                totalCustomers,
+                totalRegions: regionsGroups.length,
+                totalBrands,
+                withOrders
+            }
+        };
+    } catch (error) {
+        console.error('Error in getCustomerKpis service:', error);
         return { success: false, message: error.message };
     }
 };

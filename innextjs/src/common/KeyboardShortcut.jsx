@@ -38,6 +38,7 @@ export const useKeyboardShortcuts = ({
         if (disabled) return;
 
         const handleKeyDown = (e) => {
+            if (!e || typeof e.key !== 'string') return;
             const activeEl = document.activeElement;
             const isInputActive = activeEl && ['INPUT', 'TEXTAREA', 'SELECT'].includes(activeEl.tagName);
             const isSearchFocused = activeEl && activeEl.id === searchId;
@@ -50,7 +51,7 @@ export const useKeyboardShortcuts = ({
                 let isMatch = false;
                 if (shortcut.key) {
                     const sKey = shortcut.key.toLowerCase();
-                    const eKey = e.key.toLowerCase();
+                    const eKey = (e.key || '').toLowerCase();
                     const eCode = (e.code || '').toLowerCase();
                     isMatch = (eKey === sKey) || (eCode === sKey);
                     

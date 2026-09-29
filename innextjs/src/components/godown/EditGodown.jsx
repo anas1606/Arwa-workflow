@@ -3,7 +3,7 @@ import { useRouter } from 'next/router';
 import { Box, Plus, Minus, X, Trash2, ArrowLeft, ArrowRight, Check, LayoutGrid, Layers } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
-import { getBoxByIdApi, updateBoxApi } from '@/lib/fetcher';
+import { getAreaByIdApi, updateAreaApi } from '@/lib/fetcher';
 import { useKeyboardShortcuts, KeyboardShortcutBar } from '@/common/KeyboardShortcut';
 import { toast } from 'sonner';
 import clsx from 'clsx';
@@ -111,23 +111,23 @@ export default function EditGodown() {
 
   useEffect(() => {
     if (id) {
-      const fetchBox = async () => {
+      const fetchArea = async () => {
         try {
-          const res = await getBoxByIdApi(id);
+          const res = await getAreaByIdApi(id);
           if (res.data?.success) {
-            const boxData = res.data.data;
-            setName(boxData.name || '');
-            setSections(boxData.sections || []);
+            const areaData = res.data.data;
+            setName(areaData.name || '');
+            setSections(areaData.sections || []);
           } else {
-            toast.error(res.data?.message || 'Failed to fetch Box');
+            toast.error(res.data?.message || 'Failed to fetch Area');
           }
         } catch (error) {
-          toast.error('An error occurred while fetching box details');
+          toast.error('An error occurred while fetching area details');
         } finally {
           setIsLoading(false);
         }
       };
-      fetchBox();
+      fetchArea();
     }
   }, [id]);
 
@@ -204,7 +204,7 @@ export default function EditGodown() {
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error('Box name is required');
+      toast.error('Area name is required');
       return;
     }
     
@@ -234,12 +234,12 @@ export default function EditGodown() {
     
     setIsSubmitting(true);
     try {
-      const res = await updateBoxApi(id, { name, sections: formattedSections });
+      const res = await updateAreaApi(id, { name, sections: formattedSections });
       if (res.data?.success) {
-        toast.success(res.data.message || 'Godown Box updated successfully');
+        toast.success(res.data.message || 'Godown Area updated successfully');
         handleClose();
       } else {
-        toast.error(res.error?.message || res.data?.message || 'Failed to update Godown Box');
+        toast.error(res.error?.message || res.data?.message || 'Failed to update Godown Area');
       }
     } catch (err) {
       toast.error(err.response?.data?.message || 'An error occurred');
@@ -250,7 +250,7 @@ export default function EditGodown() {
 
   const nextStep = () => {
     if (step === 1 && !name.trim()) {
-      toast.error('Please enter a Box name to continue');
+      toast.error('Please enter a Area name to continue');
       return;
     }
     if (step === 2 && sections.length === 0) {
@@ -289,7 +289,7 @@ export default function EditGodown() {
           />
           <div>
             <h1 className="text-md font-bold text-grey-text-strong leading-tight">Edit Godown Setup</h1>
-            <p className="text-sm text-grey-muted mt-1">Configure your master box and layout.</p>
+            <p className="text-sm text-grey-muted mt-1">Configure your master area and layout.</p>
           </div>
         </div>
         <div className="flex items-center ">
@@ -308,8 +308,8 @@ export default function EditGodown() {
         <div className="w-full bg-white rounded-xl shadow-sm border border-grey-surface p-1">
           <div className="grid grid-cols-3">
             {[
-              { num: 1, title: 'Box Details', desc: 'Name your master container' },
-              { num: 2, title: 'Sections', desc: 'Generate box sections' },
+              { num: 1, title: 'Area Details', desc: 'Name your master container' },
+              { num: 2, title: 'Sections', desc: 'Generate area sections' },
               { num: 3, title: 'Trays', desc: 'Allocate trays to sections' }
             ].map((s, idx) => {
               const isActive = step === s.num;
@@ -385,24 +385,24 @@ export default function EditGodown() {
           </div>
         ) : (
           <>
-        {/* STEP 1: BOX DETAILS */}
+        {/* STEP 1: AREA DETAILS */}
         {step === 1 && (
           <div className="h-full overflow-y-auto custom-scrollbar p-6 flex flex-col animate-in fade-in slide-in-from-right-4 duration-200">
             <div className="w-full max-w-2xl bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden m-auto shrink-0">
               <div className="bg-grey-bg/50 px-6 py-5 border-b border-grey-border flex items-center justify-between">
                 <h3 className="font-bold text-grey-text-strong flex items-center gap-2 text-lg">
                   <Box size={20} className="text-primary" />
-                  Box Configuration
+                  Area Configuration
                 </h3>
               </div>
               <div className="p-8 flex flex-col gap-6">
                 <div>
                   <p className="text-sm text-grey-muted mb-6 leading-relaxed">
-                    Edit the unique name for this godown box. This acts as the master container for all sections and trays.
+                    Edit the unique name for this godown area. This acts as the master container for all sections and trays.
                   </p>
                   <Input
                     type="text"
-                    label="Box Name *"
+                    label="Area Name *"
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="e.g. Warehouse Alpha"
