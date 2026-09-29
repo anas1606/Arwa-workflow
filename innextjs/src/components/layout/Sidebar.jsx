@@ -18,7 +18,8 @@ import {
   User,
   LogOut,
   Users,
-  Settings
+  Settings,
+  Briefcase
 } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -26,7 +27,15 @@ const operationsNav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true, moduleKey: 'dashboard' },
   { to: '/customers', label: 'Customers', icon: Building2, moduleKey: 'customers' },
   { to: '/orders', label: 'Orders', icon: ClipboardList, moduleKey: 'orders' },
-  { to: '/production', label: 'Production', icon: Factory, moduleKey: 'production' },
+  {
+    to: '/production',
+    label: 'Production',
+    icon: Factory,
+    children: [
+      { to: '/production/bom-calculation', label: 'BOM Calculation', icon: Layers, moduleKey: 'production' },
+      { to: '/production/job-work', label: 'Job Work', icon: Briefcase, moduleKey: 'job_work' },
+    ],
+  },
   {
     to: '/inventory',
     label: 'Inventory',
@@ -56,7 +65,8 @@ const allNav = [
   { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/customers', label: 'Customers', icon: Building2 },
   { to: '/orders', label: 'Orders', icon: ClipboardList },
-  { to: '/production', label: 'Production', icon: Factory },
+  { to: '/production/bom-calculation', label: 'BOM Calculation', icon: Factory },
+  { to: '/production/job-work', label: 'Job Work', icon: Briefcase },
   { to: '/bom', label: 'BOM', icon: Layers },
   { to: '/inventory/product', label: 'Inventory', icon: Package },
   { to: '/users', label: 'Users', icon: Users },

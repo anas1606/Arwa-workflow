@@ -155,7 +155,8 @@ export default function Production() {
 
         setLoadingNodes(prev => new Set(prev).add(uniqueId));
         try {
-            const res = await getProductionBomApi(item.productId, item.requiredQuantity, 1, 10);
+            const shortageQty = Math.max(0, item.requiredQuantity - (item.stockQuantity || 0));
+            const res = await getProductionBomApi(item.productId, shortageQty, 1, 10);
             if (res.data?.success) {
                 const childrenData = res.data.data.requirements;
                 const pagination = res.data.data.pagination;
@@ -223,7 +224,7 @@ export default function Production() {
             if (item) {
                 if (item.isLoadMore) {
                     handleLoadMore(item);
-                } else if (item.hasSubBom) {
+                } else if (item.hasSubBom && item.isShortage) {
                     toggleExpand(item);
                 }
             }
@@ -270,7 +271,7 @@ export default function Production() {
                 
                 return (
                     <div style={{ paddingLeft: `${item.depth * 28}px` }} className="flex items-center">
-                        {item.hasSubBom ? (
+                        {(item.hasSubBom && item.isShortage) ? (
                             <button 
                                 onClick={(e) => { e.stopPropagation(); toggleExpand(item); }}
                                 className="w-6 h-6 rounded flex items-center justify-center text-grey-icon-strong hover:bg-grey-bg transition-colors mr-2 shrink-0"
@@ -334,7 +335,7 @@ export default function Production() {
     return (
         <>
             <Head>
-                <title>Production | Arwa Weld</title>
+                <title>BOM Calculation | Arwa Weld</title>
             </Head>
 
             <div className="w-full flex flex-col gap-5 h-full min-h-[calc(100vh-100px)]">
@@ -342,7 +343,7 @@ export default function Production() {
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div className="min-w-0">
                         <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong">
-                            Production Requirements
+                            BOM Calculation
                         </h1>
                         <p className="mt-1 text-sm leading-snug text-grey-muted">
                             Calculate Bill of Materials requirements and check stock availability.
