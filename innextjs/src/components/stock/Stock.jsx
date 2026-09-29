@@ -52,9 +52,10 @@ export default function Stock() {
                     hasChildren: true,
                     products: products,
                     children: [],
+                    childrenLoaded: true,
                     totalStock: searchTotalStock
                 });
-                setExpandedNodes(prev => new Set(prev).add('cat-search-products'));
+                setExpandedNodes(prev => new Set(prev).add('search-products'));
                 setCategoriesData(searchData);
             } else {
                 setCategoriesData(data);
@@ -73,26 +74,26 @@ export default function Stock() {
         return () => clearTimeout(timeout);
     }, [inputValue]);
 
-    const toggleExpand = async (id, e) => {
+    const toggleExpand = async (uniquePath, rawId, e) => {
         e.stopPropagation();
         
         setExpandedNodes(prev => {
             const next = new Set(prev);
-            if (next.has(id)) {
-                next.delete(id);
+            if (next.has(uniquePath)) {
+                next.delete(uniquePath);
             } else {
-                next.add(id);
+                next.add(uniquePath);
             }
             return next;
         });
 
         // Lazy load children
-        if (!expandedNodes.has(id) && !loadingChildren.has(id)) {
+        if (!expandedNodes.has(uniquePath) && !loadingChildren.has(rawId)) {
             // Find if children are already loaded
             let node = null;
             const findNode = (nodes) => {
                 for (const n of nodes) {
-                    if (n.id === id) { node = n; return; }
+                    if (n.id === rawId) { node = n; return; }
                     if (n.children) findNode(n.children);
                 }
             };
@@ -100,9 +101,9 @@ export default function Stock() {
             
             // Only fetch if it hasn't been loaded yet AND it actually has either products or subcategories!
             if (node && node.hasChildren && !node.childrenLoaded) {
-                setLoadingChildren(prev => new Set(prev).add(id));
+                setLoadingChildren(prev => new Set(prev).add(rawId));
                 try {
-                    const res = await fetch(`/api/v1/stock?parentId=${id}&limit=100`, {
+                    const res = await fetch(`/api/v1/stock?parentId=${rawId}&limit=100`, {
                         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
                     });
                     const result = await res.json();
@@ -112,7 +113,7 @@ export default function Stock() {
                     
                     setCategoriesData(prev => {
                         const updateNode = (nodes) => nodes.map(n => {
-                            if (n.id === id) {
+                            if (n.id === rawId) {
                                 return { 
                                     ...n, 
                                     children: childrenData, 
@@ -130,7 +131,7 @@ export default function Stock() {
                 } finally {
                     setLoadingChildren(prev => {
                         const next = new Set(prev);
-                        next.delete(id);
+                        next.delete(rawId);
                         return next;
                     });
                 }
@@ -143,7 +144,8 @@ export default function Stock() {
         const searchLower = inputValue.toLowerCase();
         
         // Flatten the tree
-        const traverse = (node, depth, isMatchingParent = false) => {
+        const traverse = (node, depth, path = '', isMatchingParent = false) => {
+            const currentPath = path ? `${path}-${node.id}` : node.id;
             const nodeMatches = node.name.toLowerCase().includes(searchLower);
             
             // Check if any products match
@@ -172,14 +174,15 @@ export default function Stock() {
                 depth, 
                 hasChildren, 
                 rowType: 'category',
-                id: `cat-${node.id}`,
+                id: `cat-${currentPath}`,
                 rawId: node.id,
+                uniquePath: currentPath,
                 isLoadingChildren: loadingChildren.has(node.id)
             });
 
-            if (expandedNodes.has(node.id) || inputValue) {
+            if (expandedNodes.has(currentPath)) {
                 // 1. Products
-                const prodsToRender = inputValue ? (nodeMatches ? node.products : matchingProducts) : node.products;
+                const prodsToRender = node.products;
                 
                 if (prodsToRender?.length > 0) {
                     const limit = loadedCounts[node.id] || 10;
@@ -192,13 +195,13 @@ export default function Stock() {
                             hasChildren: false,
                             rowType: 'product',
                             totalStock: prod.stockQuantity || 0,
-                            id: `prod-${prod.id}`
+                            id: `prod-${currentPath}-${prod.id}`
                         });
                     });
                     
                     if (!inputValue && prodsToRender.length > limit) {
                         result.push({
-                            id: `load-more-${node.id}`,
+                            id: `load-more-${currentPath}`,
                             rowType: 'load-more',
                             categoryId: node.id,
                             depth: depth + 1,
@@ -210,12 +213,12 @@ export default function Stock() {
                 // 2. Skeletons for subcategories (loading state)
                 if (loadingChildren.has(node.id)) {
                     result.push({
-                        id: `skel-1-${node.id}`,
+                        id: `skel-1-${currentPath}`,
                         rowType: 'skeleton',
                         depth: depth + 1
                     });
                     result.push({
-                        id: `skel-2-${node.id}`,
+                        id: `skel-2-${currentPath}`,
                         rowType: 'skeleton',
                         depth: depth + 1
                     });
@@ -223,12 +226,12 @@ export default function Stock() {
                 
                 // 3. Subcategories
                 if (node.children?.length > 0) {
-                    node.children.forEach(child => traverse(child, depth + 1, !!inputValue));
+                    node.children.forEach(child => traverse(child, depth + 1, currentPath, !!inputValue));
                 }
             }
         };
 
-        categoriesData.forEach(root => traverse(root, 0));
+        categoriesData.forEach(root => traverse(root, 0, ''));
         return result;
     }, [categoriesData, expandedNodes, inputValue, loadedCounts, loadingChildren]);
 
@@ -256,7 +259,7 @@ export default function Stock() {
         setSelectedRowIndex,
         onEdit: (item) => {
             if (item.rowType === 'category' && item.hasChildren) {
-                toggleExpand(item.rawId, { stopPropagation: () => {} });
+                toggleExpand(item.uniquePath, item.rawId, { stopPropagation: () => {} });
             } else if (item.rowType === 'load-more') {
                 setLoadedCounts(prev => ({
                     ...prev,
@@ -319,7 +322,7 @@ export default function Stock() {
                         
                         {row.rowType === 'category' ? (
                             <button
-                                onClick={(e) => row.hasChildren && toggleExpand(row.rawId, e)}
+                                onClick={(e) => row.hasChildren && toggleExpand(row.uniquePath, row.rawId, e)}
                                 disabled={!row.hasChildren || row.isLoadingChildren}
                                 className={`p-1 rounded-md transition-colors flex items-center justify-center w-6 h-6 ${
                                     isChild 
@@ -331,7 +334,7 @@ export default function Stock() {
                                         : 'opacity-40 cursor-not-allowed'
                                 }`}
                             >
-                                {row.hasChildren && (expandedNodes.has(row.rawId) || inputValue) ? (
+                                {row.hasChildren && expandedNodes.has(row.uniquePath) ? (
                                     <ChevronDown size={16} />
                                 ) : (
                                     <ChevronRight size={16} />
