@@ -171,11 +171,15 @@ export const useKeyboardShortcuts = ({
                 return;
             }
 
-            // 8. Table Navigation & Row Actions (Only when NOT typing inside inputs and modal is not open)
-            if (!isInputActive && !isModalOpen && items.length > 0) {
+            // 8. Table Navigation & Row Actions
+            if (!isModalOpen && items.length > 0) {
+                // Only allow arrow navigation if not in an input, OR if specifically in the main search input
+                const canNavigateWithArrows = !isInputActive || (activeEl && activeEl.id === searchId);
+
                 // Navigate Down: ArrowDown or 'J'
-                if (e.key === 'ArrowDown' || e.key.toLowerCase() === 'j') {
+                if ((canNavigateWithArrows && e.key === 'ArrowDown') || (!isInputActive && e.key.toLowerCase() === 'j')) {
                     e.preventDefault();
+                    if (isInputActive) activeEl.blur();
                     if (setSelectedRowIndex) {
                         setSelectedRowIndex(prev => (prev < items.length - 1 ? prev + 1 : prev));
                     }
@@ -183,48 +187,52 @@ export const useKeyboardShortcuts = ({
                 }
 
                 // Navigate Up: ArrowUp or 'K'
-                if (e.key === 'ArrowUp' || e.key.toLowerCase() === 'k') {
+                if ((canNavigateWithArrows && e.key === 'ArrowUp') || (!isInputActive && e.key.toLowerCase() === 'k')) {
                     e.preventDefault();
+                    if (isInputActive) activeEl.blur();
                     if (setSelectedRowIndex) {
                         setSelectedRowIndex(prev => (prev > 0 ? prev - 1 : 0));
                     }
                     return;
                 }
 
-                // Toggle Checkbox for Focused Row: Space or 'X'
-                if (e.key === ' ' || e.key.toLowerCase() === 'x') {
-                    e.preventDefault();
-                    if (onToggleSelect && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
-                        onToggleSelect(items[selectedRowIndex], selectedRowIndex);
+                // Following actions only work when NOT typing inside inputs
+                if (!isInputActive) {
+                    // Toggle Checkbox for Focused Row: Space or 'X'
+                    if (e.key === ' ' || e.key.toLowerCase() === 'x') {
+                        e.preventDefault();
+                        if (onToggleSelect && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
+                            onToggleSelect(items[selectedRowIndex], selectedRowIndex);
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                // Edit Selected: Enter or Alt + E
-                if (e.key === 'Enter' || (e.altKey && e.key.toLowerCase() === 'e')) {
-                    e.preventDefault();
-                    if (onEdit && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
-                        onEdit(items[selectedRowIndex], selectedRowIndex);
+                    // Edit Selected: Enter or Alt + E
+                    if (e.key === 'Enter' || (e.altKey && e.key.toLowerCase() === 'e')) {
+                        e.preventDefault();
+                        if (onEdit && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
+                            onEdit(items[selectedRowIndex], selectedRowIndex);
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                // Delete Selected: Delete / Del or Alt + D
-                if (e.key === 'Delete' || (e.altKey && e.key.toLowerCase() === 'd')) {
-                    e.preventDefault();
-                    if (onDelete && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
-                        onDelete(items[selectedRowIndex], selectedRowIndex);
+                    // Delete Selected: Delete / Del or Alt + D
+                    if (e.key === 'Delete' || (e.altKey && e.key.toLowerCase() === 'd')) {
+                        e.preventDefault();
+                        if (onDelete && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
+                            onDelete(items[selectedRowIndex], selectedRowIndex);
+                        }
+                        return;
                     }
-                    return;
-                }
 
-                // View Selected: Alt + V
-                if (e.altKey && e.key.toLowerCase() === 'v') {
-                    e.preventDefault();
-                    if (onView && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
-                        onView(items[selectedRowIndex], selectedRowIndex);
+                    // View Selected: Alt + V
+                    if (e.altKey && e.key.toLowerCase() === 'v') {
+                        e.preventDefault();
+                        if (onView && selectedRowIndex >= 0 && selectedRowIndex < items.length) {
+                            onView(items[selectedRowIndex], selectedRowIndex);
+                        }
+                        return;
                     }
-                    return;
                 }
             }
         };
