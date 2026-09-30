@@ -9,8 +9,12 @@ import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShor
 import { getProductsApi, getProductionBomApi, createJobWorkApi } from '@/lib/fetcher';
 import { useRouter } from 'next/router';
 import { toast } from 'sonner';
+import { usePermission } from '@/hooks/usePermission';
 
 export default function BomCalculation() {
+    const { canRead: canReadBomCalc } = usePermission('bom_calculation');
+    const { canCreate: canCreateJobWork } = usePermission('job_work');
+    
     // Inputs
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [quantity, setQuantity] = useState('1');
@@ -388,7 +392,7 @@ export default function BomCalculation() {
                             Calculate Bill of Materials requirements and check stock availability.
                         </p>
                     </div>
-                    {hasChecked && requirementsTree.length > 0 && (
+                    {hasChecked && requirementsTree.length > 0 && canCreateJobWork && (
                         <Button
                             variant="primary"
                             className="w-full sm:w-auto shrink-0"

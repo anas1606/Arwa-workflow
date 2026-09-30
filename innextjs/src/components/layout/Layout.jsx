@@ -14,7 +14,8 @@ export function Layout({ children }) {
     { path: '/customers', module: 'customers' },
     { path: '/inventory/customisation', module: 'customisation' },
     { path: '/orders', module: 'orders' },
-    { path: '/production', module: 'production' },
+    { path: '/production/job-work', module: 'job_work' },
+    { path: '/production/bom-calculation', module: 'bom_calculation' },
     { path: '/bom', module: 'bom' },
     { path: '/inventory/category', module: 'categories' },
     { path: '/inventory/product', module: 'products' },
@@ -33,8 +34,8 @@ export function Layout({ children }) {
   let requiredAction = 'can_read';
   if (router.pathname.endsWith('/create') || router.pathname.endsWith('/new') || router.pathname.endsWith('/add')) {
     requiredAction = 'can_create';
-  } else if (router.pathname.includes('/edit') || router.pathname.includes('/[')) {
-    // If it's a sub-path like /[id] or /edit, it requires update permission
+  } else if (router.pathname.includes('/edit')) {
+    // If it's a sub-path like /edit, it requires update permission
     requiredAction = 'can_update';
   }
 

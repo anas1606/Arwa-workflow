@@ -12,7 +12,6 @@ const moduleMap = {
     '/api/v1/brand': 'customisation',
     '/api/v1/sticker': 'customisation',
     '/api/v1/user': 'users',
-    '/api/v1/production': 'production',
     '/api/v1/security_role': 'security_roles',
     '/api/v1/module': 'modules',
     '/api/v1/order': 'orders',
@@ -20,6 +19,8 @@ const moduleMap = {
     '/api/v1/stock': 'stock',
     '/api/v1/bom': 'bom',
     '/api/v1/settings': 'settings',
+    '/api/v1/job-work': 'job_work',
+    '/api/v1/bom-calculation': 'bom_calculation',
 };
 
 export async function middleware(req) {
@@ -82,6 +83,14 @@ export async function middleware(req) {
                 }
 
                 let hasPermission = modulePerms && modulePerms[requiredAction];
+
+                // Custom Business Rule: Grant BOM Calculation permissions if user has Job Work create permission
+                if (!hasPermission && matchedModuleKey === 'bom_calculation') {
+                    const jobWorkPerm = permissions.find(p => p.module_key === 'job_work');
+                    if (jobWorkPerm && jobWorkPerm.can_create) {
+                        hasPermission = true;
+                    }
+                }
 
                 // --- OPEN READ EXCEPTION ---
                 // Allow all authenticated users to perform GET requests (Open Read, Strict Write)
