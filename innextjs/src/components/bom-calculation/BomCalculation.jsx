@@ -6,7 +6,9 @@ import Input from '@/common/input/Input';
 import Button from '@/common/buttons/Button';
 import CommonTable from '@/common/table/CommonTable';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
-import { getProductsApi, getProductionBomApi } from '@/lib/fetcher';
+import { getProductsApi, getProductionBomApi, createJobWorkApi } from '@/lib/fetcher';
+import { useRouter } from 'next/router';
+import { toast } from 'sonner';
 
 export default function BomCalculation() {
     // Inputs
@@ -24,8 +26,10 @@ export default function BomCalculation() {
     const [expandedNodes, setExpandedNodes] = useState(new Set());
     const [loadingNodes, setLoadingNodes] = useState(new Set());
     const [rootPagination, setRootPagination] = useState({ page: 1, hasMore: false });
+    const [isCreatingJobWork, setIsCreatingJobWork] = useState(false);
     
     const [selectedRowIndex, setSelectedRowIndex] = useState(0);
+    const router = useRouter();
 
     useEffect(() => {
         const fetchDefaultProducts = async () => {
@@ -82,6 +86,41 @@ export default function BomCalculation() {
                 page: 1,
                 hasMore: res.data.data.pagination?.hasMore || false
             });
+        }
+    };
+
+    const handleCreateJobWork = async () => {
+        if (!selectedProduct) return;
+        setIsCreatingJobWork(true);
+        
+        const items = requirementsTree.map(req => ({
+            productId: req.productId,
+            requiredQty: req.requiredQuantity,
+            allocatedQty: Math.min(req.requiredQuantity, req.stockQuantity || 0)
+        }));
+
+        try {
+            const res = await createJobWorkApi({
+                productId: selectedProduct.value,
+                quantity: parseFloat(quantity),
+                status: 'CREATED',
+                autoCascade: true,
+                items: items
+            });
+
+            if (res.error) {
+                toast.error(res.error.message || 'Failed to create Job Work');
+            } else if (res.data?.success) {
+                toast.success('Job Work created successfully!');
+                router.push('/production/job-work');
+            } else {
+                toast.error(res.data?.message || 'Failed to create Job Work');
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(err?.message || 'An error occurred while creating Job Work');
+        } finally {
+            setIsCreatingJobWork(false);
         }
     };
 
@@ -349,6 +388,16 @@ export default function BomCalculation() {
                             Calculate Bill of Materials requirements and check stock availability.
                         </p>
                     </div>
+                    {hasChecked && requirementsTree.length > 0 && (
+                        <Button
+                            variant="primary"
+                            className="w-full sm:w-auto shrink-0"
+                            onClick={handleCreateJobWork}
+                            text="Create Job Work"
+                            disabled={isCreatingJobWork}
+                            isLoading={isCreatingJobWork}
+                        />
+                    )}
                 </div>
 
                 {/* Search & Filters */}

@@ -342,3 +342,20 @@ export const deleteBomApi = (id, deletedBy = null) => deleteData(`bom/${id}`, { 
 export const getProductionBomApi = async (productId, quantity, page = 1, limit = 10) => {
   return await fetchDataWithParams('bom-calculation/bom-requirements', { productId, quantity, page, limit });
 };
+
+// Job Work
+export const getJobWorksApi = async (page = 1, limit = 10, search = '') => {
+  return await fetchDataWithParams('job-work', { page, limit, search });
+};
+
+export const getJobWorkByIdApi = async (id) => {
+  return await fetchData(`job-work/${id}`);
+};
+
+export const createJobWorkApi = (payload) => postData("job-work", payload);
+
+export const updateJobWorkApi = async (id, payload) => {
+  return await putData(`job-work/${id}`, { id, ...payload });
+};
+
+export const deleteJobWorkApi = (id, deletedBy = null) => deleteData(`job-work/${id}`, { data: { deletedBy } });
