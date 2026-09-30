@@ -1,8 +1,8 @@
-import Production from "@/components/production/Production";
+import BomCalculation from "@/components/bom-calculation/BomCalculation";
 
 const ProductionPage = () => {
     return (
-        <Production />
+        <BomCalculation />
     )
 }
 
