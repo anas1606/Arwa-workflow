@@ -8,7 +8,7 @@ import CommonTable from '@/common/table/CommonTable';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 import { getProductsApi, getProductionBomApi } from '@/lib/fetcher';
 
-export default function Production() {
+export default function BomCalculation() {
     // Inputs
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [quantity, setQuantity] = useState('1');
