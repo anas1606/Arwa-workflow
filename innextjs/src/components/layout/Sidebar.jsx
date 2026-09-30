@@ -32,7 +32,7 @@ const operationsNav = [
     label: 'Production',
     icon: Factory,
     children: [
-      { to: '/production/bom-calculation', label: 'BOM Calculation', icon: Layers, moduleKey: 'production' },
+      { to: '/production/bom-calculation', label: 'BOM Calculation', icon: Layers, moduleKey: 'bom_calculation' },
       { to: '/production/job-work', label: 'Job Work', icon: Briefcase, moduleKey: 'job_work' },
     ],
   },

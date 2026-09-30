@@ -41,8 +41,17 @@ export default function useUser() {
 
         const permissions = user.security_role?.permissions || [];
         const modulePerm = permissions.find(p => p.module_key === moduleKey);
+        let hasPerm = modulePerm ? !!modulePerm[action] : false;
+
+        // Custom Business Rule: Grant BOM Calculation permissions if user has Job Work create permission
+        if (!hasPerm && moduleKey === 'bom_calculation') {
+            const jobWorkPerm = permissions.find(p => p.module_key === 'job_work');
+            if (jobWorkPerm && jobWorkPerm.can_create) {
+                hasPerm = true;
+            }
+        }
         
-        return modulePerm ? !!modulePerm[action] : false;
+        return hasPerm;
     };
 
     const login = (token, userData) => {
