@@ -210,6 +210,9 @@ export const getAllJobWorks = async (page = 1, limit = 10, search = '') => {
                     status: true,
                     quantity: true,
                     createdAt: true,
+                    updatedAt: true,
+                    createdBy: true,
+                    updatedBy: true,
                     product: {
                         select: { name: true, code: true }
                     }
@@ -222,6 +225,26 @@ export const getAllJobWorks = async (page = 1, limit = 10, search = '') => {
         ]);
 
         const totalPages = Math.ceil(total / take);
+
+        const userIds = new Set();
+        data.forEach(o => {
+            if (o.createdBy) userIds.add(o.createdBy);
+            if (o.updatedBy) userIds.add(o.updatedBy);
+        });
+
+        if (userIds.size > 0) {
+            const users = await prisma.user.findMany({
+                where: { id: { in: Array.from(userIds) } },
+                select: { id: true, username: true }
+            });
+            const userMap = {};
+            users.forEach(u => { userMap[u.id] = u.username; });
+            
+            data.forEach(o => {
+                o.createdByName = userMap[o.createdBy] || null;
+                o.updatedByName = userMap[o.updatedBy] || null;
+            });
+        }
 
         return {
             success: true,

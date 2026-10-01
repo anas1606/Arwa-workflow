@@ -272,10 +272,10 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
         </div>
 
         {/* Body */}
-        <div className="flex flex-1 h-[500px] min-h-0 overflow-hidden px-2 pb-2">
+        <div className="flex flex-col sm:flex-row flex-1 h-[500px] min-h-0 overflow-hidden px-2 pb-2">
           
           {/* Left Sidebar (Categories) */}
-          <div className="w-[180px] shrink-0 flex flex-col gap-1 p-2 overflow-y-auto">
+          <div className="w-full sm:w-[180px] shrink-0 flex flex-row sm:flex-col gap-1.5 p-2 overflow-x-auto hide-scrollbar sm:overflow-y-auto mb-2 sm:mb-0">
             {CATEGORIES.map(cat => {
               const isActive = activeTab === cat.id;
               const count = getCategoryCount(cat.id);
@@ -284,8 +284,8 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
                   key={cat.id}
                   onClick={() => setActiveTab(cat.id)}
                   className={clsx(
-                    "flex items-center justify-between px-4 py-3 rounded-xl text-sm font-bold transition-all text-left",
-                    isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-grey-text hover:bg-grey-surface"
+                    "flex items-center justify-between gap-2 px-4 py-2.5 sm:py-3 rounded-xl text-sm font-bold transition-all text-left whitespace-nowrap shrink-0",
+                    isActive ? "bg-primary text-white shadow-md shadow-primary/20" : "text-grey-text bg-white sm:bg-transparent hover:bg-grey-surface shadow-sm sm:shadow-none border border-grey-surface sm:border-transparent"
                   )}
                 >
                   <span>{cat.label}</span>

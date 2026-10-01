@@ -162,7 +162,7 @@ export default function Godown() {
         render: (row) => (
             <div className="flex flex-col gap-0.5">
                 <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
-                <span className="text-xs text-grey-muted">
+                <span className="text-xs text-grey-muted whitespace-nowrap">
                     {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
                 </span>
             </div>
@@ -175,7 +175,7 @@ export default function Godown() {
             <div className="flex flex-col gap-0.5">
                 <span className="font-semibold text-grey-text-strong">{row.updatedByName === '-' ? '-' : (row.updatedByName || '-')}</span>
                 {row.updatedByName && row.updatedByName !== '-' ? (
-                    <span className="text-xs text-grey-muted">
+                    <span className="text-xs text-grey-muted whitespace-nowrap">
                         {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
                     </span>
                 ) : null}
@@ -282,18 +282,20 @@ export default function Godown() {
               className="flex-1 min-w-0"
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/inventory/godown/create') : undefined}
-            onEdit={canUpdate ? (item) => router.push(`/inventory/godown/edit/${item.id}`) : undefined}
-            onDelete={canDelete ? (item) => { setSelectedArea(item); setDeleteOpen(true); } : undefined}
-            onRefresh={() => { fetchAreas(); fetchKpis(); }}
-            searchId="godown-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={areasData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Area"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => router.push('/inventory/godown/create') : undefined}
+              onEdit={canUpdate ? (item) => router.push(`/inventory/godown/edit/${item.id}`) : undefined}
+              onDelete={canDelete ? (item) => { setSelectedArea(item); setDeleteOpen(true); } : undefined}
+              onRefresh={() => { fetchAreas(); fetchKpis(); }}
+              searchId="godown-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={areasData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Area"
+            />
+          </div>
         </div>
 
         {/* Table */}

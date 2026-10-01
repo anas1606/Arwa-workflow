@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import CommonTable from '@/common/table/CommonTable';
-import { Package, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Package, ChevronLeft, ChevronRight, ChevronDown } from 'lucide-react';
 import { getOrdersApi } from '@/lib/fetcher';
 
 function ProductOrderTable({ productGroup, columns, query, activeFilters, onInitialLoadComplete }) {
@@ -58,15 +58,15 @@ function ProductOrderTable({ productGroup, columns, query, activeFilters, onInit
             {productGroup.product}
           </h2>
         </div>
-        <div className="flex flex-wrap items-center gap-2 text-xs font-semibold text-grey-text">
+        <div className="flex flex-nowrap items-center gap-1 sm:gap-2 text-xs font-semibold text-grey-text whitespace-nowrap">
           <span>{productGroup.ordersCount} {productGroup.ordersCount === 1 ? 'order' : 'orders'}</span>
-          <span className="text-grey-border">·</span>
+          <span className="text-grey-border shrink-0">·</span>
           <span>Total qty <span className="font-bold text-grey-text-strong">{productGroup.qty}</span></span>
-          <span className="text-grey-border">·</span>
-          <span className="inline-flex items-center gap-1 rounded-xl bg-grey-surface px-2 py-0.5 text-2xs font-bold text-grey-text-strong border border-grey-border">
+          <span className="text-grey-border shrink-0">·</span>
+          <span className="inline-flex items-center gap-1 rounded-xl bg-grey-surface px-2 py-0.5 text-2xs font-bold text-grey-text-strong border border-grey-border shrink-0">
             Standard <span className="font-mono">{productGroup.standard}</span>
           </span>
-          <span className="inline-flex items-center gap-1 rounded-xl bg-primary/10 px-2 py-0.5 text-2xs font-bold text-primary-dark border border-primary/20">
+          <span className="inline-flex items-center gap-1 rounded-xl bg-primary/10 px-2 py-0.5 text-2xs font-bold text-primary-dark border border-primary/20 shrink-0">
             Customized <span className="font-mono">{productGroup.customized}</span>
           </span>
         </div>
@@ -178,12 +178,12 @@ export default function ByProductTab({
 
       {/* Pagination for By Product View */}
       {!showSkeleton && productData.length > 0 && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border border-grey-border bg-white rounded-lg shadow-sm">
-          <div className="text-sm text-grey-text-light whitespace-nowrap">
+        <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-5 py-4 border border-grey-border bg-white rounded-lg shadow-sm">
+          <div className="text-sm text-grey-text-light whitespace-nowrap text-center sm:text-left">
             Showing <b className="text-grey-text-strong">{productData.length}</b> of <b className="text-grey-text-strong">{productTotalItems}</b> products
           </div>
 
-          <div className="flex flex-wrap items-center gap-4">
+          <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
             <div className="flex items-center gap-2">
               <span className="text-sm text-grey-text-light whitespace-nowrap">Per page</span>
               <div className="relative inline-block">
@@ -200,6 +200,7 @@ export default function ByProductTab({
                   <option value={10}>10</option>
                   <option value={20}>20</option>
                 </select>
+                <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-grey-icon pointer-events-none" />
               </div>
             </div>
 
@@ -211,6 +212,10 @@ export default function ByProductTab({
               >
                 <ChevronLeft size={16} />
               </button>
+
+              <div className="flex items-center justify-center w-8 h-8 rounded-xl bg-primary text-white text-sm font-medium shadow-sm border border-primary sm:hidden">
+                {productPageNo}
+              </div>
 
               <div className="flex items-center gap-1.5 hidden sm:flex">
                 {getPageWindow().map((p) => (

@@ -224,7 +224,7 @@ export default function SpecsStep({
     }
 
     if (key === 'brandId') {
-       newLines[lineIdx].specs['stickerId'] = ''; // reset sticker when brand changes
+       newLines[lineIdx].specs['stickerId'] = ''; 
        newLines[lineIdx].specs['stickerIdName'] = '';
     }
     setLines(newLines);
@@ -237,10 +237,10 @@ export default function SpecsStep({
         <h2 className="text-[15px] font-bold text-grey-text-strong">Technical specifications</h2>
       </div>
 
-      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-5">
+      <div className="flex-1 min-h-0 flex flex-col lg:flex-row gap-5 overflow-y-auto lg:overflow-hidden pr-1 lg:pr-0">
         {/* LEFT SIDEBAR */}
-        <div className="w-full lg:w-[280px] shrink-0 bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden p-2">
-          <div className="mb-2 pb-2 border-b border-grey-border/40">
+        <div className="w-full lg:w-[280px] h-auto lg:h-full shrink-0 bg-white rounded-[12px] border border-grey-border/40 shadow-[0_2px_8px_-2px_rgba(0,0,0,0.05)] flex flex-col overflow-hidden p-2">
+          <div className="mb-2 pb-2 border-b border-grey-border/40 shrink-0">
             <div className="flex items-center justify-between mb-2.5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-grey-text-strong">Models</p>
               <p className="text-[11px] font-bold text-grey-text-strong">{lines.filter(isLineComplete).length}/{lines.length}</p>
@@ -253,7 +253,7 @@ export default function SpecsStep({
             </div>
           </div>
           
-          <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+          <div className="flex-1 overflow-y-auto max-h-[160px] lg:max-h-none space-y-2 pr-1">
             {lines.map((line, idx) => {
               const isLineActive = activeSpecLineIndex === idx;
               return (
@@ -306,7 +306,7 @@ export default function SpecsStep({
 
         {/* MAIN SPEC AREA */}
         <div className="flex-1 min-w-0 flex flex-col gap-2">
-          <div className="shrink-0 mb-3">
+          <div className="shrink-0 mb-3 hidden lg:block">
             <KeyboardShortcutBar 
               customActions={[
                 { label: 'Next model', keyCombo: ['Alt', '↓'] },

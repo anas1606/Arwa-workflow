@@ -53,7 +53,7 @@ export default function EditOrderView() {
           setCustomer(data.customer);
           setOrderNumber(data.orderNumber);
           setDueDate(data.dueDate ? new Date(data.dueDate).toISOString().split('T')[0] : '');
-          setPriority(data.priority || 'Normal');
+          setPriority(data.priority ? data.priority.charAt(0).toUpperCase() + data.priority.slice(1).toLowerCase() : 'Normal');
           setPlannerNotes(data.remark || '');
           setStatus(data.status || 'CONFIRMED');
           
@@ -272,7 +272,7 @@ export default function EditOrderView() {
                     {(isActive || isDone) && <div className="absolute top-0 inset-x-0 h-[2px] bg-primary rounded-b-sm" />}
                     
                     <div className={clsx(
-                      'flex items-center w-full gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
+                      'flex items-center justify-center sm:justify-start w-full sm:gap-3 p-1.5 sm:px-3 sm:py-2.5 rounded-xl cursor-pointer transition-colors',
                       isActive ? 'bg-primary-bg' : isDone ? '' : 'hover:bg-grey-surface/50'
                     )}>
                       <div className={clsx(

@@ -204,7 +204,7 @@ export default function CreateOrderView() {
                 return (
                   <div
                     key={step.id}
-                    className="relative flex-1 px-1 py-1"
+                    className="relative flex-1 min-w-0 px-1 py-1"
                     onClick={() => { 
                       if (idx <= stepIndex) {
                         setStepIndex(idx);
@@ -224,7 +224,7 @@ export default function CreateOrderView() {
                     {(isActive || isDone) && <div className="absolute top-0 inset-x-0 h-[2px] bg-primary rounded-b-sm" />}
                     
                     <div className={clsx(
-                      'flex items-center w-full gap-3 px-3 py-2.5 rounded-xl cursor-pointer transition-colors',
+                      'flex items-center justify-center sm:justify-start w-full sm:gap-3 p-1.5 sm:px-3 sm:py-2.5 rounded-xl cursor-pointer transition-colors',
                       isActive ? 'bg-primary-bg' : isDone ? '' : 'hover:bg-grey-surface/50'
                     )}>
                       <div className={clsx(

@@ -21,7 +21,7 @@ import { usePermission } from '@/hooks/usePermission';
 export default function OrdersView() {
   const router = useRouter();
   const { canCreate, canUpdate, canDelete, canRead } = usePermission('orders');
-  
+
   // Data state
   const [ordersData, setOrdersData] = useState([]);
   const [kpis, setKpis] = useState([]);
@@ -34,7 +34,7 @@ export default function OrdersView() {
   const [productTotalItems, setProductTotalItems] = useState(0);
   const [productTotalPages, setProductTotalPages] = useState(1);
   const [productPageNo, setProductPageNo] = useState(1);
-  
+
   // Table state
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
@@ -63,7 +63,7 @@ export default function OrdersView() {
     try {
       setIsLoading(true);
       const res = await getOrdersApi(pageNo, pageSize, debouncedQuery, activeFilters);
-      
+
       if (res.data?.success) {
         setOrdersData(res.data.data.data);
         setKpis(res.data.data.kpis);
@@ -81,7 +81,7 @@ export default function OrdersView() {
     try {
       setIsLoading(true);
       const res = await getOrdersByProductApi(productPageNo, pageSize, debouncedQuery, activeFilters);
-      
+
       if (res.data?.success) {
         setProductData(res.data.data.data);
         setProductTotalItems(res.data.data.pagination.total);
@@ -96,9 +96,9 @@ export default function OrdersView() {
 
   useEffect(() => {
     if (viewMode === 'orders') {
-        fetchOrders();
+      fetchOrders();
     } else if (viewMode === 'product') {
-        fetchProducts();
+      fetchProducts();
     }
   }, [fetchOrders, fetchProducts, viewMode]);
 
@@ -113,41 +113,49 @@ export default function OrdersView() {
     };
   }, [actionMenu]);
 
-useKeyboardShortcuts({
-      onAdd: canCreate ? () => router.push('/orders/create') : undefined,
-      onView: canRead ? (item) => { setSelectedOrder(item); setIsDetailsModalOpen(true); } : undefined,
-      onEdit: canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined,
-      onDelete: canDelete ? (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); } : undefined,
-      onRefresh: fetchOrders,
-      searchId: "search-orders",
-      pageNo: viewMode === 'orders' ? pageNo : productPageNo,
-      setPageNo: viewMode === 'orders' ? setPageNo : setProductPageNo,
-      totalPages: viewMode === 'orders' ? totalPages : productTotalPages,
-      items: viewMode === 'orders' ? ordersData : productData,
-      selectedRowIndex,
-      setSelectedRowIndex,
-      isModalOpen: isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen,
-      customShortcuts: [
-          { key: '1', altKey: true, action: () => setViewMode('orders') },
-          { key: '2', altKey: true, action: () => setViewMode('product') },
-          { key: 'ArrowRight', altKey: true, action: () => {
-              if (viewMode === 'orders' && pageNo < totalPages) setPageNo(p => p + 1);
-              else if (viewMode === 'product' && productPageNo < productTotalPages) setProductPageNo(p => p + 1);
-          } },
-          { key: 'ArrowLeft', altKey: true, action: () => {
-              if (viewMode === 'orders' && pageNo > 1) setPageNo(p => p - 1);
-              else if (viewMode === 'product' && productPageNo > 1) setProductPageNo(p => p - 1);
-          } },
-          { key: 'ArrowDown', action: () => {
-              if (isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen) return;
-              const max = viewMode === 'orders' ? ordersData.length - 1 : productData.length - 1;
-              if (max >= 0) setSelectedRowIndex(prev => Math.min(prev + 1, max));
-          } },
-          { key: 'ArrowUp', action: () => {
-              if (isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen) return;
-              setSelectedRowIndex(prev => Math.max(prev - 1, 0));
-          } }
-      ]
+  useKeyboardShortcuts({
+    onAdd: canCreate ? () => router.push('/orders/create') : undefined,
+    onView: canRead ? (item) => { setSelectedOrder(item); setIsDetailsModalOpen(true); } : undefined,
+    onEdit: canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined,
+    onDelete: canDelete ? (item) => { setSelectedOrder(item); setIsDeleteModalOpen(true); } : undefined,
+    onRefresh: fetchOrders,
+    searchId: "search-orders",
+    pageNo: viewMode === 'orders' ? pageNo : productPageNo,
+    setPageNo: viewMode === 'orders' ? setPageNo : setProductPageNo,
+    totalPages: viewMode === 'orders' ? totalPages : productTotalPages,
+    items: viewMode === 'orders' ? ordersData : productData,
+    selectedRowIndex,
+    setSelectedRowIndex,
+    isModalOpen: isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen,
+    customShortcuts: [
+      { key: '1', altKey: true, action: () => setViewMode('orders') },
+      { key: '2', altKey: true, action: () => setViewMode('product') },
+      {
+        key: 'ArrowRight', altKey: true, action: () => {
+          if (viewMode === 'orders' && pageNo < totalPages) setPageNo(p => p + 1);
+          else if (viewMode === 'product' && productPageNo < productTotalPages) setProductPageNo(p => p + 1);
+        }
+      },
+      {
+        key: 'ArrowLeft', altKey: true, action: () => {
+          if (viewMode === 'orders' && pageNo > 1) setPageNo(p => p - 1);
+          else if (viewMode === 'product' && productPageNo > 1) setProductPageNo(p => p - 1);
+        }
+      },
+      {
+        key: 'ArrowDown', action: () => {
+          if (isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen) return;
+          const max = viewMode === 'orders' ? ordersData.length - 1 : productData.length - 1;
+          if (max >= 0) setSelectedRowIndex(prev => Math.min(prev + 1, max));
+        }
+      },
+      {
+        key: 'ArrowUp', action: () => {
+          if (isDetailsModalOpen || isDeleteModalOpen || isFilterModalOpen) return;
+          setSelectedRowIndex(prev => Math.max(prev - 1, 0));
+        }
+      }
+    ]
   });
 
   const totalFilters = useMemo(() => {
@@ -195,13 +203,13 @@ useKeyboardShortcuts({
         const dueDate = new Date(row.dueDate);
         const today = new Date();
         // Zero out time
-        dueDate.setHours(0,0,0,0);
-        today.setHours(0,0,0,0);
-        
+        dueDate.setHours(0, 0, 0, 0);
+        today.setHours(0, 0, 0, 0);
+
         const diffTime = dueDate.getTime() - today.getTime();
         const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
         const dateStr = dueDate.toISOString().split('T')[0];
-        
+
         let dueText = '';
         let dueColor = 'text-grey-text-strong';
         if (diffDays < 0) {
@@ -229,17 +237,17 @@ useKeyboardShortcuts({
       render: (row) => {
         const lines = row.orderLines || [];
         if (lines.length === 0) return <span className="text-grey-muted">-</span>;
-        
+
         const firstLine = lines[0];
         const extraCount = lines.length - 1;
-        
+
         return (
           <div className="flex flex-col text-sm font-semibold text-grey-text-strong max-w-[180px]">
             <span className="truncate">{firstLine.product?.name || 'Unknown Product'}</span>
             {extraCount > 0 && (
               <span className="text-xs text-grey-icon mt-0.5 flex items-center gap-1">
                 <span className="w-1 h-1 rounded-full bg-grey-icon inline-block" />
-                <span className="truncate max-w-[150px]">{lines[1]?.product?.name || 'Unknown Product'}</span> 
+                <span className="truncate max-w-[150px]">{lines[1]?.product?.name || 'Unknown Product'}</span>
                 {extraCount > 1 && <span className="text-primary font-bold">+{extraCount - 1}</span>}
               </span>
             )}
@@ -265,7 +273,7 @@ useKeyboardShortcuts({
         return (
           <span className={clsx("text-sm font-bold",
             p === 'HIGH' ? "text-danger-main" :
-            p === 'MEDIUM' ? "text-warning-dark" : "text-success-main"
+              p === 'NORMAL' ? "text-warning-dark" : "text-success-main"
           )}>
             {row.priority ? row.priority.charAt(0).toUpperCase() + row.priority.slice(1).toLowerCase() : 'Low'}
           </span>
@@ -277,6 +285,32 @@ useKeyboardShortcuts({
       label: 'Status',
       render: (row) => (
         <StatusBadge status={row.status} />
+      ),
+    },
+    {
+      key: 'createdByName',
+      label: 'Created By',
+      render: (row) => (
+        <div className="flex flex-col gap-0.5 whitespace-nowrap">
+            <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
+            <span className="text-xs text-grey-muted">
+                {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
+            </span>
+        </div>
+      ),
+    },
+    {
+      key: 'updatedByName',
+      label: 'Updated By',
+      render: (row) => (
+        <div className="flex flex-col gap-0.5 whitespace-nowrap">
+            <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
+            {row.updatedBy ? (
+                <span className="text-xs text-grey-muted">
+                    {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                </span>
+            ) : null}
+        </div>
       ),
     },
     {
@@ -324,15 +358,16 @@ useKeyboardShortcuts({
               Search, filter, and track customer / production orders.
             </p>
           </div>
-          <div className="flex items-center gap-2">
-            <Button variant="secondary" icon={Printer} text="Export" />
-            <Button variant="secondary" icon={Printer} text="Print" />
+          <div className="flex flex-wrap items-center gap-2">
+            <Button variant="secondary" className="flex-1 sm:flex-none justify-center" icon={Printer} text="Export" />
+            <Button variant="secondary" className="flex-1 sm:flex-none justify-center" icon={Printer} text="Print" />
             {canCreate && (
               <Button
                 variant="primary"
                 onClick={() => router.push('/orders/create')}
                 icon={Plus}
                 text="Add new order"
+                className="flex-1 sm:flex-none whitespace-nowrap"
               />
             )}
           </div>
@@ -346,7 +381,7 @@ useKeyboardShortcuts({
             { label: "DUE THIS WEEK", value: isLoading ? "..." : ordersData.filter(o => new Date(o.dueDate) >= new Date() && new Date(o.dueDate) <= new Date(new Date().setDate(new Date().getDate() + 7))).length, hint: "Risk of delay" },
             { label: "LATE / BLOCKED", value: isLoading ? "..." : ordersData.filter(o => new Date(o.dueDate) < new Date() && o.status !== 'COMPLETED' && o.status !== 'CANCELLED').length, hint: "Needs attention" },
           ].map((kpi, i) => (
-            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-xl h-[90px]">
+            <article key={kpi.label} className="card-panel relative overflow-hidden !p-3 border-none rounded-xl min-h-[90px]">
               <div
                 className={clsx('absolute inset-y-0 left-0 w-1',
                   i === 0 ? 'bg-primary' :
@@ -369,19 +404,19 @@ useKeyboardShortcuts({
         {/* Tabs & Toolbar Container */}
         <div className="card-panel flex w-full flex-col gap-4 border-none !p-4 bg-white/40 backdrop-blur-md rounded-xl shadow-sm">
           {/* Tabs */}
-          <nav className="relative inline-flex items-center p-1 bg-white/60 rounded-[10px] shrink-0 self-start gap-1">
+          <nav className="relative flex w-full sm:w-auto sm:inline-flex items-center p-1 bg-white/60 rounded-[10px] shrink-0 self-stretch sm:self-start gap-1">
             {/* Animated Background Pill */}
             <div
               className={clsx(
-                "absolute left-1 top-1 bottom-1 w-[130px] rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-grey-border/50 transition-transform duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                viewMode === 'orders' ? "translate-x-0" : "translate-x-[134px]"
+                "absolute top-1 bottom-1 w-[calc(50%-6px)] sm:w-[130px] rounded-lg bg-white shadow-[0_1px_3px_rgba(0,0,0,0.08)] border border-grey-border/50 transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+                viewMode === 'orders' ? "left-1 translate-x-0" : "left-1 translate-x-[calc(100%+4px)] sm:translate-x-[134px]"
               )}
             />
             <button
               onClick={() => setViewMode('orders')}
               title="Alt+1"
               className={clsx(
-                'relative z-10 w-[130px] inline-flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors focus:outline-none',
+                'relative z-10 flex-1 sm:w-[130px] sm:flex-none inline-flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors focus:outline-none',
                 viewMode === 'orders' ? 'text-grey-text-strong' : 'text-grey-icon hover:text-grey-text-strong'
               )}
             >
@@ -395,7 +430,7 @@ useKeyboardShortcuts({
               onClick={() => setViewMode('product')}
               title="Alt+2"
               className={clsx(
-                'relative z-10 w-[130px] inline-flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors focus:outline-none',
+                'relative z-10 flex-1 sm:w-[130px] sm:flex-none inline-flex min-h-8 cursor-pointer items-center justify-center gap-1.5 rounded-lg text-xs font-semibold transition-colors focus:outline-none',
                 viewMode === 'product' ? 'text-grey-text-strong' : 'text-grey-icon hover:text-grey-text-strong'
               )}
             >
@@ -419,7 +454,7 @@ useKeyboardShortcuts({
                 onChange={(e) => setQuery(e.target.value)}
               />
             </div>
-            <button 
+            <button
               onClick={() => setIsFilterModalOpen(true)}
               className={clsx(
                 "flex items-center gap-2 px-3 h-10 rounded-xl border text-sm font-bold transition-colors shrink-0",
@@ -437,27 +472,29 @@ useKeyboardShortcuts({
           </div>
 
           {/* Hints */}
-         <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/orders/create') : undefined}
-            onView={canRead ? (item) => { setSelectedOrder(item); setIsDetailsModalOpen(true); } : undefined}
-            onEdit={canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined}
-            onRefresh={fetchOrders}
-            searchId="search-orders"
-            pageNo={viewMode === 'orders' ? pageNo : productPageNo}
-            totalPages={viewMode === 'orders' ? totalPages : productTotalPages}
-            selectedItem={viewMode === 'orders' ? ordersData[selectedRowIndex] : productData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Order"
-            customActions={[
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => router.push('/orders/create') : undefined}
+              onView={canRead ? (item) => { setSelectedOrder(item); setIsDetailsModalOpen(true); } : undefined}
+              onEdit={canUpdate ? (item) => router.push(`/orders/edit/${item.id}`) : undefined}
+              onRefresh={fetchOrders}
+              searchId="search-orders"
+              pageNo={viewMode === 'orders' ? pageNo : productPageNo}
+              totalPages={viewMode === 'orders' ? totalPages : productTotalPages}
+              selectedItem={viewMode === 'orders' ? ordersData[selectedRowIndex] : productData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Order"
+              customActions={[
                 { label: 'Order List', keyCombo: ['Alt', '1'], onClick: () => setViewMode('orders') },
                 { label: 'By Product', keyCombo: ['Alt', '2'], onClick: () => setViewMode('product') },
-            ]}
-          />
+              ]}
+            />
+          </div>
         </div>
 
         {/* Views */}
         {viewMode === 'orders' && (
-          <OrdersListTab 
+          <OrdersListTab
             columns={columns}
             ordersData={ordersData}
             isLoading={isLoading}

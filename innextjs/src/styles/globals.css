@@ -22,6 +22,10 @@
   --color-grey-text-dark: #1e293b;
   --color-grey-text-strong: #0f172a;
 
+  /* Fonts */
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+
   /* Success (Emerald) */
   --color-success-bg: #ecfdf5;
   --color-success-subtle: #d1fae5;
@@ -189,7 +193,7 @@ body {
 
   /* Modals */
   .app-modal-layer {
-    @apply fixed inset-0 z-50 flex items-center justify-center overflow-y-auto px-4 py-6 sm:px-6;
+    @apply fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto px-4 py-6 sm:px-6 lg:pl-[calc(14.25rem+1.5rem)];
   }
 
   .app-modal-backdrop {
@@ -280,13 +284,25 @@ body {
 
 /* Modal Animations */
 @keyframes modal-fade-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
 }
 
 @keyframes modal-scale-in {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .animate-modal-backdrop {
@@ -298,13 +314,25 @@ body {
 }
 
 @keyframes modal-fade-out {
-  from { opacity: 1; }
-  to { opacity: 0; }
+  from {
+    opacity: 1;
+  }
+
+  to {
+    opacity: 0;
+  }
 }
 
 @keyframes modal-scale-out {
-  from { opacity: 1; transform: scale(1) translateY(0); }
-  to { opacity: 0; transform: scale(0.95) translateY(10px); }
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+
+  to {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
 }
 
 .animate-modal-backdrop-out {
@@ -314,6 +342,7 @@ body {
 .animate-modal-panel-out {
   animation: modal-scale-out 0.15s ease-in forwards;
 }
+
 .app-page-bg {
   background-color: var(--app-bg);
   background-image:

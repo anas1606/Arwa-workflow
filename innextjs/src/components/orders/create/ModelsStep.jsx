@@ -167,15 +167,15 @@ export default function ModelsStep({
   });
 
   return (
-    <div className="flex flex-col lg:flex-row gap-5 items-start h-full">
+    <div className="flex flex-col lg:flex-row gap-5 items-start h-full overflow-y-auto lg:overflow-hidden pr-1 lg:pr-0">
       {/* LEFT */}
-      <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
+      <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-[400px] shrink-0 lg:h-full">
         <div className="flex-1 bg-white rounded-xl border border-grey-border/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
           <div className="px-5 pt-5 pb-3 shrink-0">
             <h2 className="text-base font-bold text-grey-text-strong">Select models</h2>
           </div>
 
-          <div className="px-5 pb-3 shrink-0">
+          <div className="px-5 pb-3 shrink-0 hidden lg:block">
             <KeyboardShortcutBar
               searchId="model-search"
               customActions={[
@@ -189,7 +189,7 @@ export default function ModelsStep({
           </div>
 
           {/* Search + Category */}
-          <div className="px-5 pb-3 flex items-center gap-3 shrink-0">
+          <div className="px-5 pb-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="flex-1">
               <Input
                 id="model-search"
@@ -205,7 +205,7 @@ export default function ModelsStep({
                 }}
               />
             </div>
-            <div className="w-44 shrink-0 z-20">
+            <div className="w-full sm:w-44 shrink-0 z-20">
               <AsyncSelectInput
                 loadOptions={loadCategoryOptions}
                 defaultOptions={true}
@@ -272,7 +272,7 @@ export default function ModelsStep({
       </div>
 
       {/* RIGHT: Selected */}
-      <div id="selected-models-panel" tabIndex={-1} className="w-full lg:w-[280px] shrink-0 h-full overflow-y-auto pb-5 outline-none focus:ring-2 focus:ring-primary/50 focus:rounded-xl">
+      <div id="selected-models-panel" tabIndex={-1} className="w-full lg:w-[280px] shrink-0 lg:h-full lg:overflow-y-auto pb-5 outline-none focus:ring-2 focus:ring-primary/50 focus:rounded-xl">
         <div className="bg-white rounded-xl border border-grey-border/60 shadow-sm overflow-hidden">
           <div className="flex items-center justify-between px-4 py-3 border-b border-grey-surface">
             <span className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">Selected</span>
@@ -293,7 +293,7 @@ export default function ModelsStep({
               <p className="text-xs mt-1 text-grey-icon">Select a model, set qty, then adjust with + / -</p>
             </div>
           ) : (
-            <div className="divide-y divide-grey-surface">
+            <div className="divide-y divide-grey-surface max-h-[250px] lg:max-h-none overflow-y-auto">
               {lines.map((line, idx) => (
                 <div
                   key={line.model.id}
