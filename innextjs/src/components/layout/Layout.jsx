@@ -1,4 +1,6 @@
-import { Sidebar, MobileNav } from './Sidebar';
+import { Sidebar } from './Sidebar';
+import { useState } from 'react';
+import { Menu } from 'lucide-react';
 import clsx from 'clsx';
 import Link from 'next/link';
 import useUser from '@/hooks/useUser';
@@ -8,6 +10,7 @@ import { useRouter } from 'next/router';
 export function Layout({ children }) {
   const { hasPermission, isLoading } = useUser();
   const router = useRouter();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const ROUTE_PERMISSIONS = [
     { path: '/dashboard', module: 'dashboard' },
@@ -54,18 +57,22 @@ export function Layout({ children }) {
         Skip to content
       </a>
 
-      <Sidebar />
+      <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
       <div className="flex min-w-0 flex-1 flex-col md:pl-[14.25rem] md:pb-0 pb-[calc(4.75rem+env(safe-area-inset-bottom))]">
         {/* Mobile top brand bar */}
-        <header className="glass-nav-mobile-top md:hidden">
+        <header className="glass-nav-mobile-top md:hidden sticky top-0 z-[999] flex items-center gap-2 px-3 py-1 bg-[var(--app-bg)]/80 backdrop-blur-md border-b border-grey-border/30">
+          <button 
+            type="button" 
+            className="p-1 -ml-1 mr-1 text-primary-text hover:text-primary-dark focus:outline-none"
+            onClick={() => setSidebarOpen(true)}
+          >
+            <Menu className="h-6 w-6" aria-hidden="true" />
+          </button>
           <Link
             href="/"
-            className="flex min-h-11 cursor-pointer items-center gap-2.5 px-3"
+            className="flex min-h-11 cursor-pointer items-center gap-2.5"
           >
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-primary text-xs font-bold text-white">
-              AW
-            </span>
             <span className="min-w-0">
               <span className="block truncate text-sm font-bold text-grey-text-strong">
                 Arwa Weld
@@ -85,8 +92,6 @@ export function Layout({ children }) {
           {isAuthorized ? children : <AccessRestricted />}
         </main>
       </div>
-
-      <MobileNav />
     </div>
   );
 }
