@@ -359,18 +359,20 @@ export default function Unit() {
               ]}
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => setAddOpen(true) : undefined}
-            onEdit={canUpdate ? (item) => { setSelectedUnit(item); setEditOpen(true); } : undefined}
-            onDelete={canDelete ? (item) => { setSelectedUnit(item); setDeleteOpen(true); } : undefined}
-            onRefresh={() => setRefreshTrigger(prev => prev + 1)}
-            searchId="unit-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={unitsData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Unit"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => setAddOpen(true) : undefined}
+              onEdit={canUpdate ? (item) => { setSelectedUnit(item); setEditOpen(true); } : undefined}
+              onDelete={canDelete ? (item) => { setSelectedUnit(item); setDeleteOpen(true); } : undefined}
+              onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+              searchId="unit-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={unitsData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Unit"
+            />
+          </div>
         </div>
 
         {/* Table */}

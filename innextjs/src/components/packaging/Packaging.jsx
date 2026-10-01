@@ -247,18 +247,20 @@ export default function Packaging() {
               />
             </div>
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => setAddOpen(true) : undefined}
-            onEdit={canUpdate ? (item) => { setSelectedPackaging(item); setEditOpen(true); } : undefined}
-            onDelete={canDelete ? (item) => { setSelectedPackaging(item); setDeleteOpen(true); } : undefined}
-            onRefresh={() => setRefreshTrigger(prev => prev + 1)}
-            searchId="packaging-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={packagingsData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Packaging"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => setAddOpen(true) : undefined}
+              onEdit={canUpdate ? (item) => { setSelectedPackaging(item); setEditOpen(true); } : undefined}
+              onDelete={canDelete ? (item) => { setSelectedPackaging(item); setDeleteOpen(true); } : undefined}
+              onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+              searchId="packaging-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={packagingsData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Packaging"
+            />
+          </div>
         </div>
 
         {/* Table */}

@@ -541,18 +541,20 @@ export default function Category() {
                             ]}
                         />
                     </div>
-                    <KeyboardShortcutBar
-                        onAdd={canCreate ? () => setAddOpen(true) : undefined}
-                        onEdit={canUpdate ? (item) => { setSelectedCategory(item); setEditOpen(true); } : undefined}
-                        onDelete={canDelete ? (item) => { setSelectedCategory(item); setDeleteOpen(true); } : undefined}
-                        onRefresh={refreshData}
-                        searchId="category-search-input"
-                        pageNo={pageNo}
-                        totalPages={Math.ceil(totalItems / pageSize) || 1}
-                        selectedItem={paginatedData[selectedRowIndex]}
-                        selectedRowIndex={selectedRowIndex}
-                        addLabel="Add Category"
-                    />
+                    <div className="hidden lg:block">
+                        <KeyboardShortcutBar
+                            onAdd={canCreate ? () => setAddOpen(true) : undefined}
+                            onEdit={canUpdate ? (item) => { setSelectedCategory(item); setEditOpen(true); } : undefined}
+                            onDelete={canDelete ? (item) => { setSelectedCategory(item); setDeleteOpen(true); } : undefined}
+                            onRefresh={refreshData}
+                            searchId="category-search-input"
+                            pageNo={pageNo}
+                            totalPages={Math.ceil(totalItems / pageSize) || 1}
+                            selectedItem={paginatedData[selectedRowIndex]}
+                            selectedRowIndex={selectedRowIndex}
+                            addLabel="Add Category"
+                        />
+                    </div>
                 </div>
 
                 {/* DATA TABLE */}

@@ -111,19 +111,19 @@ export default function EditProduct({ id }) {
   return (
     <div className="flex flex-col h-full animate-in fade-in" aria-labelledby={titleId}>
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between bg-white px-6 py-4 border-b border-grey-border z-10">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-grey-border">
-            <Package className="h-5 w-5 text-primary" strokeWidth={2.5} />
+      <div className="flex shrink-0 items-center justify-between bg-white px-3 sm:px-6 py-4 border-b border-grey-border z-10">
+        <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-md border border-grey-border">
+            <Package className="h-4 w-4 sm:h-5 sm:w-5 text-primary" strokeWidth={2.5} />
           </div>
           <div>
-            <h2 id={titleId} className="text-xl font-bold text-grey-text-strong">
+            <h2 id={titleId} className="text-base sm:text-xl font-bold text-grey-text-strong whitespace-nowrap">
               Edit Product
             </h2>
-            <p className="text-xs text-grey-muted mt-0.5">Modify product details and inventory settings</p>
+            <p className="text-xs text-grey-muted mt-0.5 hidden sm:block">Modify product details and inventory settings</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Button variant="secondary" onClick={handleClose} text="Cancel" disabled={isSubmitting || isLoadingProduct} />
           <Button variant="primary" type="submit" form="product-edit-form" text={isSubmitting ? "Saving..." : "Save changes"} disabled={isSubmitting || isLoadingProduct} />
         </div>
@@ -291,22 +291,22 @@ export default function EditProduct({ id }) {
                   </label>
                   
                   {bodyDesigns.length > 0 && (
-                    <div className="flex items-center gap-4 pr-[5.5rem] px-1">
+                    <div className="flex items-center gap-2 sm:gap-4 pr-[5.5rem] px-1">
                       <div className="flex-1 text-xs font-semibold text-grey-text-strong">Design Name</div>
-                      <div className="w-48 text-xs font-semibold text-grey-text-strong">Type</div>
+                      <div className="w-28 sm:w-48 text-xs font-semibold text-grey-text-strong">Type</div>
                     </div>
                   )}
 
                   {bodyDesigns.map((design, index) => (
-                    <div key={index} className="flex items-center gap-2 group">
-                      <div className="flex-1">
+                    <div key={index} className="flex items-center gap-2 sm:gap-4 group">
+                      <div className="flex-1 min-w-0">
                         <Input type="text" placeholder="e.g. Elegant Curves" value={design.name} onChange={(e) => {
                           const newDesigns = [...bodyDesigns];
                           newDesigns[index].name = e.target.value;
                           setBodyDesigns(newDesigns);
                         }} />
                       </div>
-                      <div className="w-48 shrink-0">
+                      <div className="w-28 sm:w-48 shrink-0">
                         <Input type="select" value={design.type} onChange={(e) => {
                           const newDesigns = [...bodyDesigns];
                           newDesigns[index].type = e.target.value;
@@ -355,22 +355,22 @@ export default function EditProduct({ id }) {
                   </label>
                   
                   {colours.length > 0 && (
-                    <div className="flex items-center gap-4 pr-[5.5rem] px-1">
+                    <div className="flex items-center gap-2 sm:gap-4 pr-[5.5rem] px-1">
                       <div className="flex-1 text-xs font-semibold text-grey-text-strong">Colour Name</div>
-                      <div className="w-48 text-xs font-semibold text-grey-text-strong">Type</div>
+                      <div className="w-28 sm:w-48 text-xs font-semibold text-grey-text-strong">Type</div>
                     </div>
                   )}
 
                   {colours.map((colour, index) => (
-                    <div key={index} className="flex items-center gap-2 group">
-                      <div className="flex-1">
+                    <div key={index} className="flex items-center gap-2 sm:gap-4 group">
+                      <div className="flex-1 min-w-0">
                         <Input type="text" placeholder="e.g. Matte Black" value={colour.name} onChange={(e) => {
                           const newColours = [...colours];
                           newColours[index].name = e.target.value;
                           setColours(newColours);
                         }} />
                       </div>
-                      <div className="w-48 shrink-0">
+                      <div className="w-28 sm:w-48 shrink-0">
                         <Input type="select" value={colour.type} onChange={(e) => {
                           const newColours = [...colours];
                           newColours[index].type = e.target.value;
