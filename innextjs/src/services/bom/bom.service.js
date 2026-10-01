@@ -14,6 +14,17 @@ export const createBom = async (data, userId = null) => {
                 throw new Error('A BOM with this name already exists');
             }
 
+            const existingBomForProduct = await tx.bom.findFirst({
+                where: {
+                    productId: data.productId,
+                    is_deleted: false
+                }
+            });
+            
+            if (existingBomForProduct) {
+                throw new Error('A BOM for this product already exists.');
+            }
+
             const mainProduct = await tx.product.findUnique({
                 where: { id: data.productId }
             });
@@ -25,6 +36,9 @@ export const createBom = async (data, userId = null) => {
                 const productIds = data.items.map(i => i.productId);
                 if (new Set(productIds).size !== productIds.length) {
                     throw new Error('A BOM cannot contain duplicate component products');
+                }
+                if (productIds.includes(data.productId)) {
+                    throw new Error('A product cannot be a component of its own BOM');
                 }
             }
 
@@ -192,6 +206,27 @@ export const updateBom = async (id, data, userId = null) => {
                 }
             }
 
+            if (data.productId !== undefined && data.productId !== existing.productId) {
+                const existingBomForProduct = await tx.bom.findFirst({
+                    where: {
+                        productId: data.productId,
+                        is_deleted: false,
+                        id: { not: id }
+                    }
+                });
+                
+                if (existingBomForProduct) {
+                    throw new Error('A BOM for this product already exists.');
+                }
+
+                const mainProduct = await tx.product.findUnique({
+                    where: { id: data.productId }
+                });
+                if (!mainProduct || mainProduct.is_deleted) {
+                    throw new Error('The specified main product does not exist or has been deleted');
+                }
+            }
+
             const updateData = {};
             if (data.name !== undefined) updateData.name = data.name;
             if (data.productId !== undefined) updateData.productId = data.productId;
@@ -202,6 +237,11 @@ export const updateBom = async (id, data, userId = null) => {
                 const productIds = data.items.map(i => i.productId);
                 if (new Set(productIds).size !== productIds.length) {
                     throw new Error('A BOM cannot contain duplicate component products');
+                }
+                
+                const targetProductId = data.productId !== undefined ? data.productId : existing.productId;
+                if (productIds.includes(targetProductId)) {
+                    throw new Error('A product cannot be a component of its own BOM');
                 }
                 
                 updateData.items = {
@@ -226,7 +266,7 @@ export const updateBom = async (id, data, userId = null) => {
         return { success: true, data: result };
     } catch (error) {
         console.error('Error in updateBom service:', error);
-        return { success: false, message: 'An internal server error occurred while updating BOM.' };
+        return { success: false, message: error.message || 'An internal server error occurred while updating BOM.', error: error.message };
     }
 };
 
