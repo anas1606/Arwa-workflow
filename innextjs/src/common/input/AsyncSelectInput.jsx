@@ -71,6 +71,7 @@ export default function AsyncSelectInput({
     valueContainer: (base) => ({
       ...base,
       padding: '0 12px',
+      flexWrap: 'nowrap',
     }),
     input: (base) => ({
       ...base,
@@ -83,11 +84,17 @@ export default function AsyncSelectInput({
       ...base,
       color: '#94a3b8', // grey-icon
       fontSize: '0.875rem',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
     }),
     singleValue: (base) => ({
       ...base,
       color: '#1e293b',
       fontSize: '0.875rem',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
     }),
     menu: (base) => ({
       ...base,
@@ -105,6 +112,9 @@ export default function AsyncSelectInput({
       backgroundColor: state.isSelected ? 'var(--color-primary)' : state.isFocused ? '#f1f5f9' : 'white',
       color: state.isSelected ? 'white' : '#1e293b',
       cursor: 'pointer',
+      whiteSpace: 'nowrap',
+      overflow: 'hidden',
+      textOverflow: 'ellipsis',
       '&:active': {
         backgroundColor: state.isSelected ? 'var(--color-primary)' : '#e2e8f0',
       },

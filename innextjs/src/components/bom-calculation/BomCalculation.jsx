@@ -14,24 +14,24 @@ import { usePermission } from '@/hooks/usePermission';
 export default function BomCalculation() {
     const { canRead: canReadBomCalc } = usePermission('bom_calculation');
     const { canCreate: canCreateJobWork } = usePermission('job_work');
-    
+
     // Inputs
     const [selectedProduct, setSelectedProduct] = useState(null);
     const [quantity, setQuantity] = useState('1');
     const [defaultProducts, setDefaultProducts] = useState([]);
-    
+
     // Data states
     const [requirementsTree, setRequirementsTree] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
     const [error, setError] = useState(null);
     const [hasChecked, setHasChecked] = useState(false);
-    
+
     // Tree states
     const [expandedNodes, setExpandedNodes] = useState(new Set());
     const [loadingNodes, setLoadingNodes] = useState(new Set());
     const [rootPagination, setRootPagination] = useState({ page: 1, hasMore: false });
     const [isCreatingJobWork, setIsCreatingJobWork] = useState(false);
-    
+
     const [selectedRowIndex, setSelectedRowIndex] = useState(0);
     const router = useRouter();
 
@@ -71,11 +71,11 @@ export default function BomCalculation() {
         setError(null);
         setHasChecked(true);
         setExpandedNodes(new Set());
-        
+
         const res = await getProductionBomApi(selectedProduct.value, q, 1, 10);
-        
+
         setIsLoading(false);
-        
+
         if (res.error) {
             const msg = res.error.message || 'Failed to fetch production requirements.';
             setRequirementsTree([]);
@@ -96,7 +96,7 @@ export default function BomCalculation() {
     const handleCreateJobWork = async () => {
         if (!selectedProduct) return;
         setIsCreatingJobWork(true);
-        
+
         const items = requirementsTree.map(req => ({
             productId: req.productId,
             requiredQty: req.requiredQuantity,
@@ -133,7 +133,7 @@ export default function BomCalculation() {
         const traverse = (node, depth, parentUniqueId = "") => {
             const uniqueId = parentUniqueId ? `${parentUniqueId}-${node.productId}` : `${node.productId}`;
             result.push({ ...node, depth, uniqueId });
-            
+
             if (expandedNodes.has(uniqueId)) {
                 if (loadingNodes.has(uniqueId)) {
                     result.push({ isSkeleton: true, depth: depth + 1, uniqueId: `skel-1-${uniqueId}` });
@@ -184,7 +184,7 @@ export default function BomCalculation() {
 
     const toggleExpand = async (item) => {
         const uniqueId = item.uniqueId;
-        
+
         if (expandedNodes.has(uniqueId)) {
             // Collapse
             setExpandedNodes(prev => { const n = new Set(prev); n.delete(uniqueId); return n; });
@@ -193,7 +193,7 @@ export default function BomCalculation() {
 
         // Expand
         setExpandedNodes(prev => { const n = new Set(prev); n.add(uniqueId); return n; });
-        
+
         if (item.childrenLoaded) return;
 
         setLoadingNodes(prev => new Set(prev).add(uniqueId));
@@ -311,11 +311,11 @@ export default function BomCalculation() {
                 }
 
                 const isExpanded = expandedNodes.has(item.uniqueId);
-                
+
                 return (
                     <div style={{ paddingLeft: `${item.depth * 28}px` }} className="flex items-center">
                         {(item.hasSubBom && item.isShortage) ? (
-                            <button 
+                            <button
                                 onClick={(e) => { e.stopPropagation(); toggleExpand(item); }}
                                 className="w-6 h-6 rounded flex items-center justify-center text-grey-icon-strong hover:bg-grey-bg transition-colors mr-2 shrink-0"
                             >
@@ -381,7 +381,7 @@ export default function BomCalculation() {
                 <title>BOM Calculation | Arwa Weld</title>
             </Head>
 
-            <div className="w-full flex flex-col gap-5 h-full min-h-[calc(100vh-100px)]">
+            <div className="w-full flex flex-col gap-5">
                 {/* Header */}
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
                     <div className="min-w-0">
@@ -424,9 +424,9 @@ export default function BomCalculation() {
                             />
                         </div>
                         <div className="w-full sm:w-[150px]">
-                            <Input 
+                            <Input
                                 id="production-qty-input"
-                                type="number" 
+                                type="number"
                                 placeholder="Quantity (e.g. 1)"
                                 min="1"
                                 value={quantity}
@@ -442,55 +442,55 @@ export default function BomCalculation() {
                             disabled={isLoading}
                         />
                     </div>
-                    <KeyboardShortcutBar
-                        onRefresh={() => { if (hasChecked) handleCheck(); }}
-                        searchId="production-product-search"
-                        selectedItem={flattenedList[selectedRowIndex]}
-                        selectedRowIndex={selectedRowIndex}
-                    />
+                    <div className="hidden lg:block">
+                        <KeyboardShortcutBar
+                            onRefresh={() => { if (hasChecked) handleCheck(); }}
+                            searchId="production-product-search"
+                            selectedItem={flattenedList[selectedRowIndex]}
+                            selectedRowIndex={selectedRowIndex}
+                        />
+                    </div>
                 </div>
 
                 {/* Table Area */}
-                <div className="w-full flex-1 flex flex-col relative min-h-0">
-                    <CommonTable
-                        columns={columns}
-                        data={flattenedList}
-                        isLoading={isLoading}
-                        hidePagination={true}
-                        emptyState={
-                            error ? (
-                                error === 'For this product no bom available' ? (
-                                    <div className="flex flex-col items-center justify-center text-center">
-                                        <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
-                                            <PackageOpen size={32} />
-                                        </div>
-                                        <p className="text-sm font-semibold text-slate-800">{error}</p>
-                                    </div>
-                                ) : (
-                                    <div className="flex flex-col items-center justify-center text-center">
-                                        <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-4">
-                                            <AlertCircle size={32} />
-                                        </div>
-                                        <p className="text-sm font-semibold text-slate-800">{error}</p>
-                                    </div>
-                                )
-                            ) : !hasChecked ? (
+                <CommonTable
+                    columns={columns}
+                    data={flattenedList}
+                    isLoading={isLoading}
+                    hidePagination={true}
+                    emptyState={
+                        error ? (
+                            error === 'For this product no bom available' ? (
                                 <div className="flex flex-col items-center justify-center text-center">
                                     <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
                                         <PackageOpen size={32} />
                                     </div>
-                                    <h3 className="text-base font-bold text-slate-800 mb-1">Check Requirements</h3>
-                                    <p className="text-sm text-slate-500 max-w-sm">Select a product and click 'Calculate BOM' to load requirements.</p>
+                                    <p className="text-sm font-semibold text-slate-800">{error}</p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col items-center justify-center text-center">
-                                    <span className="text-sm font-medium">No BOM requirements found.</span>
+                                    <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center text-red-500 mb-4">
+                                        <AlertCircle size={32} />
+                                    </div>
+                                    <p className="text-sm font-semibold text-slate-800">{error}</p>
                                 </div>
                             )
-                        }
-                        selectedRowIndex={selectedRowIndex}
-                    />
-                </div>
+                        ) : !hasChecked ? (
+                            <div className="flex flex-col items-center justify-center text-center">
+                                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-400 mb-4">
+                                    <PackageOpen size={32} />
+                                </div>
+                                <h3 className="text-base font-bold text-slate-800 mb-1">Check Requirements</h3>
+                                <p className="text-sm text-slate-500 max-w-sm">Select a product and click 'Calculate BOM' to load requirements.</p>
+                            </div>
+                        ) : (
+                            <div className="flex flex-col items-center justify-center text-center">
+                                <span className="text-sm font-medium">No BOM requirements found.</span>
+                            </div>
+                        )
+                    }
+                    selectedRowIndex={selectedRowIndex}
+                />
             </div>
         </>
     );
