@@ -277,12 +277,22 @@ function NavSection({ title, items }) {
   );
 }
 
-export function Sidebar() {
+export function Sidebar({ isOpen, onClose }) {
   const { user, logout } = useUser();
   const [profileOpen, setProfileOpen] = useState(false);
 
   return (
-    <aside className="glass-nav" aria-label="Application">
+    <>
+      {/* Mobile Backdrop */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-[9999] bg-grey-text-strong/20 backdrop-blur-sm md:hidden"
+          onClick={onClose}
+          aria-hidden="true"
+        />
+      )}
+      
+      <aside className={clsx("glass-nav z-[9999]", isOpen && "open")} aria-label="Application">
       <div className="glass-nav-header">
         <Link
           href="/"
@@ -303,9 +313,16 @@ export function Sidebar() {
       </div>
 
       <nav className="glass-nav-body" aria-label="Primary">
-        <NavSection title="Operations" items={operationsNav} />
-        <NavSection title="Master data" items={masterNav} />
-        <NavSection title="Administration" items={adminNav} />
+        <div onClick={(e) => {
+          const target = e.target.closest('a');
+          if (target && window.innerWidth < 768) {
+            onClose?.();
+          }
+        }}>
+          <NavSection title="Operations" items={operationsNav} />
+          <NavSection title="Master data" items={masterNav} />
+          <NavSection title="Administration" items={adminNav} />
+        </div>
       </nav>
 
       <div className="glass-nav-footer relative px-2 py-3 mt-auto">
@@ -362,44 +379,9 @@ export function Sidebar() {
         )}
       </div>
     </aside>
+    </>
   );
 }
 
-export function MobileNav() {
-  const router = useRouter();
-  const pathname = router.pathname;
 
-  return (
-    <nav className="glass-nav-mobile" aria-label="Primary mobile">
-      {allNav.map((item) => {
-        const Icon = item.icon;
-        const isOrders = item.to === '/orders';
-        const active = isOrders
-          ? pathname.startsWith('/orders')
-          : item.end
-            ? pathname === item.to
-            : pathname.startsWith(item.to);
 
-        return (
-          <Link
-            key={item.to}
-            href={item.to}
-            className={clsx(
-              'relative flex min-h-12 flex-1 cursor-pointer flex-col items-center justify-center gap-0.5 px-1 py-2 text-2xs font-semibold transition-colors duration-150',
-              active ? 'text-primary-dark' : 'text-grey-icon active:text-grey-text',
-            )}
-          >
-            {active ? (
-              <span
-                className="absolute inset-x-5 top-0 h-0.5 rounded-full bg-primary"
-                aria-hidden
-              />
-            ) : null}
-            <Icon className="h-5 w-5 shrink-0" aria-hidden />
-            <span className="truncate">{item.label}</span>
-          </Link>
-        );
-      })}
-    </nav>
-  );
-}
