@@ -363,18 +363,20 @@ export default function Customers() {
               ]}
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => setAddOpen(true) : undefined}
-            onEdit={canUpdate ? (item) => { setSelectedCustomer(item); setEditOpen(true); } : undefined}
-            onDelete={canDelete ? (item) => { setSelectedCustomer(item); setDeleteOpen(true); } : undefined}
-            onRefresh={triggerRefresh}
-            searchId="customer-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={paginatedData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Customer"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => setAddOpen(true) : undefined}
+              onEdit={canUpdate ? (item) => { setSelectedCustomer(item); setEditOpen(true); } : undefined}
+              onDelete={canDelete ? (item) => { setSelectedCustomer(item); setDeleteOpen(true); } : undefined}
+              onRefresh={triggerRefresh}
+              searchId="customer-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={paginatedData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Customer"
+            />
+          </div>
         </div>
 
         {/* Table */}
