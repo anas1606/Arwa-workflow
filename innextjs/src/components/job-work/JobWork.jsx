@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Head from 'next/head';
-import { Search, Plus, Pencil, Trash2, Eye, Briefcase } from 'lucide-react';
+import { Search, Plus, Pencil, Trash2, Eye } from 'lucide-react';
 import CommonTable from '@/common/table/CommonTable';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
@@ -212,7 +212,6 @@ export default function JobWork() {
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div className="min-w-0">
             <h1 className="text-[clamp(1.125rem,4vw,1.5rem)] font-bold tracking-tight text-grey-text-strong flex items-center gap-2">
-              <Briefcase className="w-6 h-6 text-primary" />
               Job Work
             </h1>
             <p className="mt-1 text-sm leading-snug text-grey-muted">
