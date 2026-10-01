@@ -197,7 +197,7 @@ export default function AddGodown() {
         return;
       }
       sectionNames.add(s.name);
-      
+
       const trayNames = new Set();
       for (const t of s.trays) {
         if (trayNames.has(t.name)) {
@@ -251,21 +251,26 @@ export default function AddGodown() {
   };
 
   return (
-    <div className="flex flex-col h-[96vh] overflow-hidden">
+    <div className="flex flex-col h-[calc(100dvh-5rem)] lg:h-[calc(100dvh-1.5rem)] overflow-hidden">
 
       {/* Header & Progress Bar */}
       <div className="shrink-0 py-1 flex items-start justify-between gap-6 px-1">
-        <div className="flex items-start gap-6">
-          <Button
-            variant="ghost"
-            onClick={handleClose}
-            className="!px-0 !bg-transparent text-grey-muted hover:text-grey-text-strong mt-0.5"
-            icon={ArrowLeft}
-            text="Back to godown"
-          />
-          <div>
-            <h1 className="text-md font-bold text-grey-text-strong leading-tight">Add Godown Setup</h1>
-            <p className="text-sm text-grey-muted mt-1">Configure your new master area and layout.</p>
+        <div className="flex items-start gap-2 sm:gap-6 min-w-0">
+          <div className="hidden sm:block">
+            <Button
+              variant="ghost"
+              onClick={handleClose}
+              className="!px-0 !bg-transparent text-grey-muted hover:text-grey-text-strong mt-0.5"
+              icon={ArrowLeft}
+              text="Back to godown"
+            />
+          </div>
+          <button onClick={handleClose} className="sm:hidden mt-0.5 shrink-0 text-grey-muted p-1">
+            <ArrowLeft size={20} />
+          </button>
+          <div className="min-w-0">
+            <h1 className="text-base sm:text-md font-bold text-grey-text-strong leading-tight truncate">Add Godown Setup</h1>
+            <p className="text-xs sm:text-sm text-grey-muted mt-0.5 sm:mt-1 truncate">Configure your new master area and layout.</p>
           </div>
         </div>
         <div className="flex items-center">
@@ -305,19 +310,19 @@ export default function AddGodown() {
                   {(isActive || isDone) && <div className="absolute top-0 inset-x-0 h-[2px] bg-primary rounded-b-sm" />}
 
                   <div className={clsx(
-                    'flex items-center w-full gap-3 px-3 py-2.5 rounded-xl transition-colors',
+                    'flex flex-col sm:flex-row items-center justify-center sm:justify-start w-full gap-1 sm:gap-3 px-1 sm:px-3 py-2 sm:py-2.5 rounded-xl transition-colors',
                     isClickable ? 'cursor-pointer' : isActive ? '' : 'opacity-50 cursor-not-allowed',
                     isActive ? 'bg-primary-bg' : isClickable ? 'hover:bg-grey-surface/50' : ''
                   )}>
                     <div className={clsx(
-                      'w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold shrink-0 transition-colors',
+                      'w-6 h-6 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold shrink-0 transition-colors',
                       isActive ? 'bg-primary text-white shadow-sm shadow-primary/20' : isDone ? 'bg-primary-subtle text-primary-dark' : 'bg-grey-surface text-grey-muted'
                     )}>
                       {isDone ? <Check size={14} /> : idx + 1}
                     </div>
-                    <div className="hidden sm:block min-w-0">
-                      <p className={clsx('text-sm font-bold leading-tight truncate', isActive ? 'text-grey-text-strong' : isDone ? 'text-primary' : 'text-grey-icon')}>{s.title}</p>
-                      <p className="text-[11px] text-grey-icon truncate leading-tight mt-0.5">{s.desc}</p>
+                    <div className="flex flex-col sm:min-w-0 items-center sm:items-start w-full sm:w-auto text-center sm:text-left">
+                      <p className={clsx('text-[10px] sm:text-sm font-bold leading-tight sm:truncate', isActive ? 'text-grey-text-strong' : isDone ? 'text-primary' : 'text-grey-icon')}>{s.title}</p>
+                      <p className="hidden sm:block text-[11px] text-grey-icon truncate leading-tight mt-0.5">{s.desc}</p>
                     </div>
                   </div>
                 </div>
@@ -327,8 +332,8 @@ export default function AddGodown() {
         </div>
       </div>
 
-      <div className="shrink-0 px-1 pb-2">
-        <KeyboardShortcutBar 
+      <div className="shrink-0 px-1 pb-2 hidden lg:block">
+        <KeyboardShortcutBar
           hideSearch={true}
           customActions={[
             { label: 'Navigate items', keyCombo: ['↓', '↑'] },
@@ -369,16 +374,7 @@ export default function AddGodown() {
                   />
                 </div>
 
-                <div className="flex justify-end pt-6 border-t border-grey-border/50 gap-3">
-                  <Button
-                    variant="primary"
-                    onClick={nextStep}
-                    text="Continue to Sections"
-                    icon={ArrowRight}
-                    className="px-8 h-10"
-                    disabled={!name.trim()}
-                  />
-                </div>
+
               </div>
             </div>
           </div>
@@ -386,18 +382,18 @@ export default function AddGodown() {
 
         {/* STEP 2: GENERATE SECTIONS */}
         {step === 2 && (
-          <div className="h-full flex flex-col lg:flex-row pb-2 gap-4 animate-in fade-in slide-in-from-right-4 duration-200 min-h-0">
+          <div className="h-full flex flex-col lg:flex-row pb-2 gap-4 animate-in fade-in slide-in-from-right-4 duration-200 overflow-y-auto lg:overflow-hidden pr-1 lg:pr-0">
 
             {/* Left: Section Generator Wrapper */}
-            <div className="w-full lg:w-[350px] shrink-0 min-h-0 flex flex-col justify-start">
-              <div className="w-full min-h-0 shrink bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden">
+            <div className="w-full lg:w-[350px] shrink-0 flex flex-col lg:h-full h-auto lg:min-h-0">
+              <div className="w-full h-full bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden">
                 <div className="bg-grey-bg/50 px-4 py-3 border-b border-grey-border shrink-0">
                   <h3 className="font-bold text-grey-text-strong flex items-center gap-2 text-sm">
                     <LayoutGrid size={16} className="text-primary" />
                     Bulk Generate Sections
                   </h3>
                 </div>
-                <div className="overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4 min-h-0">
+                <div className="flex-1 overflow-y-auto custom-scrollbar p-4 flex flex-col gap-4">
                   <p className="text-sm text-grey-muted leading-relaxed">
                     Generate multiple sections at once by setting a prefix and quantity.
                   </p>
@@ -429,7 +425,7 @@ export default function AddGodown() {
             </div>
 
             {/* Right: Section List Wrapper */}
-            <div className="flex-1 min-h-0 flex flex-col justify-start">
+            <div className="w-full lg:flex-1 shrink-0 flex flex-col lg:h-full h-auto min-h-[400px] lg:min-h-0">
               <div className="w-full min-h-0 shrink bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden">
                 <div className="bg-grey-bg/50 px-4 py-3 border-b border-grey-border flex items-center justify-between shrink-0">
                   <h3 className="font-bold text-grey-text-strong text-sm">Generated Sections ({sections.length})</h3>
@@ -467,7 +463,7 @@ export default function AddGodown() {
                           />
                           <button
                             onClick={() => deleteSection(section.id)}
-                            className="w-8 h-8 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shrink-0 bg-white shadow-sm"
+                            className="w-8 h-8 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 transition-all shrink-0 bg-white shadow-sm"
                           >
                             <Trash2 size={16} />
                           </button>
@@ -483,18 +479,18 @@ export default function AddGodown() {
 
         {/* STEP 3: ALLOCATE TRAYS */}
         {step === 3 && (
-          <div className="h-full flex flex-col lg:flex-row pb-2 gap-4 animate-in fade-in slide-in-from-right-4 duration-200 min-h-0">
+          <div className="h-full flex flex-col lg:flex-row pb-2 gap-4 animate-in fade-in slide-in-from-right-4 duration-200 overflow-y-auto lg:overflow-hidden pr-1 lg:pr-0">
 
             {/* Left: Section Selector Wrapper */}
-            <div className="w-full lg:w-[300px] shrink-0 min-h-0 flex flex-col justify-start">
-              <div className="w-full min-h-0 shrink bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden">
+            <div className="w-full lg:w-[300px] shrink-0 flex flex-col lg:h-full h-auto min-h-[200px] lg:min-h-0">
+              <div className="w-full h-full bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden">
                 <div className="bg-grey-bg/50 px-4 py-3 border-b border-grey-border shrink-0">
                   <h3 className="font-bold text-grey-text-strong flex items-center gap-2 text-sm">
                     <LayoutGrid size={16} className="text-primary" />
                     Select Section
                   </h3>
                 </div>
-                <div className="overflow-y-auto p-3 custom-scrollbar flex flex-col gap-2 min-h-0">
+                <div className="flex-1 overflow-y-auto p-3 custom-scrollbar flex flex-col gap-2">
                   {sections.length === 0 ? (
                     <p className="text-sm text-grey-muted text-center p-4">No sections available.</p>
                   ) : (
@@ -504,8 +500,8 @@ export default function AddGodown() {
                         id={`section-btn-${section.id}`}
                         onClick={() => setSelectedSectionId(section.id)}
                         className={`section-btn flex items-center justify-between p-3 rounded-lg border text-left transition-all ${selectedSectionId === section.id
-                            ? 'bg-primary/5 border-primary shadow-sm'
-                            : 'bg-white border-grey-border hover:bg-grey-bg'
+                          ? 'bg-primary/5 border-primary shadow-sm'
+                          : 'bg-white border-grey-border hover:bg-grey-bg'
                           }`}
                       >
                         <span className={`font-bold ${selectedSectionId === section.id ? 'text-primary' : 'text-grey-text-strong'}`}>
@@ -522,7 +518,7 @@ export default function AddGodown() {
             </div>
 
             {/* Right: Trays For Selected Section Wrapper */}
-            <div className="flex-1 min-h-0 flex flex-col justify-start">
+            <div className="w-full lg:flex-1 shrink-0 flex flex-col lg:h-full h-auto min-h-[400px] lg:min-h-0">
               <div className="w-full min-h-0 shrink bg-white rounded-xl border border-grey-border shadow-sm flex flex-col overflow-hidden">
                 {selectedSectionId ? (() => {
                   const selectedSection = sections.find(s => s.id === selectedSectionId);
@@ -537,36 +533,38 @@ export default function AddGodown() {
                           </h3>
                         </div>
 
-                        <div className="flex items-end gap-3 bg-white p-4 rounded-xl border border-grey-border shadow-sm">
-                          <div className="flex-1">
-                            <Input
-                              label="Tray Prefix"
-                              value={selectedSection?.trayPrefix || ''}
-                              onChange={(e) => updateSectionField(selectedSectionId, 'trayPrefix', e.target.value)}
-                              placeholder="e.g. Row"
-                              className="bg-grey-bg/20"
-                              autoFocus
-                            />
+                        <div className="flex flex-col sm:flex-row sm:items-end gap-3 bg-white p-4 rounded-xl border border-grey-border shadow-sm">
+                          <div className="flex gap-3 w-full sm:w-auto sm:flex-1">
+                            <div className="flex-1">
+                              <Input
+                                label="Tray Prefix"
+                                value={selectedSection?.trayPrefix || ''}
+                                onChange={(e) => updateSectionField(selectedSectionId, 'trayPrefix', e.target.value)}
+                                placeholder="e.g. Row"
+                                className="bg-grey-bg/20"
+                                autoFocus
+                              />
+                            </div>
+                            <div className="flex-1 sm:w-24 sm:flex-none">
+                              <Input
+                                label="Qty"
+                                type="number"
+                                min="1"
+                                value={selectedSection?.trayQty || ''}
+                                onChange={(e) => updateSectionField(selectedSectionId, 'trayQty', e.target.value)}
+                                placeholder="e.g. 10"
+                                className="bg-grey-bg/20"
+                              />
+                            </div>
                           </div>
-                          <div className="w-24 shrink-0">
-                            <Input
-                              label="Qty"
-                              type="number"
-                              min="1"
-                              value={selectedSection?.trayQty || ''}
-                              onChange={(e) => updateSectionField(selectedSectionId, 'trayQty', e.target.value)}
-                              placeholder="e.g. 10"
-                              className="bg-grey-bg/20"
-                            />
-                          </div>
-                          <div className="flex items-end gap-2 shrink-0">
+                          <div className="w-full sm:w-auto shrink-0 mt-1 sm:mt-0">
                             <Button
                               variant="primary"
                               icon={Plus}
                               text="Generate Bulk"
                               onClick={() => handleGenerateTraysForSection(selectedSectionId)}
                               disabled={!selectedSection?.trayQty || parseInt(selectedSection.trayQty, 10) <= 0}
-                              className="h-10 px-4"
+                              className="h-10 px-4 w-full sm:w-auto justify-center"
                             />
                           </div>
                         </div>
@@ -618,7 +616,7 @@ export default function AddGodown() {
                                 />
                                 <button
                                   onClick={() => deleteTray(selectedSectionId, tray.id)}
-                                  className="w-7 h-7 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-all shrink-0"
+                                  className="w-7 h-7 flex items-center justify-center rounded-md text-grey-muted hover:text-red-500 hover:bg-red-50 focus:text-red-500 focus:bg-red-50 focus:outline-none focus:ring-2 focus:ring-red-200 opacity-100 lg:opacity-0 lg:group-hover:opacity-100 focus:opacity-100 transition-all shrink-0"
                                 >
                                   <X size={16} />
                                 </button>
@@ -651,10 +649,10 @@ export default function AddGodown() {
             <Button variant="secondary" onClick={prevStep} text="Back" className="px-5 h-9 text-sm" />
           )}
           {step < 3 && (
-            <Button 
-              variant="primary" 
-              onClick={nextStep} 
-              text="Next Step" 
+            <Button
+              variant="primary"
+              onClick={nextStep}
+              text="Next Step"
               className="px-5 h-9 text-sm"
               disabled={(step === 1 && !name.trim()) || (step === 2 && sections.length === 0)}
             />

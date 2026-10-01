@@ -165,13 +165,28 @@ export default function JobWork() {
       ),
     },
     {
-      key: 'createdAt',
-      label: 'Created Date',
+      key: 'createdByName',
+      label: 'Created By',
       render: (row) => (
-        <div className="flex flex-col">
-          <span className="text-sm font-medium text-grey-text-strong">
-            {row.createdAt ? new Date(row.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
-          </span>
+        <div className="flex flex-col gap-0.5 whitespace-nowrap">
+            <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
+            <span className="text-xs text-grey-muted">
+                {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
+            </span>
+        </div>
+      ),
+    },
+    {
+      key: 'updatedByName',
+      label: 'Updated By',
+      render: (row) => (
+        <div className="flex flex-col gap-0.5 whitespace-nowrap">
+            <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
+            {row.updatedBy ? (
+                <span className="text-xs text-grey-muted">
+                    {row.updatedAt ? new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : ''}
+                </span>
+            ) : null}
         </div>
       ),
     }

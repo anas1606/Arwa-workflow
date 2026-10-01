@@ -108,9 +108,9 @@ export default function CustomerStep({
   }, [focusedCustomerIndex]);
 
   return (
-    <div className="flex flex-col lg:flex-row gap-3 items-start h-full">
+    <div className="flex flex-col lg:flex-row gap-3 items-start h-full overflow-y-auto lg:overflow-hidden pr-1 lg:pr-0">
       {/* LEFT: Customer list */}
-      <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-full">
+      <div className="flex-1 min-w-0 w-full lg:relative flex flex-col h-[400px] shrink-0 lg:h-full">
         <div className="flex-1 bg-white rounded-xl border border-grey-border/60 shadow-sm flex flex-col overflow-hidden lg:absolute lg:inset-0">
           <div className="px-5 pt-5 pb-3 shrink-0">
             <h2 className="text-base font-bold text-grey-text-strong">Select customer</h2>
@@ -118,7 +118,7 @@ export default function CustomerStep({
           </div>
 
           {/* Search */}
-          <div className="px-5 pb-3 flex items-center gap-3 shrink-0">
+          <div className="px-5 pb-3 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 shrink-0">
             <div className="flex-1">
               <Input
                 id="customer-search"
@@ -150,21 +150,21 @@ export default function CustomerStep({
               />
             </div>
             {canCreateCustomer && (
-              <Button variant="secondary" icon={Plus} text="Add customer" onClick={() => setIsAddOpen(true)} className="!h-10 !rounded-xl !text-sm" />
+              <Button variant="secondary" icon={Plus} text="Add customer" onClick={() => setIsAddOpen(true)} className="!h-10 !rounded-xl !text-sm w-full sm:w-auto justify-center" />
             )}
           </div>
 
-          <AddCustomer 
-            open={isAddOpen} 
-            onClose={() => setIsAddOpen(false)} 
+          <AddCustomer
+            open={isAddOpen}
+            onClose={() => setIsAddOpen(false)}
             onAdd={() => {
               setIsAddOpen(false);
               fetchCustomers();
-            }} 
+            }}
           />
 
-          <div className="px-5 pb-3 shrink-0">
-            <KeyboardShortcutBar 
+          <div className="px-5 pb-3 shrink-0 hidden lg:block">
+            <KeyboardShortcutBar
               searchId="customer-search"
               customActions={[
                 { label: 'Move list', keyCombo: ['↓', '↑'] },
@@ -231,7 +231,7 @@ export default function CustomerStep({
 
       {/* RIGHT: Order Summary sidebar */}
       {customer && (
-        <div className="w-full lg:w-[280px] shrink-0 space-y-2 h-full overflow-y-auto">
+        <div className="w-full lg:w-[280px] shrink-0 space-y-2 lg:h-full lg:overflow-y-auto">
           <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon px-1">Order Summary</p>
 
           {/* Customer card */}
@@ -239,7 +239,7 @@ export default function CustomerStep({
             {customer ? (
               <>
                 <div className="w-9 h-9 rounded-xl bg-primary text-white flex items-center justify-center text-xs font-bold shrink-0">
-                     {(customer.name || 'NA').substring(0, 2).toUpperCase()}
+                  {(customer.name || 'NA').substring(0, 2).toUpperCase()}
                 </div>
                 <div>
                   <p className="font-bold text-sm text-grey-text-strong leading-tight">{customer.name}</p>
@@ -272,7 +272,7 @@ export default function CustomerStep({
                 }
               }}
             />
-            <div className="grid grid-cols-3 gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {DUE_PRESETS.map(p => (
                 <button
                   type="button"
@@ -293,7 +293,7 @@ export default function CustomerStep({
                     }
                   }}
                   className={clsx(
-                    'text-[11px] font-medium py-1.5 rounded-xl border transition-colors',
+                    'flex-1 min-w-[70px] text-[11px] font-medium py-1.5 rounded-xl border transition-colors',
                     dueDate === addDays(p.days) ? 'bg-primary-bg text-primary-dark border-primary-subtle' : 'bg-grey-bg text-grey-text-light border-transparent hover:bg-grey-surface'
                   )}
                 >
@@ -324,8 +324,8 @@ export default function CustomerStep({
                   className={clsx(
                     'flex-1 py-1.5 rounded-xl text-xs font-bold border transition-colors',
                     p === 'Low' ? (priority === 'Low' ? 'bg-success-subtle text-success-text border-success-subtle' : 'bg-success-bg/50 text-success-dark border-transparent hover:bg-success-subtle') :
-                    p === 'Normal' ? (priority === 'Normal' ? 'bg-warning-subtle text-warning-text border-warning-subtle' : 'bg-warning-bg/50 text-warning-dark border-transparent hover:bg-warning-subtle') :
-                    (priority === 'High' ? 'bg-danger-subtle text-danger-text border-danger-subtle' : 'bg-danger-bg/50 text-danger-dark border-transparent hover:bg-danger-subtle')
+                      p === 'Normal' ? (priority === 'Normal' ? 'bg-warning-subtle text-warning-text border-warning-subtle' : 'bg-warning-bg/50 text-warning-dark border-transparent hover:bg-warning-subtle') :
+                        (priority === 'High' ? 'bg-danger-subtle text-danger-text border-danger-subtle' : 'bg-danger-bg/50 text-danger-dark border-transparent hover:bg-danger-subtle')
                   )}
                 >
                   {p}

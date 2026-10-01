@@ -47,7 +47,7 @@ export default function ReviewStep({
               <p className="text-[10px] font-bold uppercase tracking-wide text-grey-icon">PRIORITY</p>
               <p className={clsx(
                 'text-sm font-bold mt-0.5',
-                priority === 'Low' ? 'text-success-main' : priority === 'Medium' ? 'text-warning-main' : 'text-danger-main'
+                priority === 'Low' ? 'text-success-main' : priority === 'Normal' ? 'text-warning-main' : 'text-danger-main'
               )}>{priority}</p>
             </div>
           </div>
