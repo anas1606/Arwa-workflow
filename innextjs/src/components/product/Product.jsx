@@ -423,18 +423,20 @@ export default function Product() {
               ]}
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/inventory/product/create') : undefined}
-            onEdit={canUpdate ? (item) => router.push(`/inventory/product/edit/${item.id}`) : undefined}
-            onDelete={canDelete ? (item) => { setProductToDelete(item); setDeleteModalOpen(true); } : undefined}
-            onRefresh={() => { fetchProducts(); fetchKpis(); }}
-            searchId="product-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={productsData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Product"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => router.push('/inventory/product/create') : undefined}
+              onEdit={canUpdate ? (item) => router.push(`/inventory/product/edit/${item.id}`) : undefined}
+              onDelete={canDelete ? (item) => { setProductToDelete(item); setDeleteModalOpen(true); } : undefined}
+              onRefresh={() => { fetchProducts(); fetchKpis(); }}
+              searchId="product-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={productsData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Product"
+            />
+          </div>
         </div>
 
         {/* Table */}

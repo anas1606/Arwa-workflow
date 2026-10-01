@@ -355,7 +355,7 @@ export default function Stock() {
                         </span>
                         
                         {row.rowType === 'product' && row.code && (
-                            <span className="text-[10px] bg-grey-bg px-1.5 py-0.5 rounded text-grey-text border border-grey-border-strong ml-2">{row.code}</span>
+                            <span className="text-[10px] bg-grey-bg px-1.5 py-0.5 rounded text-grey-text border border-grey-border-strong ml-2 whitespace-nowrap">{row.code}</span>
                         )}
                     </div>
                 );
@@ -447,14 +447,16 @@ export default function Stock() {
                             className="flex-1 min-w-0"
                         />
                     </div>
-                    <KeyboardShortcutBar
-                        onRefresh={() => loadInitialData(apiPagination.page)}
-                        searchId="stock-search-input"
-                        pageNo={apiPagination.page}
-                        totalPages={apiPagination.totalPages}
-                        selectedItem={flattenedData[selectedRowIndex]}
-                        selectedRowIndex={selectedRowIndex}
-                    />
+                    <div className="hidden lg:block">
+                        <KeyboardShortcutBar
+                            onRefresh={() => loadInitialData(apiPagination.page)}
+                            searchId="stock-search-input"
+                            pageNo={apiPagination.page}
+                            totalPages={apiPagination.totalPages}
+                            selectedItem={flattenedData[selectedRowIndex]}
+                            selectedRowIndex={selectedRowIndex}
+                        />
+                    </div>
                 </div>
 
                 {/* Table */}

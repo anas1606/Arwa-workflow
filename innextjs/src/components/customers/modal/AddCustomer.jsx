@@ -125,7 +125,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
   if (!root) return null;
 
   return createPortal(
-    <div className="app-modal-layer !p-0 sm:!p-6 !items-end sm:!items-center" role="presentation">
+    <div className="app-modal-layer" role="presentation">
       <button
         type="button"
         className={`app-modal-backdrop ${isAnimatingOut ? 'animate-modal-backdrop-out' : 'animate-modal-backdrop'}`}
@@ -136,7 +136,7 @@ export default function AddCustomer({ open, onClose, onAdd }) {
         role="dialog"
         aria-modal="true"
         aria-labelledby={titleId}
-        className={`app-modal-panel bg-white shadow-2xl !rounded-t-2xl sm:!rounded-2xl !rounded-b-none sm:!rounded-b-2xl border !border-x-0 !border-b-0 sm:!border-x sm:!border-b border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full !max-h-[90vh] sm:!max-h-[calc(100vh-3rem)]`}
+        className={`app-modal-panel bg-white shadow-2xl rounded-xl sm:rounded-2xl border border-grey-border ${isAnimatingOut ? 'animate-modal-panel-out' : 'animate-modal-panel'} max-w-lg w-full`}
       >
         <div className="flex shrink-0 items-center justify-between border-b border-grey-border px-4 py-3">
           <h2 id={titleId} className="text-base font-bold text-grey-text-strong">

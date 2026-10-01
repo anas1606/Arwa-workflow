@@ -661,7 +661,7 @@ export default function Customisation() {
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                 <h2 className="text-sm font-bold text-grey-text-strong">Customer brands</h2>
-                <span className="inline-flex flex-wrap items-center gap-1 text-2xs text-grey-icon" aria-label="Keyboard shortcuts">
+                <span className="hidden lg:inline-flex flex-wrap items-center gap-1 text-2xs text-grey-icon" aria-label="Keyboard shortcuts">
                   <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↑</kbd>
                   <kbd className="px-1 py-0.5 border border-grey-border rounded-md text-grey-muted bg-white shadow-sm font-sans font-semibold text-[10px] uppercase">↓</kbd>
                   <span>Move</span>
@@ -796,18 +796,20 @@ export default function Customisation() {
               />
             </div>
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreateProduct ? () => router.push('/inventory/product/create') : undefined}
-            searchId="customisation-search"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={models[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Product"
-            customActions={[
-                { label: 'Panes', keyCombo: ['Alt', '←/→'], onClick: focusBrandsPane }
-            ]}
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreateProduct ? () => router.push('/inventory/product/create') : undefined}
+              searchId="customisation-search"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={models[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Product"
+              customActions={[
+                  { label: 'Panes', keyCombo: ['Alt', '←/→'], onClick: focusBrandsPane }
+              ]}
+            />
+          </div>
         </div>
 
         {/* ─── Product Models Table (CommonTable) ─── */}
@@ -823,36 +825,6 @@ export default function Customisation() {
         />
         </div>
 
-        {/* Mobile cards */}
-        <ul className="space-y-2 lg:hidden">
-          {models.map((model) => (
-            <li key={model.id} className="card-panel !p-3">
-              <div className="mb-3 flex items-start gap-2.5 border-b border-grey-border/40 pb-2.5">
-                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-xs font-bold text-primary-dark">{modelInitials(model.code)}</span>
-                <div className="min-w-0 flex-1">
-                  <p className="font-semibold text-grey-text-strong">{model.name}</p>
-                  <p className="font-mono text-2xs text-grey-muted">{model.code} · {model.category}</p>
-                </div>
-                <span className="inline-flex items-center gap-1 rounded-md bg-primary/10 px-1.5 py-0.5 text-2xs font-semibold text-primary-dark">
-                  <Settings2 className="h-3 w-3" aria-hidden />Configured
-                </span>
-              </div>
-              <dl className="mb-3 grid gap-2.5 sm:grid-cols-2">
-                {TABLE_SPEC_KEYS.map((key) => {
-                  const field = CUSTOMISATION_SPECS.find((f) => f.key === key);
-                  if (!field) return null;
-                  return (
-                    <div key={key}><dt className="mb-1 text-2xs font-semibold uppercase tracking-wide text-grey-icon">{field.label}</dt><dd>{renderSpecCell(model, field)}</dd></div>
-                  );
-                })}
-              </dl>
-              <div className="flex gap-2 ">
-                <Button variant="secondary" className="flex-1" icon={Pencil} text="Edit" onClick={() => setEditingModel(model)} />
-                <Button variant="danger" className="flex-1" icon={Trash2} text="Delete" onClick={() => setModelToDelete(model)} />
-              </div>
-            </li>
-          ))}
-        </ul>
 
         <p className="mt-1 flex items-center gap-1.5 text-2xs text-grey-icon">
           <Package className="h-3.5 w-3.5" aria-hidden />
