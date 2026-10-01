@@ -14,12 +14,12 @@ import EditJobWorkModal from './modal/EditJobWork';
 
 export default function JobWork() {
   const router = useRouter();
-  const { canRead, canCreate, canUpdate, canDelete } = usePermission('job_work'); 
+  const { canRead, canCreate, canUpdate, canDelete } = usePermission('job_work');
 
   const [data, setData] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [query, setQuery] = useState('');
-  
+
   const searchInputRef = useRef(null);
 
   useEffect(() => {
@@ -34,13 +34,13 @@ export default function JobWork() {
   const [pageSize, setPageSize] = useState(10);
   const [totalItems, setTotalItems] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
-  
+
   const [dropdownState, setDropdownState] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
-  
+
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [itemToEdit, setItemToEdit] = useState(null);
 
@@ -53,19 +53,19 @@ export default function JobWork() {
   }, [dropdownState]);
 
   useKeyboardShortcuts({
-      onAdd: canCreate ? () => router.push('/production/bom-calculation') : undefined,
-      onView: canRead ? (item) => router.push(`/production/job-work/${item.id}`) : undefined,
-      onEdit: canUpdate ? (item) => { setItemToEdit(item); setEditModalOpen(true); } : undefined,
-      onDelete: canDelete ? (item) => { setItemToDelete(item); setDeleteModalOpen(true); } : undefined,
-      onRefresh: () => { fetchData(); },
-      searchId: "jobwork-search-input",
-      setPageNo,
-      pageNo,
-      totalPages,
-      items: data,
-      selectedRowIndex,
-      setSelectedRowIndex,
-      isModalOpen: deleteModalOpen,
+    onAdd: canCreate ? () => router.push('/production/bom-calculation') : undefined,
+    onView: canRead ? (item) => router.push(`/production/job-work/${item.id}`) : undefined,
+    onEdit: canUpdate ? (item) => { setItemToEdit(item); setEditModalOpen(true); } : undefined,
+    onDelete: canDelete ? (item) => { setItemToDelete(item); setDeleteModalOpen(true); } : undefined,
+    onRefresh: () => { fetchData(); },
+    searchId: "jobwork-search-input",
+    setPageNo,
+    pageNo,
+    totalPages,
+    items: data,
+    selectedRowIndex,
+    setSelectedRowIndex,
+    isModalOpen: deleteModalOpen,
   });
 
   const fetchData = async () => {
@@ -98,7 +98,7 @@ export default function JobWork() {
   }, [query]);
 
   const getStatusColor = (status) => {
-    switch(status) {
+    switch (status) {
       case 'CREATED': return 'bg-blue-100 text-blue-800';
       case 'CONFIRMED': return 'bg-purple-100 text-purple-800';
       case 'IN_PROGRESS': return 'bg-yellow-100 text-yellow-800';
@@ -116,8 +116,8 @@ export default function JobWork() {
       render: (row) => (
         <div className="flex items-center gap-2.5">
           {canRead ? (
-            <span 
-              className="font-semibold text-primary hover:underline cursor-pointer truncate max-w-[150px]" 
+            <span
+              className="font-semibold text-primary hover:underline cursor-pointer truncate max-w-[150px]"
               title={row.jobWorkNumber}
               onClick={() => router.push(`/production/job-work/${row.id}`)}
             >
@@ -170,7 +170,7 @@ export default function JobWork() {
       render: (row) => (
         <div className="flex flex-col">
           <span className="text-sm font-medium text-grey-text-strong">
-            {row.createdAt ? new Date(row.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric'}) : '-'}
+            {row.createdAt ? new Date(row.createdAt).toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
           </span>
         </div>
       ),
@@ -178,28 +178,28 @@ export default function JobWork() {
   ];
 
   if (canRead || canUpdate || canDelete) {
-      columns.push({
-          key: 'actions',
-          label: 'Action',
-          type: 'action',
-          align: 'center',
-          onClick: (row, e) => {
-              const rect = e.currentTarget.getBoundingClientRect();
-              const dropdownHeight = 85; 
-              const spaceBelow = window.innerHeight - rect.bottom;
-              
-              let yPos = rect.bottom + window.scrollY;
-              if (spaceBelow < dropdownHeight) {
-                  yPos = rect.top + window.scrollY - dropdownHeight;
-              }
-              
-              setDropdownState({
-                  row,
-                  x: rect.right - 128,
-                  y: yPos,
-              });
-          },
-      });
+    columns.push({
+      key: 'actions',
+      label: 'Action',
+      type: 'action',
+      align: 'center',
+      onClick: (row, e) => {
+        const rect = e.currentTarget.getBoundingClientRect();
+        const dropdownHeight = 85;
+        const spaceBelow = window.innerHeight - rect.bottom;
+
+        let yPos = rect.bottom + window.scrollY;
+        if (spaceBelow < dropdownHeight) {
+          yPos = rect.top + window.scrollY - dropdownHeight;
+        }
+
+        setDropdownState({
+          row,
+          x: rect.right - 128,
+          y: yPos,
+        });
+      },
+    });
   }
 
   return (
@@ -243,19 +243,21 @@ export default function JobWork() {
               ref={searchInputRef}
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/production/bom-calculation') : undefined}
-            onView={canRead ? (item) => router.push(`/production/job-work/${item.id}`) : undefined}
-            onEdit={canUpdate ? (item) => { setItemToEdit(item); setEditModalOpen(true); } : undefined}
-            onDelete={canDelete ? (item) => { setItemToDelete(item); setDeleteModalOpen(true); } : undefined}
-            onRefresh={() => { fetchData(); }}
-            searchId="jobwork-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={data[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Job Work"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => router.push('/production/bom-calculation') : undefined}
+              onView={canRead ? (item) => router.push(`/production/job-work/${item.id}`) : undefined}
+              onEdit={canUpdate ? (item) => { setItemToEdit(item); setEditModalOpen(true); } : undefined}
+              onDelete={canDelete ? (item) => { setItemToDelete(item); setDeleteModalOpen(true); } : undefined}
+              onRefresh={() => { fetchData(); }}
+              searchId="jobwork-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={data[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Job Work"
+            />
+          </div>
         </div>
 
         {/* Table */}

@@ -203,7 +203,7 @@ body {
 
   /* Navigation */
   .glass-nav {
-    @apply fixed inset-y-0 left-0 z-30 flex w-[18rem] md:w-[14.50rem] flex-col -translate-x-full md:translate-x-0 transition-transform duration-300 ease-in-out;
+    @apply fixed inset-y-0 left-0 z-30 flex w-[18rem] lg:w-[14.50rem] flex-col -translate-x-full lg:translate-x-0 transition-transform duration-300 ease-in-out;
     background: var(--glass-bg-strong);
     border-right: 1px solid var(--glass-border-edge);
     border-right-color: var(--glass-border);
@@ -233,7 +233,7 @@ body {
   }
 
   .glass-nav-mobile {
-    @apply fixed inset-x-0 bottom-0 z-30 flex md:hidden;
+    @apply fixed inset-x-0 bottom-0 z-30 flex lg:hidden;
     padding-bottom: env(safe-area-inset-bottom);
     background: var(--glass-bg-strong);
     border-top: 1px solid var(--glass-border-edge);

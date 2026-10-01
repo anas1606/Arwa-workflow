@@ -59,9 +59,9 @@ export function Layout({ children }) {
 
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      <div className="flex min-w-0 flex-1 flex-col md:pl-[14.25rem] md:pb-0 pb-[calc(4.75rem+env(safe-area-inset-bottom))]">
+      <div className="flex min-w-0 flex-1 flex-col lg:pl-[14.25rem] lg:pb-0 pb-0">
         {/* Mobile top brand bar */}
-        <header className="glass-nav-mobile-top md:hidden sticky top-0 z-[999] flex items-center gap-2 px-3 py-1 bg-[var(--app-bg)]/80 backdrop-blur-md border-b border-grey-border/30">
+        <header className="glass-nav-mobile-top lg:hidden sticky top-0 z-[999] flex items-center gap-2 px-3 py-1 bg-[var(--app-bg)]/80 backdrop-blur-md border-b border-grey-border/30">
           <button 
             type="button" 
             className="p-1 -ml-1 mr-1 text-primary-text hover:text-primary-dark focus:outline-none"

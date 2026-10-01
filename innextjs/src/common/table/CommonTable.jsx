@@ -179,12 +179,12 @@ export default function CommonTable({
 
             {/* ================= FOOTER / PAGINATION ================= */}
             {!hidePagination && (
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-5 py-4 border-t border-grey-border bg-white mt-auto shadow-sm shrink-0">
-                    <div className="text-sm text-grey-text-light whitespace-nowrap">
+                <div className="flex flex-col-reverse sm:flex-row sm:items-center sm:justify-between gap-4 px-4 sm:px-5 py-4 border-t border-grey-border bg-white mt-auto shadow-sm shrink-0">
+                    <div className="text-sm text-grey-text-light whitespace-nowrap text-center sm:text-left">
                     Showing <b className="text-grey-text-strong">{data?.length || 0}</b> of <b className="text-grey-text-strong">{totalItems}</b>
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4">
+                <div className="flex items-center justify-between sm:justify-end gap-4 w-full sm:w-auto">
                     <div className="flex items-center gap-2">
                         <span className="text-sm text-grey-text-light whitespace-nowrap">Per page</span>
                         <div className="relative inline-block">
@@ -216,6 +216,10 @@ export default function CommonTable({
                         >
                             <ChevronLeft size={16} />
                         </button>
+
+                        <div className="flex items-center justify-center w-8 h-8 rounded-md bg-primary text-white text-sm font-medium shadow-sm border border-primary sm:hidden">
+                            {pageNo}
+                        </div>
 
                         <div className="flex items-center gap-1.5 hidden sm:flex">
                             {getPageWindow().map((p) => (

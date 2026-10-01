@@ -106,7 +106,7 @@ export default function ViewJobWork() {
         </div>
 
         {/* Cards Skeleton */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           {[1, 2, 3, 4].map((i) => (
             <div key={i} className="card-panel border-none !p-5 flex flex-col gap-3 shadow-sm h-[90px]">
               <div className="h-3.5 bg-grey-bg rounded w-1/2" />
@@ -164,7 +164,7 @@ export default function ViewJobWork() {
         </div>
 
         {/* Info Cards Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div className="card-panel border-none !p-5 flex flex-col gap-1 shadow-sm">
             <span className="text-[11px] text-grey-muted font-bold uppercase tracking-widest flex items-center gap-1.5">
               <Factory size={14} /> Target Product

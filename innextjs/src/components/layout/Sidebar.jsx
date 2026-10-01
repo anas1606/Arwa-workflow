@@ -286,7 +286,7 @@ export function Sidebar({ isOpen, onClose }) {
       {/* Mobile Backdrop */}
       {isOpen && (
         <div
-          className="fixed inset-0 z-[9999] bg-grey-text-strong/20 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[9999] bg-grey-text-strong/20 backdrop-blur-sm lg:hidden"
           onClick={onClose}
           aria-hidden="true"
         />
@@ -315,7 +315,7 @@ export function Sidebar({ isOpen, onClose }) {
       <nav className="glass-nav-body" aria-label="Primary">
         <div onClick={(e) => {
           const target = e.target.closest('a');
-          if (target && window.innerWidth < 768) {
+          if (target && window.innerWidth < 1024) {
             onClose?.();
           }
         }}>
