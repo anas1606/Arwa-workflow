@@ -234,19 +234,21 @@ export default function Bom() {
               ref={searchInputRef}
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => router.push('/bom/create') : undefined}
-            onView={canRead ? (item) => { setBomToView(item); setDetailModalOpen(true); } : undefined}
-            onEdit={canUpdate ? (item) => router.push(`/bom/edit/${item.id}`) : undefined}
-            onDelete={canDelete ? (item) => { setBomToDelete(item); setDeleteModalOpen(true); } : undefined}
-            onRefresh={() => { fetchBoms(); }}
-            searchId="bom-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={bomsData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add BOM"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => router.push('/bom/create') : undefined}
+              onView={canRead ? (item) => { setBomToView(item); setDetailModalOpen(true); } : undefined}
+              onEdit={canUpdate ? (item) => router.push(`/bom/edit/${item.id}`) : undefined}
+              onDelete={canDelete ? (item) => { setBomToDelete(item); setDeleteModalOpen(true); } : undefined}
+              onRefresh={() => { fetchBoms(); }}
+              searchId="bom-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={bomsData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add BOM"
+            />
+          </div>
         </div>
 
         {/* Table */}
