@@ -356,6 +356,29 @@ export const deleteProduct = async (id, deletedBy = null) => {
             return { success: false, message: 'Product not found or has already been deleted' };
         }
 
+        // Check if the product is used in any other entities
+        const [bomCount, bomItemCount, orderLineCount, jobWorkCount, jobWorkItemCount] = await Promise.all([
+            prisma.bom.count({ where: { productId: id, is_deleted: false } }),
+            prisma.bomItem.count({ where: { productId: id, bom: { is_deleted: false } } }),
+            prisma.orderLine.count({ where: { productId: id, order: { is_deleted: false } } }),
+            prisma.jobWork.count({ where: { productId: id, is_deleted: false } }),
+            prisma.jobWorkItem.count({ where: { productId: id, jobWork: { is_deleted: false } } })
+        ]);
+
+        const dependencies = [];
+        if (bomCount > 0) dependencies.push('BOM (Main Product)');
+        if (bomItemCount > 0) dependencies.push('BOM (Component)');
+        if (orderLineCount > 0) dependencies.push('Order');
+        if (jobWorkCount > 0) dependencies.push('Job Work (Main Product)');
+        if (jobWorkItemCount > 0) dependencies.push('Job Work (Component)');
+
+        if (dependencies.length > 0) {
+            return { 
+                success: false, 
+                message: `Cannot delete product. It is currently being used in: ${dependencies.join(', ')}.` 
+            };
+        }
+
         const deletedProduct = await prisma.product.update({
             where: { id },
             data: {
