@@ -193,7 +193,7 @@ body {
 
   /* Modals */
   .app-modal-layer {
-    @apply fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto px-4 py-6 sm:px-6 lg:pl-[calc(14.25rem+1.5rem)];
+    @apply fixed inset-0 z-[9999] flex flex-col items-center justify-center p-4 sm:p-8 overflow-hidden;
   }
 
   .app-modal-backdrop {
@@ -201,7 +201,7 @@ body {
   }
 
   .app-modal-panel {
-    @apply relative flex w-full max-h-[calc(100vh-3rem)] flex-col shadow-2xl;
+    @apply relative flex w-full max-h-full flex-col shadow-2xl mx-auto shrink-0;
   }
 
 

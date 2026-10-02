@@ -131,22 +131,13 @@ export default function UsersTabs() {
             {/* Toolbar / Tabs */}
             <div className="card-panel flex w-full flex-col gap-3 border-none !p-3">
                 <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    <nav className="relative flex items-center p-1 bg-slate-200/60 rounded-xl shrink-0" aria-label="Tabs">
-                        {/* Animated Background Pill */}
-                        <div
-                            className={clsx(
-                                "absolute top-1 bottom-1 w-[130px] rounded-lg bg-primary shadow-md transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-                                activeTab === 'users' 
-                                    ? "left-1" 
-                                    : (canReadUsers ? "left-[135px]" : "left-1")
-                            )}
-                        />
+                    <nav className="flex p-1 bg-slate-200/60 rounded-xl shrink-0 gap-1 w-full sm:w-auto" aria-label="Tabs">
                         {canReadUsers && (
                             <button
                                 onClick={() => setActiveTab('users')}
                                 className={clsx(
-                                    'relative z-10 w-[130px] flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors duration-300',
-                                    activeTab === 'users' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
+                                    'flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-300 whitespace-nowrap',
+                                    activeTab === 'users' ? 'bg-primary text-white shadow-md' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-300/50'
                                 )}
                             >
                                 Users
@@ -156,8 +147,8 @@ export default function UsersTabs() {
                             <button
                                 onClick={() => setActiveTab('roles')}
                                 className={clsx(
-                                    'relative z-10 w-[130px] flex items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors duration-300',
-                                    activeTab === 'roles' ? 'text-white' : 'text-slate-600 hover:text-slate-900'
+                                    'flex-1 px-5 py-2 text-sm font-semibold rounded-lg transition-all duration-300 whitespace-nowrap',
+                                    activeTab === 'roles' ? 'bg-primary text-white shadow-md' : 'text-slate-600 hover:text-slate-900 hover:bg-slate-300/50'
                                 )}
                             >
                                 Security Roles
@@ -177,27 +168,29 @@ export default function UsersTabs() {
                         />
                     </div>
                 </div>
-                <KeyboardShortcutBar
-                    onAdd={canAdd ? () => {
-                        if (activeTab === 'users') setAddUserOpen(true);
-                        else router.push('/users/roles/create');
-                    } : undefined}
-                    onRefresh={triggerRefresh}
-                    searchId="users-search-input"
-                    addLabel={config.addText}
-                    customActions={[
-                        {
-                            label: 'Users Tab',
-                            keyCombo: ['Alt', '1'],
-                            onClick: () => { if (canReadUsers) setActiveTab('users'); }
-                        },
-                        {
-                            label: 'Roles Tab',
-                            keyCombo: ['Alt', '2'],
-                            onClick: () => { if (canReadRoles) setActiveTab('roles'); }
-                        }
-                    ]}
-                />
+                <div className="hidden lg:block">
+                    <KeyboardShortcutBar
+                        onAdd={canAdd ? () => {
+                            if (activeTab === 'users') setAddUserOpen(true);
+                            else router.push('/users/roles/create');
+                        } : undefined}
+                        onRefresh={triggerRefresh}
+                        searchId="users-search-input"
+                        addLabel={config.addText}
+                        customActions={[
+                            {
+                                label: 'Users Tab',
+                                keyCombo: ['Alt', '1'],
+                                onClick: () => { if (canReadUsers) setActiveTab('users'); }
+                            },
+                            {
+                                label: 'Roles Tab',
+                                keyCombo: ['Alt', '2'],
+                                onClick: () => { if (canReadRoles) setActiveTab('roles'); }
+                            }
+                        ]}
+                    />
+                </div>
             </div>
 
             {/* Tab Content */}

@@ -174,7 +174,7 @@ export default function AddRole() {
   return (
     <div className="flex flex-col h-full animate-in fade-in" aria-labelledby={titleId}>
       {/* Header */}
-      <div className="flex shrink-0 items-center justify-between bg-white px-6 py-4 border-b border-grey-border z-10">
+      <div className="flex flex-col sm:flex-row shrink-0 sm:items-center justify-between bg-white px-6 py-4 border-b border-grey-border z-10 gap-4">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md border border-grey-border">
             <CheckSquare className="h-5 w-5 text-primary" strokeWidth={2.5} />
@@ -186,9 +186,9 @@ export default function AddRole() {
             <p className="text-xs text-grey-muted mt-0.5">Define new custom security role and access rights</p>
           </div>
         </div>
-        <div className="flex items-center gap-3">
-          <Button variant="secondary" onClick={handleClose} text="Cancel" />
-          <Button variant="primary" type="submit" form="roles-add-form" text={isSubmitting ? "Saving..." : "Save Role"} disabled={isSubmitting} />
+        <div className="flex items-center gap-3 w-full sm:w-auto mt-2 sm:mt-0">
+          <Button variant="secondary" onClick={handleClose} text="Cancel" className="flex-1 sm:flex-none" />
+          <Button variant="primary" type="submit" form="roles-add-form" text={isSubmitting ? "Saving..." : "Save Role"} disabled={isSubmitting} className="flex-1 sm:flex-none" />
         </div>
       </div>
 
