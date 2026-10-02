@@ -279,6 +279,18 @@ export const deleteBom = async (id, deletedBy = null) => {
             return { success: false, message: 'BOM not found or has already been deleted' };
         }
 
+        // Check if BOM is used in JobWork
+        const jobWorkCount = await prisma.jobWork.count({
+            where: { bomId: id, is_deleted: false }
+        });
+
+        if (jobWorkCount > 0) {
+            return { 
+                success: false, 
+                message: 'Cannot delete BOM. It is currently being used in Job Work.' 
+            };
+        }
+
         const deletedBom = await prisma.bom.update({
             where: { id },
             data: {

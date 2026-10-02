@@ -326,16 +326,20 @@ export default function Bom() {
           if (!bomToDelete) return;
           try {
             const res = await deleteBomApi(bomToDelete.id);
-            if (res.data?.success) {
+            if (res.data && res.data.success) {
               toast.success('BOM deleted successfully');
               fetchBoms();
               setDeleteModalOpen(false);
               setBomToDelete(null);
             } else {
-              throw new Error(res.data?.message || 'Failed to delete BOM');
+              toast.error(res.error?.message || res.data?.message || 'Failed to delete BOM');
+              setDeleteModalOpen(false);
+              setBomToDelete(null);
             }
           } catch (error) {
-            throw error;
+            toast.error(error?.message || 'Failed to delete BOM');
+            setDeleteModalOpen(false);
+            setBomToDelete(null);
           }
         }}
         item={bomToDelete}

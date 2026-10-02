@@ -504,17 +504,21 @@ export default function Product() {
           if (!productToDelete) return;
           try {
             const res = await deleteProductApi(productToDelete.id);
-            if (res.data?.success) {
+            if (res.data && res.data.success) {
               toast.success('Product deleted successfully');
               fetchProducts();
               fetchKpis();
               setDeleteModalOpen(false);
               setProductToDelete(null);
             } else {
-              throw new Error(res.data?.message || 'Failed to delete product');
+              toast.error(res.error?.message || res.data?.message || 'Failed to delete product');
+              setDeleteModalOpen(false);
+              setProductToDelete(null);
             }
           } catch (error) {
-            throw error;
+            toast.error(error?.message || 'Failed to delete product');
+            setDeleteModalOpen(false);
+            setProductToDelete(null);
           }
         }}
         item={productToDelete}
