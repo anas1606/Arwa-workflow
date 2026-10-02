@@ -361,10 +361,10 @@ export default function OrderDetailsModal({
         </div>
 
         {/* Footer - Fixed */}
-        <div className="flex-none p-4 flex items-center justify-end gap-3 bg-white border-t border-grey-surface">
-          <Button variant="secondary" text="Close" onClick={onClose} className="bg-grey-bg rounded-xl shadow-sm border-0" />
-          <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-xl shadow-sm border border-grey-border" />
-          <Button variant="primary" text="Edit order" icon={Pencil} onClick={onEdit} className="rounded-xl shadow-sm" />
+        <div className="flex-none p-4 flex flex-wrap-reverse sm:flex-nowrap items-center justify-end gap-3 bg-white border-t border-grey-surface">
+          <Button variant="secondary" text="Close" onClick={onClose} className="bg-grey-bg rounded-xl shadow-sm border-0 flex-1 sm:flex-none justify-center min-w-[100px]" />
+          <Button variant="secondary" icon={Printer} text="Print" className="bg-white rounded-xl shadow-sm border border-grey-border flex-1 sm:flex-none justify-center min-w-[100px]" />
+          <Button variant="primary" text="Edit order" icon={Pencil} onClick={onEdit} className="rounded-xl shadow-sm whitespace-nowrap w-full sm:w-auto sm:flex-none justify-center" />
         </div>
 
       </div>

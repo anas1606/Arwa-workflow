@@ -38,6 +38,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
   const [selectedFilters, setSelectedFilters] = useState({});
   const [searchQuery, setSearchQuery] = useState('');
   const [filterOptions, setFilterOptions] = useState(null);
+  const [defaultFilterOptions, setDefaultFilterOptions] = useState(null);
   const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
@@ -51,6 +52,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
       getOrderFiltersApi().then(res => {
         if (res.data?.success) {
           setFilterOptions(res.data.data);
+          setDefaultFilterOptions(res.data.data);
         }
       });
     }
@@ -63,9 +65,24 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
     // Only search on backend for specific large datasets
     if (activeTab !== 'customer' && activeTab !== 'product' && activeTab !== 'orderNumber') return;
 
+    if (!searchQuery.trim()) {
+      if (defaultFilterOptions) {
+        setFilterOptions(prev => {
+          if (!prev) return defaultFilterOptions;
+          const keyMap = { customer: 'customers', product: 'products', orderNumber: 'orderNumbers' };
+          const key = keyMap[activeTab];
+          return {
+            ...prev,
+            [key]: defaultFilterOptions[key]
+          };
+        });
+      }
+      setIsSearching(false);
+      return;
+    }
+
     const timer = setTimeout(() => {
       setIsSearching(true);
-      // If query is empty, we still want to fetch the default top 10 for that tab to reset the list
       getOrderFiltersApi(activeTab, searchQuery).then(res => {
         if (res.data?.success) {
           setFilterOptions(prev => {
@@ -83,7 +100,7 @@ export default function FilterModal({ open, onClose, onApply, initialFilters }) 
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [searchQuery, activeTab, open]);
+  }, [searchQuery, activeTab, open, defaultFilterOptions]);
 
   useEffect(() => {
     if (open) {

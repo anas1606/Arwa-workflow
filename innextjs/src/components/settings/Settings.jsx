@@ -128,7 +128,7 @@ export default function Settings() {
       render: (row) => (
         <div className="flex flex-col gap-0.5">
           <span className="font-semibold text-grey-text-strong">{row.createdByName || '-'}</span>
-          <span className="text-xs text-grey-muted">
+          <span className="text-xs text-grey-muted whitespace-nowrap">
             {row.createdAt ? new Date(row.createdAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' }) : '-'}
           </span>
         </div>
@@ -141,7 +141,7 @@ export default function Settings() {
         <div className="flex flex-col gap-0.5">
           <span className="font-semibold text-grey-text-strong">{row.updatedByName || '-'}</span>
           {row.updatedBy && row.updatedAt && new Date(row.updatedAt).getTime() !== new Date(row.createdAt).getTime() ? (
-            <span className="text-xs text-grey-muted">
+            <span className="text-xs text-grey-muted whitespace-nowrap">
               {new Date(row.updatedAt).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric', timeZone: 'Asia/Kolkata' })}
             </span>
           ) : null}
@@ -209,18 +209,20 @@ export default function Settings() {
               ref={searchInputRef}
             />
           </div>
-          <KeyboardShortcutBar
-            onAdd={canCreate ? () => setAddOpen(true) : undefined}
-            onEdit={canUpdate ? (item) => { setSelectedSetting(item); setEditOpen(true); } : undefined}
-            onDelete={canDelete ? (item) => { setSelectedSetting(item); setDeleteOpen(true); } : undefined}
-            onRefresh={() => setRefreshTrigger(prev => prev + 1)}
-            searchId="settings-search-input"
-            pageNo={pageNo}
-            totalPages={totalPages}
-            selectedItem={settingsData[selectedRowIndex]}
-            selectedRowIndex={selectedRowIndex}
-            addLabel="Add Setting"
-          />
+          <div className="hidden lg:block">
+            <KeyboardShortcutBar
+              onAdd={canCreate ? () => setAddOpen(true) : undefined}
+              onEdit={canUpdate ? (item) => { setSelectedSetting(item); setEditOpen(true); } : undefined}
+              onDelete={canDelete ? (item) => { setSelectedSetting(item); setDeleteOpen(true); } : undefined}
+              onRefresh={() => setRefreshTrigger(prev => prev + 1)}
+              searchId="settings-search-input"
+              pageNo={pageNo}
+              totalPages={totalPages}
+              selectedItem={settingsData[selectedRowIndex]}
+              selectedRowIndex={selectedRowIndex}
+              addLabel="Add Setting"
+            />
+          </div>
         </div>
 
         {/* Table */}
