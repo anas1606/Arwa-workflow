@@ -31,6 +31,8 @@ function FilterSelect({ id, label, value, onChange, options }) {
     );
 }
 
+import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
+
 export default function RawMaterialPlanning() {
     const { canRead, isLoading: isPermissionLoading } = usePermission('raw_material_planning');
 
@@ -64,29 +66,7 @@ export default function RawMaterialPlanning() {
         fetchDefaultProducts();
     }, []);
 
-    if (isPermissionLoading) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="animate-pulse flex flex-col items-center">
-                    <div className="w-16 h-16 bg-slate-200 rounded-full mb-4"></div>
-                    <div className="h-6 w-32 bg-slate-200 rounded mb-2"></div>
-                    <div className="h-4 w-48 bg-slate-200 rounded"></div>
-                </div>
-            </div>
-        );
-    }
 
-    if (!canRead) {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh]">
-                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-500 mb-4">
-                    <Trash2 size={32} />
-                </div>
-                <h3 className="text-xl font-bold text-slate-800 mb-2">Access Denied</h3>
-                <p className="text-slate-500">You do not have permission to view raw material planning.</p>
-            </div>
-        );
-    }
 
     const loadProducts = async (input) => {
         if (!input) return defaultProducts;
@@ -154,6 +134,16 @@ export default function RawMaterialPlanning() {
             setIsLoading(false);
         }
     };
+
+    useKeyboardShortcuts({
+        onAdd: addProductRow,
+        onRefresh: () => handleCalculate(),
+        customShortcuts: [
+            { key: 'e', altKey: true, action: () => handleExport('excel') },
+            { key: 'p', altKey: true, action: () => handleExport('pdf') },
+            { key: 'k', ctrlKey: true, action: () => document.getElementById('rmp-product-0')?.focus() }
+        ]
+    });
 
     // Filters re-run the calculation straight away (no need to press Calculate again)
     const handleReservedChange = (e) => {
@@ -283,6 +273,30 @@ export default function RawMaterialPlanning() {
         }
     ];
 
+    if (isPermissionLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="animate-pulse flex flex-col items-center">
+                    <div className="w-16 h-16 bg-slate-200 rounded-full mb-4"></div>
+                    <div className="h-6 w-32 bg-slate-200 rounded mb-2"></div>
+                    <div className="h-4 w-48 bg-slate-200 rounded"></div>
+                </div>
+            </div>
+        );
+    }
+
+    if (!canRead) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh]">
+                <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center text-red-500 mb-4">
+                    <Trash2 size={32} />
+                </div>
+                <h3 className="text-xl font-bold text-slate-800 mb-2">Access Denied</h3>
+                <p className="text-slate-500">You do not have permission to view raw material planning.</p>
+            </div>
+        );
+    }
+
     return (
         <>
             <Head>
@@ -307,7 +321,7 @@ export default function RawMaterialPlanning() {
                     <div className="flex flex-col gap-2">
                         {selectedProducts.map((row, index) => (
                             <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                <div className="flex-1 z-[60]">
+                                <div className="flex-1 z-[60] w-full">
                                     <AsyncSelectInput
                                         id={`rmp-product-${index}`}
                                         value={row.product}
@@ -318,33 +332,35 @@ export default function RawMaterialPlanning() {
                                         hidePlaceholder={true}
                                     />
                                 </div>
-                                <div className="w-full sm:w-[150px]">
-                                    <Input
-                                        id={`rmp-qty-${index}`}
-                                        type="number"
-                                        placeholder="Quantity (e.g. 1)"
-                                        min="1"
-                                        value={row.quantity}
-                                        onChange={(e) => updateProductRow(index, 'quantity', e.target.value)}
-                                    />
+                                <div className="flex items-center gap-2 w-full sm:w-auto">
+                                    <div className="flex-1 sm:w-[150px]">
+                                        <Input
+                                            id={`rmp-qty-${index}`}
+                                            type="number"
+                                            placeholder="Quantity (e.g. 1)"
+                                            min="1"
+                                            value={row.quantity}
+                                            onChange={(e) => updateProductRow(index, 'quantity', e.target.value)}
+                                        />
+                                    </div>
+                                    {selectedProducts.length > 1 && (
+                                        <button 
+                                            onClick={() => removeProductRow(index)}
+                                            className="w-[44px] h-[44px] flex items-center justify-center text-danger-main bg-danger-main/5 hover:bg-danger-main/15 rounded-[0.67rem] transition-colors shrink-0"
+                                        >
+                                            <Trash2 size={18} />
+                                        </button>
+                                    )}
                                 </div>
-                                {selectedProducts.length > 1 && (
-                                    <button 
-                                        onClick={() => removeProductRow(index)}
-                                        className="w-10 h-10 flex items-center justify-center text-danger-main hover:bg-danger-main/10 rounded-md transition-colors shrink-0"
-                                    >
-                                        <Trash2 size={18} />
-                                    </button>
-                                )}
                             </div>
                         ))}
                     </div>
 
-                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-grey-border pt-3">
+                    <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between border-t border-grey-border pt-3">
                         <div className="flex flex-wrap items-center gap-4">
                             <button 
                                 onClick={addProductRow}
-                                className="text-sm font-semibold text-primary hover:text-primary-dark flex items-center gap-1 transition-colors"
+                                className="text-sm font-semibold text-primary hover:text-primary-dark flex items-center gap-1 transition-colors shrink-0"
                             >
                                 <Plus size={16} /> Add Product
                             </button>
@@ -354,7 +370,7 @@ export default function RawMaterialPlanning() {
                                     type="select"
                                     value={isReserved.toString()}
                                     onChange={handleReservedChange}
-                                    className="shrink-0 w-full sm:w-56"
+                                    className="flex-1 sm:flex-none sm:w-56"
                                     hidePlaceholder={true}
                                     options={[
                                         { value: 'true', label: 'Consider Reserved Stock' },
@@ -365,7 +381,7 @@ export default function RawMaterialPlanning() {
                                     type="select"
                                     value={originFilter}
                                     onChange={handleOriginChange}
-                                    className="shrink-0 w-full sm:w-32"
+                                    className="flex-1 sm:flex-none sm:w-32"
                                     hidePlaceholder={true}
                                     options={[
                                         { value: 'ALL', label: 'All Origins' },
@@ -376,11 +392,11 @@ export default function RawMaterialPlanning() {
                             </div>
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
+                        <div className="grid grid-cols-2 xl:flex xl:flex-row items-center gap-2 w-full xl:w-auto shrink-0">
                             <Button
                                 id="rmp-export-excel"
                                 variant="secondary"
-                                className="flex-1 sm:flex-none"
+                                className="w-full xl:w-auto whitespace-nowrap"
                                 onClick={() => handleExport('excel')}
                                 icon={FileSpreadsheet}
                                 text={isExporting === 'excel' ? 'Exporting...' : 'Export Excel'}
@@ -389,7 +405,7 @@ export default function RawMaterialPlanning() {
                             <Button
                                 id="rmp-export-pdf"
                                 variant="secondary"
-                                className="flex-1 sm:flex-none"
+                                className="w-full xl:w-auto whitespace-nowrap"
                                 onClick={() => handleExport('pdf')}
                                 icon={FileText}
                                 text={isExporting === 'pdf' ? 'Exporting...' : 'Export PDF'}
@@ -398,7 +414,7 @@ export default function RawMaterialPlanning() {
                             <Button
                                 id="rmp-calculate"
                                 variant="primary"
-                                className="flex-1 sm:flex-none"
+                                className="col-span-2 w-full xl:w-auto whitespace-nowrap"
                                 onClick={() => handleCalculate()}
                                 icon={Calculator}
                                 text="Calculate"
@@ -406,6 +422,19 @@ export default function RawMaterialPlanning() {
                                 isLoading={isLoading}
                             />
                         </div>
+                    </div>
+                    <div className="hidden lg:block border-t border-grey-border pt-3">
+                        <KeyboardShortcutBar 
+                            onAdd={addProductRow}
+                            addLabel="Add Product"
+                            onRefresh={() => handleCalculate()}
+                            hideSearch={true}
+                            customActions={[
+                                { label: 'Focus Product', keyCombo: ['Ctrl', 'K'], onClick: () => document.getElementById('rmp-product-0')?.focus() },
+                                { label: 'Export Excel', keyCombo: ['Alt', 'E'], onClick: () => handleExport('excel') },
+                                { label: 'Export PDF', keyCombo: ['Alt', 'P'], onClick: () => handleExport('pdf') }
+                            ]}
+                        />
                     </div>
                 </div>
 
