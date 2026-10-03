@@ -1,4 +1,5 @@
 import prisma from '@/lib/prisma';
+import { deleteFile } from '@/lib/upload';
 
 export const createProduct = async (data, userId = null) => {
     try {
@@ -312,7 +313,9 @@ export const updateProduct = async (id, data, userId = null) => {
             if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
             if (data.unitId !== undefined) updateData.unitId = data.unitId;
             if (data.isActive !== undefined) updateData.isActive = data.isActive;
-            if (data.image !== undefined) updateData.image = data.image;
+            if (data.image !== undefined) {
+                updateData.image = data.image;
+            }
             if (data.origin !== undefined) updateData.origin = data.origin;
             if (userId || data.updatedBy) updateData.updatedBy = userId || data.updatedBy;
 
@@ -336,7 +339,7 @@ export const updateProduct = async (id, data, userId = null) => {
                 };
             }
 
-            return await tx.product.update({
+            const updatedProduct = await tx.product.update({
                 where: { id },
                 data: updateData,
                 include: {
@@ -344,6 +347,13 @@ export const updateProduct = async (id, data, userId = null) => {
                     colours: true
                 }
             });
+
+            if (data.image !== undefined && existing.image && existing.image !== data.image) {
+                // Background deletion abstracted away from the specific provider
+                deleteFile(existing.image);
+            }
+
+            return updatedProduct;
         });
 
         return { success: true, data: result };
@@ -390,9 +400,14 @@ export const deleteProduct = async (id, deletedBy = null) => {
             data: {
                 is_deleted: true,
                 deletedAt: new Date(),
-                deletedBy: deletedBy
+                deletedBy: deletedBy,
+                image: null
             }
         });
+
+        if (product.image) {
+            deleteFile(product.image);
+        }
 
         return { success: true, data: deletedProduct };
     } catch (error) {
