@@ -16,6 +16,7 @@ export function Layout({ children }) {
     { path: '/dashboard', module: 'dashboard' },
     { path: '/customers', module: 'customers' },
     { path: '/inventory/customisation', module: 'customisation' },
+    { path: '/inventory/raw-material-planning', module: 'raw_material_planning' },
     { path: '/orders', module: 'orders' },
     { path: '/production/job-work', module: 'job_work' },
     { path: '/production/bom-calculation', module: 'bom_calculation' },

@@ -19,6 +19,7 @@ export default function Home() {
       'customers': '/customers',
       'orders': '/orders',
       'customisation': '/inventory/customisation',
+      'raw_material_planning': '/inventory/raw-material-planning',
       'job_work': '/production/job-work',
       'bom_calculation': '/production/bom-calculation',
       'bom': '/bom',
