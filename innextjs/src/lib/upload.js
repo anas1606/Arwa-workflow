@@ -1,6 +1,6 @@
 import multer from 'multer';
 import { CloudinaryStorage } from 'multer-storage-cloudinary';
-import cloudinary from './cloudinary';
+import cloudinary, { deleteImageFromCloudinary } from './cloudinary';
 
 const storage = new CloudinaryStorage({
   cloudinary: cloudinary,
@@ -34,4 +34,15 @@ export const runMiddleware = (req, res, fn) => {
       return resolve(result);
     });
   });
+};
+
+export const deleteFile = async (fileUrl) => {
+  if (!fileUrl) return;
+  // This abstracts away the storage provider. 
+  // If you ever switch from Cloudinary to AWS S3, you only need to change this function!
+  try {
+    await deleteImageFromCloudinary(fileUrl);
+  } catch (error) {
+    console.error('Failed to delete file:', error);
+  }
 };
