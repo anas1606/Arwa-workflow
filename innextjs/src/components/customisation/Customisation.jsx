@@ -585,12 +585,25 @@ export default function Customisation() {
         label: 'Product',
         render: (row) => (
           <div className="flex items-center gap-2.5">
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-2xs font-bold text-primary-dark">{modelInitials(row.code)}</span>
+            {row.image ? (
+              <img src={row.image} alt={row.name} className="h-9 w-9 shrink-0 rounded-md object-cover" />
+            ) : (
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary/10 font-mono text-2xs font-bold text-primary-dark">
+                {modelInitials(row.code)}
+              </span>
+            )}
             <div className="min-w-0 max-w-[200px]">
               <p className="font-semibold text-grey-text-strong truncate" title={row.name}>{row.name}</p>
               <p className="font-mono text-2xs text-grey-muted truncate">{row.code} · {row.category}</p>
             </div>
           </div>
+        ),
+      },
+      {
+        key: 'origin',
+        label: 'Origin',
+        render: (row) => (
+          <span className="text-sm font-medium text-grey-text capitalize">{row.origin ? row.origin.toLowerCase() : 'India'}</span>
         ),
       },
       ...specFields.map((field) => ({
