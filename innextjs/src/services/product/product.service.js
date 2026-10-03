@@ -56,6 +56,8 @@ export const createProduct = async (data, userId = null) => {
                     categoryId: data.categoryId,
                     unitId: data.unitId || null,
                     isActive: data.isActive !== undefined ? data.isActive : undefined,
+                    image: data.image || null,
+                    origin: data.origin || 'INDIA',
                     createdBy: userId || data.createdBy || null,
                     bodyDesigns: data.bodyDesigns && data.bodyDesigns.length > 0 ? {
                         create: data.bodyDesigns.map(design => ({
@@ -147,6 +149,8 @@ export const getAllProducts = async (page = 1, limit = 10, search = '', statusFi
             stockQuantity: true,
             lowStockThreshold: true,
             isActive: true,
+            image: true,
+            origin: true,
             categoryId: true,
             unitId: true,
             createdAt: true,
@@ -308,6 +312,8 @@ export const updateProduct = async (id, data, userId = null) => {
             if (data.categoryId !== undefined) updateData.categoryId = data.categoryId;
             if (data.unitId !== undefined) updateData.unitId = data.unitId;
             if (data.isActive !== undefined) updateData.isActive = data.isActive;
+            if (data.image !== undefined) updateData.image = data.image;
+            if (data.origin !== undefined) updateData.origin = data.origin;
             if (userId || data.updatedBy) updateData.updatedBy = userId || data.updatedBy;
 
             if (data.bodyDesigns !== undefined) {

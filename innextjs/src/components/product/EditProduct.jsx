@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/router';
-import { Package, Plus, Minus } from 'lucide-react';
+import { Package, Plus, Minus, Upload, Image as ImageIcon } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
@@ -16,6 +16,10 @@ export default function EditProduct({ id }) {
   const [lowStockThreshold, setLowStockThreshold] = useState('10');
   const [unit, setUnit] = useState(null);
   const [isActive, setIsActive] = useState(true);
+  const [origin, setOrigin] = useState('INDIA');
+  
+  const [imageFile, setImageFile] = useState(null);
+  const [imagePreview, setImagePreview] = useState('');
   
   const [bodyDesigns, setBodyDesigns] = useState([]);
   const [colours, setColours] = useState([]);
@@ -23,6 +27,25 @@ export default function EditProduct({ id }) {
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoadingProduct, setIsLoadingProduct] = useState(false);
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      const allowedMimeTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+      if (!allowedMimeTypes.includes(file.type)) {
+        toast.error("Invalid file type. Only JPG, PNG, and WEBP are allowed.");
+        e.target.value = '';
+        return;
+      }
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error("File size should not exceed 5MB");
+        e.target.value = '';
+        return;
+      }
+      setImageFile(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
 
   const titleId = useId();
 
@@ -41,6 +64,9 @@ export default function EditProduct({ id }) {
           setLowStockThreshold(fullProduct.lowStockThreshold !== undefined ? fullProduct.lowStockThreshold.toString() : '10');
           setUnit(fullProduct.unit ? { label: fullProduct.unit.shortName || fullProduct.unit.name, value: fullProduct.unitId } : null);
           setIsActive(fullProduct.isActive ?? true);
+          setOrigin(fullProduct.origin || 'INDIA');
+          if (fullProduct.image) setImagePreview(fullProduct.image);
+          
           setBodyDesigns(fullProduct.bodyDesigns && fullProduct.bodyDesigns.length > 0 ? fullProduct.bodyDesigns.map(d => ({ name: d.name, type: d.type })) : [{ name: '', type: 'STANDARD' }]);
           setColours(fullProduct.colours && fullProduct.colours.length > 0 ? fullProduct.colours.map(c => ({ name: c.name, type: c.type })) : [{ name: '', type: 'STANDARD' }]);
         } else {
@@ -79,19 +105,27 @@ export default function EditProduct({ id }) {
     setIsSubmitting(true);
     setError(null);
     try {
-      const payload = {
-        name: trimmedName,
-        code: code.trim(),
-        stockQuantity: parseFloat(stockQuantity) || 0,
-        lowStockThreshold: parseFloat(lowStockThreshold) || 0,
-        categoryId: category ? category.value : null,
-        unitId: unit ? unit.value : null,
-        isActive,
-        bodyDesigns: bodyDesigns.filter(d => d.name.trim() !== ''),
-        colours: colours.filter(c => c.name.trim() !== '')
-      };
+      const formData = new FormData();
+      formData.append('name', trimmedName);
+      if (code.trim()) formData.append('code', code.trim());
+      formData.append('stockQuantity', parseFloat(stockQuantity) || 0);
+      formData.append('lowStockThreshold', parseFloat(lowStockThreshold) || 0);
+      if (category?.value) formData.append('categoryId', category.value);
+      if (unit?.value) formData.append('unitId', unit.value);
+      formData.append('isActive', isActive);
+      formData.append('origin', origin);
       
-      const response = await updateProductApi(id, payload);
+      const filteredBodyDesigns = bodyDesigns.filter(d => d.name.trim() !== '');
+      if (filteredBodyDesigns.length > 0) formData.append('bodyDesigns', JSON.stringify(filteredBodyDesigns));
+      
+      const filteredColours = colours.filter(c => c.name.trim() !== '');
+      if (filteredColours.length > 0) formData.append('colours', JSON.stringify(filteredColours));
+
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const response = await updateProductApi(id, formData);
       if (response.data && response.data.success) {
         toast.success('Product updated successfully!');
         router.push('/inventory/product');
@@ -233,6 +267,45 @@ export default function EditProduct({ id }) {
                     return [];
                   }}
                 />
+                <Input
+                  type="select"
+                  id="edit-product-origin"
+                  label="Origin"
+                  value={origin}
+                  onChange={(e) => setOrigin(e.target.value)}
+                  options={[{label: 'India', value: 'INDIA'}, {label: 'Import', value: 'IMPORT'}]}
+                  hidePlaceholder
+                />
+                
+                <div className="col-span-1 flex flex-col gap-2">
+                  <label className="text-sm font-semibold text-grey-text-strong">Product Image</label>
+                  <div className="flex items-center gap-4">
+                    <div className="h-24 w-24 shrink-0 rounded-xl border-2 border-dashed border-grey-border flex items-center justify-center bg-grey-bg overflow-hidden relative">
+                      {imagePreview ? (
+                        <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                      ) : (
+                        <ImageIcon className="h-8 w-8 text-grey-muted" />
+                      )}
+                    </div>
+                    <div className="flex flex-col items-start gap-2">
+                      <input 
+                        type="file" 
+                        id="edit-image-upload" 
+                        accept=".jpg,.jpeg,.png,.webp" 
+                        onChange={handleImageChange} 
+                        className="hidden" 
+                      />
+                      <Button 
+                        variant="primary" 
+                        type="button" 
+                        icon={Upload} 
+                        text="Upload File" 
+                        onClick={() => document.getElementById('edit-image-upload').click()} 
+                      />
+                      <p className="text-xs text-grey-muted">Max size: 5MB. Supported: JPG, PNG, WEBP.</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
 

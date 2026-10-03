@@ -143,10 +143,10 @@ export const getProductByIdApi = async (id) => {
   return await fetchData(`product/${id}`);
 };
 
-export const createProductApi = (payload) => postData("product", payload);
+export const createProductApi = (payload) => userPostFormData("product", payload);
 
 export const updateProductApi = async (id, payload) => {
-  return await putData(`product/${id}`, { id, ...payload });
+  return await userPutFormData(`product/${id}`, payload);
 };
 
 export const deleteProductApi = (id, deletedBy = null) => deleteData(`product/${id}`, { data: { deletedBy } });

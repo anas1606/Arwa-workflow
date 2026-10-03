@@ -110,6 +110,8 @@ model Product {
   deletedAt         DateTime?           @map("deleted_at")
   deletedBy         String?             @map("deleted_by")
   lowStockThreshold Float               @default(10) @map("low_stock_threshold")
+  image             String?
+  origin            OriginType?         @default(INDIA)
   category          Category            @relation(fields: [categoryId], references: [id])
   unit              Unit?               @relation(fields: [unitId], references: [id])
   bodyDesigns       ProductBodyDesign[]
@@ -229,6 +231,12 @@ enum StandardType {
   STANDARD
   NON_STANDARD
 }
+
+enum OriginType {
+  INDIA
+  IMPORT
+}
+
 
 enum OrderType {
   STANDARD
@@ -384,6 +392,7 @@ model BomItem {
   bomId     String @map("bom_id")
   productId String @map("product_id")
   quantity  Float  @default(1)
+  isIdentifier Boolean @default(false) @map("is_identifier")
 
   createdAt DateTime @default(now()) @map("created_at")
   createdBy String?  @map("created_by")
