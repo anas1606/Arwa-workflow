@@ -10,6 +10,8 @@ export const createProductSchema = z.object({
   categoryId: z.string({ required_error: 'Category is required' }).min(1, 'Category cannot be empty'),
   unitId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   isActive: z.boolean().optional().default(true),
+  image: z.string().optional().nullable().or(z.literal('').transform(() => null)),
+  origin: z.enum(['INDIA', 'IMPORT']).optional().default('INDIA'),
   bodyDesigns: z.array(
     z.object({
       name: z.string().min(1, 'Body Design name is required'),
@@ -33,6 +35,8 @@ export const updateProductSchema = z.object({
   categoryId: z.string().min(1, 'Category cannot be empty').optional(),
   unitId: z.string().optional().nullable().or(z.literal('').transform(() => null)),
   isActive: z.boolean().optional(),
+  image: z.string().optional().nullable().or(z.literal('').transform(() => null)),
+  origin: z.enum(['INDIA', 'IMPORT']).optional(),
   bodyDesigns: z.array(
     z.object({
       name: z.string().min(1, 'Body Design name is required'),

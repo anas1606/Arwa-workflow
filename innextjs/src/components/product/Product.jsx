@@ -190,9 +190,13 @@ export default function Product() {
       label: 'Name',
       render: (row) => (
         <div className="flex items-center gap-2.5">
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary-dark">
-            {productInitials(row.name)}
-          </span>
+          {row.image ? (
+            <img src={row.image} alt={row.name} className="h-9 w-9 shrink-0 rounded-lg object-cover" />
+          ) : (
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-xs font-bold text-primary-dark">
+              {productInitials(row.name)}
+            </span>
+          )}
           <span className="font-semibold text-grey-text-strong truncate max-w-[180px] sm:max-w-[250px]" title={row.name}>{row.name}</span>
         </div>
       ),
@@ -209,6 +213,13 @@ export default function Product() {
         <span className="inline-flex items-center gap-1 text-sm text-grey-text max-w-[150px]" title={row.category?.name}>
           <span className="text-grey-text-strong font-medium text-[13px]">{row.category ? row.category.name : '-'}</span>
         </span>
+      ),
+    },
+    {
+      key: 'origin',
+      label: 'Origin',
+      render: (row) => (
+        <span className="text-sm font-medium text-grey-text capitalize">{row.origin ? row.origin.toLowerCase() : 'India'}</span>
       ),
     },
     {

@@ -4,6 +4,13 @@ import {
 } from '@/services/product/product.service';
 import { createProductSchema } from '@/services/product/product.validation';
 import { successResponse, errorResponse } from '@/lib/response';
+import { upload, runMiddleware } from '@/lib/upload';
+
+export const config = {
+    api: {
+        bodyParser: false,
+    },
+};
 
 export default async function handler(req, res) {
     const { method } = req;
@@ -18,7 +25,17 @@ export default async function handler(req, res) {
             }
 
             case 'POST': {
-                const validationResult = createProductSchema.safeParse(req.body);
+                await runMiddleware(req, res, upload.single('image'));
+                
+                const body = { ...req.body };
+                if (body.stockQuantity !== undefined) body.stockQuantity = parseFloat(body.stockQuantity);
+                if (body.lowStockThreshold !== undefined) body.lowStockThreshold = parseFloat(body.lowStockThreshold);
+                if (body.isActive !== undefined) body.isActive = body.isActive === 'true';
+                if (body.bodyDesigns) body.bodyDesigns = JSON.parse(body.bodyDesigns);
+                if (body.colours) body.colours = JSON.parse(body.colours);
+                if (req.file && req.file.path) body.image = req.file.path;
+
+                const validationResult = createProductSchema.safeParse(body);
                 if (!validationResult.success) {
                     const errors = validationResult.error?.errors || validationResult.error?.issues || [];
                     const errorMessage = errors.map(err => err.message).join(', ');
