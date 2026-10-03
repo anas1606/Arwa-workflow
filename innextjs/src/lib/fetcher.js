@@ -359,3 +359,5 @@ export const updateJobWorkApi = async (id, payload) => {
 };
 
 export const deleteJobWorkApi = (id, deletedBy = null) => deleteData(`job-work/${id}`, { data: { deletedBy } });
+
+export const calculateRawMaterialPlanningApi = (payload) => postData("raw-material-planning", payload);

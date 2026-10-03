@@ -30,6 +30,7 @@ async function main() {
     { module_key: 'godown', name: 'Godown' },
     { module_key: 'stock', name: 'Stock Management' },
     { module_key: 'settings', name: 'Settings' },
+    { module_key: 'raw_material_planning', name: 'Raw Material Planning' },
   ];
 
   for (const mod of modulesToCreate) {

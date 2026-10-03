@@ -1,10 +1,10 @@
 import useUser from './useUser';
 
 export const usePermission = (moduleKey) => {
-    const { user } = useUser();
+    const { user, isLoading } = useUser();
 
     if (!user) {
-        return { canRead: false, canCreate: false, canUpdate: false, canDelete: false };
+        return { canRead: false, canCreate: false, canUpdate: false, canDelete: false, isLoading };
     }
 
     if (
@@ -13,7 +13,7 @@ export const usePermission = (moduleKey) => {
         user.role === 'super_admin' || 
         user.role === 'SUPER_ADMIN'
     ) {
-        return { canRead: true, canCreate: true, canUpdate: true, canDelete: true };
+        return { canRead: true, canCreate: true, canUpdate: true, canDelete: true, isLoading };
     }
 
     if (user.security_role && Array.isArray(user.security_role.permissions)) {
@@ -27,9 +27,10 @@ export const usePermission = (moduleKey) => {
                 canCreate: !!perm.can_create,
                 canUpdate: !!perm.can_update,
                 canDelete: !!perm.can_delete,
+                isLoading
             };
         }
     }
 
-    return { canRead: false, canCreate: false, canUpdate: false, canDelete: false };
+    return { canRead: false, canCreate: false, canUpdate: false, canDelete: false, isLoading };
 };

@@ -21,6 +21,7 @@ const moduleMap = {
     '/api/v1/settings': 'settings',
     '/api/v1/job-work': 'job_work',
     '/api/v1/bom-calculation': 'bom_calculation',
+    '/api/v1/raw-material-planning': 'raw_material_planning',
 };
 
 export async function middleware(req) {
@@ -80,6 +81,11 @@ export async function middleware(req) {
                     case 'DELETE': requiredAction = 'can_delete'; break;
                     case 'GET':
                     default: requiredAction = 'can_read'; break;
+                }
+
+                // Custom Business Rule: raw_material_planning POST is just a calculation (Read operation)
+                if (req.method === 'POST' && matchedModuleKey === 'raw_material_planning') {
+                    requiredAction = 'can_read';
                 }
 
                 let hasPermission = modulePerms && modulePerms[requiredAction];
