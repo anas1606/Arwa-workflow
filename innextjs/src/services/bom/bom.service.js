@@ -40,6 +40,44 @@ export const createBom = async (data, userId = null) => {
                 if (productIds.includes(data.productId)) {
                     throw new Error('A product cannot be a component of its own BOM');
                 }
+
+                const identifierItems = data.items.filter(i => i.isIdentifier);
+                if (identifierItems.length === 0) {
+                    throw new Error('An identifier product is compulsory for every BOM.');
+                }
+                if (identifierItems.length > 1) {
+                    throw new Error('A BOM can only have a maximum of 1 identifier product.');
+                }
+
+                const identifierProductId = identifierItems[0].productId;
+                const normalProductIds = data.items.filter(i => !i.isIdentifier).map(i => i.productId);
+
+                const existingUsage = await tx.bomItem.findFirst({
+                    where: { productId: identifierProductId },
+                    include: { product: { select: { name: true } } }
+                });
+                if (existingUsage) {
+                    const prodName = existingUsage.product?.name || 'This product';
+                    if (existingUsage.isIdentifier) {
+                        throw new Error(`'${prodName}' is already an identifier in another BOM.`);
+                    } else {
+                        throw new Error(`'${prodName}' is already used in another BOM and cannot be set as an identifier.`);
+                    }
+                }
+
+                if (normalProductIds.length > 0) {
+                    const isUsedAsIdentifierElsewhere = await tx.bomItem.findFirst({
+                        where: { 
+                            productId: { in: normalProductIds },
+                            isIdentifier: true 
+                        },
+                        include: { product: { select: { name: true } } }
+                    });
+                    if (isUsedAsIdentifierElsewhere) {
+                        const prodName = isUsedAsIdentifierElsewhere.product?.name || 'One of the products';
+                        throw new Error(`'${prodName}' is reserved as an identifier in another BOM and cannot be used.`);
+                    }
+                }
             }
 
             return await tx.bom.create({
@@ -51,7 +89,8 @@ export const createBom = async (data, userId = null) => {
                     items: {
                         create: data.items.map(item => ({
                             productId: item.productId,
-                            quantity: item.quantity
+                            quantity: item.quantity,
+                            isIdentifier: item.isIdentifier || false
                         }))
                     }
                 },
@@ -163,6 +202,7 @@ export const getBomById = async (id) => {
                 items: {
                     select: {
                         quantity: true,
+                        isIdentifier: true,
                         product: {
                             select: { id: true, name: true, code: true }
                         }
@@ -244,11 +284,54 @@ export const updateBom = async (id, data, userId = null) => {
                     throw new Error('A product cannot be a component of its own BOM');
                 }
                 
+                const identifierItems = data.items.filter(i => i.isIdentifier);
+                if (identifierItems.length === 0) {
+                    throw new Error('An identifier product is compulsory for every BOM.');
+                }
+                if (identifierItems.length > 1) {
+                    throw new Error('A BOM can only have a maximum of 1 identifier product.');
+                }
+
+                const identifierProductId = identifierItems[0].productId;
+                const normalProductIds = data.items.filter(i => !i.isIdentifier).map(i => i.productId);
+
+                const existingUsage = await tx.bomItem.findFirst({
+                    where: { 
+                        productId: identifierProductId,
+                        bomId: { not: id }
+                    },
+                    include: { product: { select: { name: true } } }
+                });
+                if (existingUsage) {
+                    const prodName = existingUsage.product?.name || 'This product';
+                    if (existingUsage.isIdentifier) {
+                        throw new Error(`'${prodName}' is already an identifier in another BOM.`);
+                    } else {
+                        throw new Error(`'${prodName}' is already used in another BOM and cannot be set as an identifier.`);
+                    }
+                }
+
+                if (normalProductIds.length > 0) {
+                    const isUsedAsIdentifierElsewhere = await tx.bomItem.findFirst({
+                        where: { 
+                            productId: { in: normalProductIds },
+                            isIdentifier: true,
+                            bomId: { not: id }
+                        },
+                        include: { product: { select: { name: true } } }
+                    });
+                    if (isUsedAsIdentifierElsewhere) {
+                        const prodName = isUsedAsIdentifierElsewhere.product?.name || 'One of the products';
+                        throw new Error(`'${prodName}' is reserved as an identifier in another BOM and cannot be used.`);
+                    }
+                }
+                
                 updateData.items = {
                     deleteMany: {},
                     create: data.items.map(item => ({
                         productId: item.productId,
-                        quantity: item.quantity
+                        quantity: item.quantity,
+                        isIdentifier: item.isIdentifier || false
                     }))
                 };
             }

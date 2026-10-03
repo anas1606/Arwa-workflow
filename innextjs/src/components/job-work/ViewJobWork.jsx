@@ -55,9 +55,16 @@ export default function ViewJobWork() {
           <div className="w-6 mr-2 shrink-0 flex justify-center text-grey-muted">
             <div className="w-1.5 h-1.5 rounded-full bg-grey-border-strong" />
           </div>
-          <div className="flex flex-col min-w-0">
-            <span className="font-semibold text-sm truncate" title={row.product?.name}>{row.product?.name || '-'}</span>
-            {row.product?.code && <span className="text-[10px] text-grey-muted mt-0.5 uppercase tracking-wider">{row.product.code}</span>}
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="flex flex-col min-w-0">
+              <span className="font-semibold text-sm truncate" title={row.product?.name}>{row.product?.name || '-'}</span>
+              {row.product?.code && <span className="text-[10px] text-grey-muted mt-0.5 uppercase tracking-wider">{row.product.code}</span>}
+            </div>
+            {row.isIdentifier && (
+              <span className="text-[10px] uppercase tracking-wider font-bold bg-primary text-white px-2 py-0.5 rounded shrink-0">
+                Identifier
+              </span>
+            )}
           </div>
         </div>
       )

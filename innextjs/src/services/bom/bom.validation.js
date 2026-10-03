@@ -11,7 +11,8 @@ export const createBomSchema = z.object({
   items: z.array(
     z.object({
       productId: z.string().min(1, 'Product is required for BOM item'),
-      quantity: z.number().positive('Quantity must be greater than 0')
+      quantity: z.number().positive('Quantity must be greater than 0'),
+      isIdentifier: z.boolean().optional()
     })
   ).min(1, 'At least one item is required for the BOM')
 });
@@ -24,7 +25,8 @@ export const updateBomSchema = z.object({
   items: z.array(
     z.object({
       productId: z.string().min(1, 'Product is required for BOM item'),
-      quantity: z.number().positive('Quantity must be greater than 0')
+      quantity: z.number().positive('Quantity must be greater than 0'),
+      isIdentifier: z.boolean().optional()
     })
   ).min(1, 'At least one item is required for the BOM').optional()
 });

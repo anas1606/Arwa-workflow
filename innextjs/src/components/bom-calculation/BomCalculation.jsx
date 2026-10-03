@@ -330,9 +330,16 @@ export default function BomCalculation() {
                                 <div className="w-1.5 h-1.5 rounded-full bg-grey-border-strong" />
                             </div>
                         )}
-                        <div className="flex flex-col min-w-0">
-                            <span className="font-semibold text-sm truncate" title={item.productName}>{item.productName}</span>
-                            {item.productCode && <span className="text-[10px] text-grey-muted mt-0.5 uppercase tracking-wider">{item.productCode}</span>}
+                        <div className="flex items-center gap-2 min-w-0">
+                            <div className="flex flex-col min-w-0">
+                                <span className="font-semibold text-sm truncate" title={item.productName}>{item.productName}</span>
+                                {item.productCode && <span className="text-[10px] text-grey-muted mt-0.5 uppercase tracking-wider">{item.productCode}</span>}
+                            </div>
+                            {item.isIdentifier && (
+                              <span className="text-[10px] uppercase tracking-wider font-bold bg-primary text-white px-2 py-0.5 rounded shrink-0">
+                                Identifier
+                              </span>
+                            )}
                         </div>
                     </div>
                 );
