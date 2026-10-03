@@ -264,14 +264,7 @@ export default function RawMaterialPlanning() {
             align: 'center',
             render: (item) => {
                 return (
-                    <div className="flex flex-col items-center">
-                        <span className="font-semibold text-grey-text-strong">{item.availableQuantity}</span>
-                        {isReserved && (
-                            <span className="text-[10px] text-grey-muted" title={`Actual Stock: ${item.actualStock}`}>
-                                (Actual: {item.actualStock})
-                            </span>
-                        )}
-                    </div>
+                    <span className="font-semibold text-grey-text-strong">{item.availableQuantity}</span>
                 );
             }
         },

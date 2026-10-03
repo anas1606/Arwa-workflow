@@ -70,7 +70,7 @@ export const exportToExcel = async ({ fileNamePrefix = 'export', sheetName = 'Da
     });
 
     data.forEach((item, r) => {
-        const rowValues = columns.map(c => c.isImage ? '' : (typeof c.key === 'function' ? c.key(item) : item[c.key]));
+        const rowValues = columns.map((c, i) => c.isImage ? (imagesCache[r][i] ? '' : '-') : (typeof c.key === 'function' ? c.key(item) : item[c.key]));
         const added = sheet.addRow(rowValues);
         added.height = imageCols.length > 0 ? 40 : 20;
 
@@ -133,7 +133,7 @@ export const exportToPdf = async ({ fileNamePrefix = 'export', columns, data }) 
 
     const doc = new jsPDF({ orientation: 'portrait', unit: 'pt', format: 'a4' });
     const headers = columns.map(c => c.header);
-    const body = data.map(item => columns.map(c => c.isImage ? '' : (typeof c.key === 'function' ? c.key(item) : item[c.key])));
+    const body = data.map((item, r) => columns.map((c, i) => c.isImage ? (imagesCache[r][i] ? '' : '-') : (typeof c.key === 'function' ? c.key(item) : item[c.key])));
 
     const IMG_SIZE = 32;
     const columnStyles = {};
