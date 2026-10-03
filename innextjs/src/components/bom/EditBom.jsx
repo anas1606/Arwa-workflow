@@ -17,7 +17,7 @@ export default function EditBom() {
   const [items, setItems] = useState([]);
   const [defaultProducts, setDefaultProducts] = useState([]);
 
-  const [error, setError] = useState(null);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -44,10 +44,11 @@ export default function EditBom() {
         if (bomData.items && bomData.items.length > 0) {
           setItems(bomData.items.map(item => ({
             product: { label: item.product.name + (item.product.code ? ` (${item.product.code})` : ''), value: item.product.id },
-            quantity: item.quantity.toString()
+            quantity: item.quantity.toString(),
+            isIdentifier: item.isIdentifier || false
           })));
         } else {
-          setItems([{ product: null, quantity: '1' }, { product: null, quantity: '1' }]);
+          setItems([{ product: null, quantity: '1', isIdentifier: true }, { product: null, quantity: '1', isIdentifier: false }]);
         }
       } else {
         toast.error('Failed to fetch BOM details');
@@ -105,22 +106,27 @@ export default function EditBom() {
     e.preventDefault();
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setError('BOM name is required.');
+      toast.error('BOM name is required.');
       return;
     }
     if (!mainProduct) {
-      setError('Main product is required.');
+      toast.error('Main product is required.');
       return;
     }
 
     const validItems = items.filter(i => i.product && parseFloat(i.quantity) > 0);
     if (validItems.length === 0) {
-      setError('At least one valid component product and quantity > 0 is required.');
+      toast.error('At least one valid component product and quantity > 0 is required.');
+      return;
+    }
+    
+    const hasIdentifier = validItems.some(i => i.isIdentifier);
+    if (!hasIdentifier) {
+      toast.error('An identifier product is compulsory for every BOM.');
       return;
     }
 
     setIsSubmitting(true);
-    setError(null);
     try {
       const payload = {
         name: trimmedName,
@@ -128,7 +134,8 @@ export default function EditBom() {
         note: note.trim() || null,
         items: validItems.map(i => ({
           productId: i.product.value,
-          quantity: parseFloat(i.quantity)
+          quantity: parseFloat(i.quantity),
+          isIdentifier: i.isIdentifier || false
         }))
       };
 
@@ -138,11 +145,9 @@ export default function EditBom() {
         router.push('/bom');
       } else {
         const errorMsg = response.error?.message || response.data?.message || 'Failed to update BOM';
-        setError(errorMsg);
         toast.error(errorMsg);
       }
     } catch (err) {
-      setError('An error occurred while updating the BOM');
       toast.error('An error occurred while updating the BOM');
     } finally {
       setIsSubmitting(false);
@@ -364,13 +369,35 @@ export default function EditBom() {
                             step="any" 
                           />
                         </div>
+
+                        <div className="w-full flex items-center mt-2 mb-2">
+                          <input 
+                            type="checkbox" 
+                            id={`identifier-${index}`}
+                            checked={item.isIdentifier || false}
+                            onChange={(e) => {
+                              const checked = e.target.checked;
+                              const newItems = items.map((itm, idx) => {
+                                if (idx === index) {
+                                  return { ...itm, isIdentifier: checked };
+                                }
+                                return checked ? { ...itm, isIdentifier: false } : itm;
+                              });
+                              setItems(newItems);
+                            }}
+                            className="h-4 w-4 rounded border-grey-border text-primary focus:ring-primary/20"
+                          />
+                          <label htmlFor={`identifier-${index}`} className="ml-2 text-sm text-grey-text-strong font-medium cursor-pointer">
+                            Is Identifier Product
+                          </label>
+                        </div>
                       </div>
                     </div>
                   ))}
 
                   {/* Add New Card */}
                   <div 
-                    onClick={() => setItems([...items, { product: null, quantity: '1' }])}
+                    onClick={() => setItems([...items, { product: null, quantity: '1', isIdentifier: items.length === 0 }])}
                     className="flex flex-col items-center justify-center gap-3 min-h-[220px] rounded-xl border-2 border-dashed border-grey-border bg-transparent hover:bg-white hover:border-primary/40 hover:text-primary cursor-pointer transition-all duration-200 text-grey-icon"
                   >
                     <div className="p-3 rounded-full bg-grey-bg group-hover:bg-primary/10">
@@ -397,11 +424,7 @@ export default function EditBom() {
               </div>
             </div>
 
-            {error && (
-              <p className="text-sm font-medium text-danger-dark" role="alert">
-                {error}
-              </p>
-            )}
+
           </form>
         </div>
       </div>

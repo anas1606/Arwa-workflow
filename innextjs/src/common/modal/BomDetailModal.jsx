@@ -177,11 +177,18 @@ export default function BomDetailModal({ open, bomId, onClose }) {
                       </thead>
                       <tbody className="divide-y divide-grey-border">
                         {bom.items.map((item, idx) => (
-                          <tr key={idx} className="hover:bg-gray-50/50 transition-colors">
-                            <td className="px-5 py-3">
-                              <span className="font-medium text-grey-text-strong">{item.product?.name}</span>
-                              {item.product?.code && (
-                                <span className="text-xs text-grey-muted ml-1">({item.product.code})</span>
+                          <tr key={idx} className={`hover:bg-gray-50/50 transition-colors ${item.isIdentifier ? 'bg-primary/5' : ''}`}>
+                            <td className="px-5 py-3 flex items-center gap-2">
+                              <div>
+                                <span className="font-medium text-grey-text-strong">{item.product?.name}</span>
+                                {item.product?.code && (
+                                  <span className="text-xs text-grey-muted ml-1">({item.product.code})</span>
+                                )}
+                              </div>
+                              {item.isIdentifier && (
+                                <span className="text-[10px] uppercase tracking-wider font-bold bg-primary text-white px-2 py-0.5 rounded">
+                                  Identifier
+                                </span>
                               )}
                             </td>
                             <td className="px-5 py-3 font-semibold text-grey-text-strong text-center">

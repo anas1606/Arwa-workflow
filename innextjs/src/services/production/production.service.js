@@ -59,7 +59,8 @@ export const getBomRequirements = async (productId, targetQuantity, page = 1, li
                 requiredQuantity: requiredQty,
                 stockQuantity: item.product.stockQuantity,
                 hasSubBom: hasSubBom,
-                isShortage: requiredQty > item.product.stockQuantity
+                isShortage: requiredQty > item.product.stockQuantity,
+                isIdentifier: item.isIdentifier || false
             };
         });
 

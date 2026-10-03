@@ -296,7 +296,23 @@ export const getJobWorkById = async (id) => {
             return { success: false, message: 'Job Work not found' };
         }
 
-        return { success: true, data: jobWork };
+        let identifierProductId = null;
+        if (jobWork.bomId) {
+            const bomItem = await prisma.bomItem.findFirst({
+                where: { bomId: jobWork.bomId, isIdentifier: true },
+                select: { productId: true }
+            });
+            if (bomItem) {
+                identifierProductId = bomItem.productId;
+            }
+        }
+
+        const mappedItems = jobWork.items.map(item => ({
+            ...item,
+            isIdentifier: item.product.id === identifierProductId
+        }));
+
+        return { success: true, data: { ...jobWork, items: mappedItems } };
     } catch (error) {
         console.error('Error in getJobWorkById service:', error);
         return { success: false, message: 'Internal server error while fetching the Job Work' };
