@@ -120,11 +120,7 @@ export default function EditBom() {
       return;
     }
     
-    const hasIdentifier = validItems.some(i => i.isIdentifier);
-    if (!hasIdentifier) {
-      toast.error('An identifier product is compulsory for every BOM.');
-      return;
-    }
+
 
     setIsSubmitting(true);
     try {
