@@ -122,17 +122,27 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
             const items = childrenOf.get(id) || [];
 
             if (node) {
-                const available = Math.max(0, (node.product.stockQuantity || 0) - node.reservedQuantity);
-                const shortage = Math.max(0, node.requiredQuantity - available);
+                const actualStock = node.product.stockQuantity || 0;
+                const shortage = Math.max(0, node.requiredQuantity + node.reservedQuantity - actualStock);
                 if (shortage > 0 && items.length > 0) {
                     // The missing units are built from the sub-BOM, so this row itself is not shown
                     node.expanded = true;
+                    
+                    let subReservedParentQty = 0;
+                    if (isReserved) {
+                        const identifierItem = items.find(i => i.isIdentifier);
+                        if (identifierItem && identifierItem.quantity > 0) {
+                            const identifierStock = identifierItem.product.stockQuantity || 0;
+                            subReservedParentQty = Math.floor(identifierStock / identifierItem.quantity);
+                        }
+                    }
+
                     for (const item of items) {
                         addDemand({
                             product: item.product,
                             isIdentifier: !!item.isIdentifier,
                             requiredQuantity: shortage * item.quantity,
-                            reservedQuantity: isReserved ? node.reservedQuantity * item.quantity : 0
+                            reservedQuantity: subReservedParentQty * item.quantity
                         });
                     }
                 }
@@ -147,8 +157,7 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
 
         let result = [...state.values()].filter(m => !m.expanded).map(m => {
             const actualStock = m.product.stockQuantity || 0;
-            const availableQuantity = Math.max(0, actualStock - m.reservedQuantity);
-            const shortage = Math.max(0, m.requiredQuantity - availableQuantity);
+            const shortage = Math.max(0, m.requiredQuantity + m.reservedQuantity - actualStock);
             return {
                 productId: m.product.id,
                 productName: m.product.name,
@@ -159,7 +168,7 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
                 actualStock: round(actualStock),
                 requiredQuantity: round(m.requiredQuantity),
                 reservedQuantity: round(m.reservedQuantity),
-                availableQuantity: round(availableQuantity),
+                availableQuantity: round(actualStock),
                 needsToOrder: round(shortage)
             };
         });

@@ -250,17 +250,12 @@ export default function RawMaterialPlanning() {
         },
         {
             key: 'available',
-            label: 'IN STOCK',
+            label: 'Current STOCK',
             align: 'center',
             render: (item) => {
                 return (
                     <div className="flex flex-col items-center">
-                        <span className="font-semibold text-grey-text-strong">{item.availableQuantity}</span>
-                        {item.actualStock !== undefined && (
-                            <span className="text-xs text-grey-text-light font-medium" title="Physical Stock">
-                                Actual: {item.actualStock}
-                            </span>
-                        )}
+                        <span className="font-semibold text-grey-text-strong">{item.actualStock}</span>
                     </div>
                 );
             }
