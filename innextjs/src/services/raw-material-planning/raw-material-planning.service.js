@@ -167,7 +167,23 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
         if (origin && origin !== 'ALL') {
             result = result.filter(r => r.origin === origin);
         }
-        result.sort((a, b) => a.productName.localeCompare(b.productName));
+
+        const orderIndex = new Map();
+        let currentIdx = 0;
+        const q = rootEntries.map(e => e.product.id);
+        
+        while (q.length > 0) {
+            const id = q.shift();
+            if (orderIndex.has(id)) continue;
+            
+            orderIndex.set(id, currentIdx++);
+            const items = childrenOf.get(id) || [];
+            for (const item of items) {
+                q.push(item.productId);
+            }
+        }
+
+        result.sort((a, b) => (orderIndex.get(a.productId) ?? Infinity) - (orderIndex.get(b.productId) ?? Infinity));
 
         return { success: true, data: result };
     } catch (err) {
