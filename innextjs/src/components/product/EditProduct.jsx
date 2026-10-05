@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useId } from 'react';
 import { useRouter } from 'next/router';
-import { Package, Plus, Minus, Upload, Image as ImageIcon } from 'lucide-react';
+import { Package, Plus, Minus, Upload, Image as ImageIcon, Edit2, Trash2 } from 'lucide-react';
 import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
@@ -20,6 +20,7 @@ export default function EditProduct({ id }) {
   
   const [imageFile, setImageFile] = useState(null);
   const [imagePreview, setImagePreview] = useState('');
+  const [removeImage, setRemoveImage] = useState(false);
   
   const [bodyDesigns, setBodyDesigns] = useState([]);
   const [colours, setColours] = useState([]);
@@ -44,6 +45,7 @@ export default function EditProduct({ id }) {
       }
       setImageFile(file);
       setImagePreview(URL.createObjectURL(file));
+      setRemoveImage(false);
     }
   };
 
@@ -123,6 +125,8 @@ export default function EditProduct({ id }) {
 
       if (imageFile) {
         formData.append('image', imageFile);
+      } else if (removeImage) {
+        formData.append('removeImage', 'true');
       }
 
       const response = await updateProductApi(id, formData);
@@ -280,9 +284,34 @@ export default function EditProduct({ id }) {
                 <div className="col-span-1 flex flex-col gap-2">
                   <label className="text-sm font-semibold text-grey-text-strong">Product Image</label>
                   <div className="flex items-center gap-4">
-                    <div className="h-24 w-24 shrink-0 rounded-xl border-2 border-dashed border-grey-border flex items-center justify-center bg-grey-bg overflow-hidden relative">
+                    <div className="h-24 w-24 shrink-0 rounded-xl border-2 border-dashed border-grey-border flex items-center justify-center bg-grey-bg overflow-hidden relative group">
                       {imagePreview ? (
-                        <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                        <>
+                          <img src={imagePreview} alt="Preview" className="h-full w-full object-cover" />
+                          <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => document.getElementById('edit-image-upload').click()}
+                              className="p-1.5 bg-white/20 hover:bg-white/40 rounded-md transition-colors text-white"
+                              title="Edit Image"
+                            >
+                              <Edit2 className="w-4 h-4" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setImageFile(null);
+                                setImagePreview('');
+                                document.getElementById('edit-image-upload').value = '';
+                                setRemoveImage(true);
+                              }}
+                              className="p-1.5 bg-white/20 hover:bg-danger-main rounded-md transition-colors text-white"
+                              title="Remove Image"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </>
                       ) : (
                         <ImageIcon className="h-8 w-8 text-grey-muted" />
                       )}

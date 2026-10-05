@@ -37,7 +37,12 @@ export default async function handler(req, res) {
                 if (body.isActive !== undefined) body.isActive = body.isActive === 'true';
                 if (body.bodyDesigns) body.bodyDesigns = JSON.parse(body.bodyDesigns);
                 if (body.colours) body.colours = JSON.parse(body.colours);
-                if (req.file && req.file.path) body.image = req.file.path;
+                
+                if (req.file && req.file.path) {
+                    body.image = req.file.path;
+                } else if (body.removeImage === 'true') {
+                    body.image = '';
+                }
 
                 const validationResult = updateProductSchema.safeParse({ id, ...body });
                 if (!validationResult.success) {
