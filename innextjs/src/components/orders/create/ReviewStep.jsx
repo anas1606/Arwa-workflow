@@ -100,7 +100,7 @@ export default function ReviewStep({
                   <div className="w-8 h-8 rounded-xl bg-primary-subtle text-primary-dark font-bold text-xs flex items-center justify-center">{(line.model.code || line.model.name || 'NA').substring(0, 2)}</div>
                   <div className="flex-1">
                     <p className="font-bold text-sm text-grey-text-strong">{line.model.name}</p>
-                    <p className="text-[11px] text-grey-icon font-mono">{line.model.code}</p>
+                    <p className="text-[11px] text-grey-icon font-mono">{line.model.code} · {line.model.unit ? (line.model.unit.shortName || line.model.unit.name) : 'No Unit'}</p>
                   </div>
                   <span className="text-xs font-bold text-grey-muted bg-grey-surface px-2 py-0.5 rounded">×{line.quantity}</span>
                 </div>

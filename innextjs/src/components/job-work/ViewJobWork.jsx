@@ -73,13 +73,13 @@ export default function ViewJobWork() {
       key: 'requiredQty',
       label: 'REQUIRED',
       align: 'center',
-      render: (row) => <span className="font-semibold text-grey-text-strong">{row.requiredQty}</span>
+      render: (row) => <span className="font-semibold text-grey-text-strong">{row.requiredQty} <span className="text-xs font-normal text-grey-muted">{row.product && row.product.unit ? (row.product.unit.shortName || row.product.unit.name) : ''}</span></span>
     },
     {
       key: 'allocatedQty',
       label: 'AVAILABLE STOCK',
       align: 'center',
-      render: (row) => <span className="font-semibold text-grey-text-strong">{row.allocatedQty}</span>
+      render: (row) => <span className="font-semibold text-grey-text-strong">{row.allocatedQty} <span className="text-xs font-normal text-grey-muted">{row.product && row.product.unit ? (row.product.unit.shortName || row.product.unit.name) : ''}</span></span>
     },
     {
       key: 'status',
@@ -89,7 +89,7 @@ export default function ViewJobWork() {
         const isShortage = row.allocatedQty < row.requiredQty;
         return isShortage ? (
           <span className="font-bold text-danger-main bg-danger-main/10 px-2 py-1 rounded text-xs whitespace-nowrap">
-            Shortage: {row.requiredQty - row.allocatedQty}
+            Shortage: {row.requiredQty - row.allocatedQty} <span className="font-medium text-[10px] ml-0.5">{row.product && row.product.unit ? (row.product.unit.shortName || row.product.unit.name) : ''}</span>
           </span>
         ) : (
           <span className="font-bold text-success-main bg-success-main/10 px-2 py-1 rounded text-xs whitespace-nowrap">
@@ -185,7 +185,10 @@ export default function ViewJobWork() {
             <span className="text-[11px] text-grey-muted font-bold uppercase tracking-widest flex items-center gap-1.5">
               <Layers size={14} /> Target Quantity
             </span>
-            <span className="text-[15px] font-extrabold text-grey-text-strong">{data.quantity}</span>
+            <span className="text-[15px] font-extrabold text-grey-text-strong">
+              {data.quantity}
+              {data.product && data.product.unit && <span className="font-medium text-[11px] text-grey-muted ml-1">{data.product.unit.shortName || data.product.unit.name}</span>}
+            </span>
           </div>
 
           <div className="card-panel border-none !p-5 flex flex-col gap-1 shadow-sm">

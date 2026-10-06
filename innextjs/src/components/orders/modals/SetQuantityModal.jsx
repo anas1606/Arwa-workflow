@@ -63,7 +63,7 @@ export default function SetQuantityModal({ isOpen, onClose, model, onAdd }) {
             </div>
             <div>
               <p className="font-bold text-sm text-grey-text-strong">{model.name}</p>
-              <p className="text-xs text-grey-muted font-medium font-mono">{model.code}</p>
+              <p className="text-xs text-grey-muted font-medium font-mono">{model.code} · {model.unit ? (model.unit.shortName || model.unit.name) : 'No Unit'}</p>
             </div>
           </div>
 
