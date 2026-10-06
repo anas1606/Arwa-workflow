@@ -295,81 +295,53 @@ export default function EditBom() {
                 </div>
               </div>
               
-              <div className="p-6 bg-grey-bg/20">
-                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+              <div className="p-6 bg-white">
+                <div className="flex flex-col gap-4">
                   {items.map((item, index) => (
                     <div 
                       key={index} 
-                      className="group relative flex flex-col gap-4 p-5 bg-white rounded-xl border border-grey-surface shadow-sm hover:shadow-md hover:border-primary/30 transition-all duration-200"
+                      className="flex flex-col sm:flex-row items-center gap-3 w-full"
                     >
-                      {/* Card Header */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="flex items-center justify-center w-6 h-6 rounded-md bg-grey-bg text-[11px] font-bold text-grey-muted group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                            {index + 1}
-                          </span>
-                          <span className="text-xs font-bold text-grey-text-strong uppercase tracking-wider">
-                            Component
-                          </span>
-                        </div>
-                        
-                        {items.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const newItems = [...items];
-                              newItems.splice(index, 1);
-                              setItems(newItems);
-                            }}
-                            className="p-1.5 text-grey-icon hover:text-danger-main hover:bg-danger-main/10 rounded-md transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                            title="Remove material"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
+                      {/* Material */}
+                      <div className="flex-1 w-full">
+                        <AsyncSelectInput
+                          value={item.product}
+                          onChange={(opt) => {
+                            const newItems = [...items];
+                            newItems[index].product = opt || null;
+                            setItems(newItems);
+                          }}
+                          placeholder="Select material..."
+                          defaultOptions={defaultProducts.filter(p => !items.filter(i => i.product && i.product.value !== item.product?.value).map(i => i.product.value).includes(p.value))}
+                          loadOptions={(input) => loadComponentProducts(input, item.product?.value)}
+                          hidePlaceholder={true}
+                        />
                       </div>
 
-                      {/* Card Body */}
-                      <div className="flex flex-col gap-3">
-                        <div className="w-full">
-                          <div className="text-[10px] font-bold text-grey-muted uppercase tracking-wider mb-1.5">Material / Product</div>
-                          <AsyncSelectInput
-                            value={item.product}
-                            onChange={(opt) => {
-                              const newItems = [...items];
-                              newItems[index].product = opt || null;
-                              setItems(newItems);
-                            }}
-                            placeholder="Search material..."
-                            defaultOptions={defaultProducts.filter(p => !items.filter(i => i.product && i.product.value !== item.product?.value).map(i => i.product.value).includes(p.value))}
-                            loadOptions={(input) => loadComponentProducts(input, item.product?.value)}
-                            hidePlaceholder={true}
-                          />
-                        </div>
+                      {/* Quantity */}
+                      <div className="w-full sm:w-[150px] shrink-0">
+                        <Input 
+                          type="number" 
+                          placeholder="Qty" 
+                          value={item.quantity} 
+                          onChange={(e) => {
+                            const newItems = [...items];
+                            let val = e.target.value;
+                            if (val !== '' && parseFloat(val) <= 0) val = '1';
+                            newItems[index].quantity = val;
+                            setItems(newItems);
+                          }} 
+                          hidePlaceholder 
+                          min="1" 
+                          step="any" 
+                        />
+                      </div>
 
-                        <div className="w-full">
-                          <div className="text-[10px] font-bold text-grey-muted uppercase tracking-wider mb-1.5">Quantity</div>
-                          <Input 
-                            type="number" 
-                            placeholder="1" 
-                            value={item.quantity} 
-                            onChange={(e) => {
-                              const newItems = [...items];
-                              let val = e.target.value;
-                              if (val !== '' && parseFloat(val) <= 0) val = '1';
-                              newItems[index].quantity = val;
-                              setItems(newItems);
-                            }} 
-                            hidePlaceholder 
-                            min="1" 
-                            step="any" 
-                          />
-                        </div>
-
-                        <div className="w-full flex items-center mt-2 mb-2">
+                      {/* Identifier */}
+                      <div className="flex items-center justify-center w-full sm:w-auto shrink-0 bg-white px-4 h-11 rounded-md border border-grey-border">
+                        <label className="flex items-center gap-2 cursor-pointer">
                           <input 
                             type="checkbox" 
-                            id={`identifier-${index}`}
                             checked={item.isIdentifier || false}
                             onChange={(e) => {
                               const checked = e.target.checked;
@@ -383,24 +355,43 @@ export default function EditBom() {
                             }}
                             className="h-4 w-4 rounded border-grey-border text-primary focus:ring-primary/20"
                           />
-                          <label htmlFor={`identifier-${index}`} className="ml-2 text-sm text-grey-text-strong font-medium cursor-pointer">
-                            Is Identifier Product
-                          </label>
-                        </div>
+                          <span className="text-sm font-medium text-grey-text-strong whitespace-nowrap">Identifier</span>
+                        </label>
+                      </div>
+
+                      {/* Actions */}
+                      <div className="flex items-center gap-2 shrink-0 self-end sm:self-auto mt-2 sm:mt-0">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            if (items.length > 1) {
+                              const newItems = [...items];
+                              newItems.splice(index, 1);
+                              setItems(newItems);
+                            }
+                          }}
+                          className={`flex items-center justify-center w-11 h-11 rounded-md transition-all ${items.length > 1 ? 'bg-[#DC2626] text-white hover:bg-[#B91C1C] shadow-sm' : 'bg-grey-border/50 text-grey-icon cursor-not-allowed'}`}
+                          disabled={items.length <= 1}
+                        >
+                          <svg width="14" height="2" viewBox="0 0 14 2" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M1 1H13" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                          </svg>
+                        </button>
+                        
+                        {index === items.length - 1 ? (
+                          <button
+                            type="button"
+                            onClick={() => setItems([...items, { product: null, quantity: '1', isIdentifier: items.length === 0 }])}
+                            className="flex items-center justify-center w-11 h-11 rounded-md bg-[#2563EB] text-white hover:bg-[#1D4ED8] transition-all shadow-sm"
+                          >
+                            <Plus className="w-5 h-5" />
+                          </button>
+                        ) : (
+                          <div className="w-11 h-11 hidden sm:block"></div>
+                        )}
                       </div>
                     </div>
                   ))}
-
-                  {/* Add New Card */}
-                  <div 
-                    onClick={() => setItems([...items, { product: null, quantity: '1', isIdentifier: items.length === 0 }])}
-                    className="flex flex-col items-center justify-center gap-3 min-h-[220px] rounded-xl border-2 border-dashed border-grey-border bg-transparent hover:bg-white hover:border-primary/40 hover:text-primary cursor-pointer transition-all duration-200 text-grey-icon"
-                  >
-                    <div className="p-3 rounded-full bg-grey-bg group-hover:bg-primary/10">
-                      <Plus className="w-6 h-6" />
-                    </div>
-                    <span className="text-sm font-bold tracking-wide">Add Component</span>
-                  </div>
                 </div>
               </div>
             </div>
