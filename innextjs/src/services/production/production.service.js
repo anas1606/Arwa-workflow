@@ -28,6 +28,9 @@ export const getBomRequirements = async (productId, targetQuantity, page = 1, li
                                 name: true,
                                 code: true,
                                 stockQuantity: true,
+                                unit: {
+                                    select: { id: true, name: true, shortName: true }
+                                },
                                 _count: {
                                     select: {
                                         bomsAsMainProduct: {
@@ -55,6 +58,7 @@ export const getBomRequirements = async (productId, targetQuantity, page = 1, li
                 productId: item.product.id,
                 productName: item.product.name,
                 productCode: item.product.code,
+                unit: item.product.unit ? (item.product.unit.shortName || item.product.unit.name) : 'No Unit',
                 baseQuantity: item.quantity,
                 requiredQuantity: requiredQty,
                 stockQuantity: item.product.stockQuantity,

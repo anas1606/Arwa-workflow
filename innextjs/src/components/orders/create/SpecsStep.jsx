@@ -273,9 +273,12 @@ export default function SpecsStep({
                   <div className={clsx('w-8 h-8 rounded-lg text-xs font-bold flex items-center justify-center shrink-0 text-white shadow-sm', isLineActive ? 'bg-primary' : 'bg-grey-icon/60')}>
                     {(line.model.code || line.model.name || 'NA').substring(0, 2)}
                   </div>
-                  <div className="flex-1 min-w-0">
+                  <div className="flex-1 min-w-0 flex flex-col justify-center">
                     <p className={clsx('text-[13px] font-bold truncate', isLineActive ? 'text-primary-dark' : 'text-grey-text-strong')}>{line.model.name}</p>
-                    <p className="text-[10px] text-grey-icon truncate mt-0.5 font-mono">{line.model.code} · Qty {line.quantity}</p>
+                    <div className="flex items-center justify-between mt-0.5 text-[10px] text-grey-icon font-mono">
+                      <span className="truncate pr-2">{line.model.code} · {line.model.unit ? (line.model.unit.shortName || line.model.unit.name) : 'No Unit'}</span>
+                      <span className="shrink-0 font-bold whitespace-nowrap text-grey-text-strong">Qty {line.quantity}</span>
+                    </div>
                   </div>
                   {isLineComplete(line) && <Check size={14} className="text-[#34d399] shrink-0" />}
                 </div>
@@ -330,7 +333,7 @@ export default function SpecsStep({
                 </div>
                 <div className="flex-1">
                   <h3 className="font-bold text-[17px] text-grey-text-strong tracking-tight">{activeLine?.model?.name}</h3>
-                  <p className="text-[11px] font-medium text-grey-muted mt-0.5">{activeLine?.model?.code} · Model {activeSpecLineIndex + 1} of {lines.length} · {isLineComplete(activeLine) ? 'Complete' : 'Incomplete'}</p>
+                  <p className="text-[11px] font-medium text-grey-muted mt-0.5">{activeLine?.model?.code} · {activeLine?.model?.unit ? (activeLine?.model?.unit.shortName || activeLine?.model?.unit.name) : 'No Unit'} · Model {activeSpecLineIndex + 1} of {lines.length} · {isLineComplete(activeLine) ? 'Complete' : 'Incomplete'}</p>
                 </div>
                 <div className="flex flex-col items-center gap-1">
                   <span className="text-[9px] font-bold text-grey-icon uppercase tracking-wide">QTY</span>

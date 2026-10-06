@@ -40,7 +40,7 @@ export default function BomCalculation() {
             try {
                 const res = await getProductsApi(1, 20, '', 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
                 if (res.data?.success) {
-                    setDefaultProducts(res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id })));
+                    setDefaultProducts(res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` · ${p.unit.shortName || p.unit.name}` : ''), value: p.id })));
                 }
             } catch (e) {
                 console.error(e);
@@ -53,7 +53,7 @@ export default function BomCalculation() {
         if (!input) return defaultProducts;
         const res = await getProductsApi(1, 20, input, 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
         if (res.data?.success) {
-            return res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id }));
+            return res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` · ${p.unit.shortName || p.unit.name}` : ''), value: p.id }));
         }
         return [];
     };
@@ -351,7 +351,7 @@ export default function BomCalculation() {
             align: 'center',
             render: (item) => {
                 if (item.isSkeleton || item.isLoadMore) return null;
-                return <span className="font-semibold text-grey-text-strong">{item.requiredQuantity}</span>;
+                return <span className="font-semibold text-grey-text-strong">{item.requiredQuantity} <span className="text-xs font-normal text-grey-muted">{item.unit !== 'No Unit' ? item.unit : ''}</span></span>;
             }
         },
         {
@@ -360,7 +360,7 @@ export default function BomCalculation() {
             align: 'center',
             render: (item) => {
                 if (item.isSkeleton || item.isLoadMore) return null;
-                return <span className="font-semibold text-grey-text-strong">{item.stockQuantity}</span>;
+                return <span className="font-semibold text-grey-text-strong">{item.stockQuantity} <span className="text-xs font-normal text-grey-muted">{item.unit !== 'No Unit' ? item.unit : ''}</span></span>;
             }
         },
         {
@@ -371,7 +371,7 @@ export default function BomCalculation() {
                 if (item.isSkeleton || item.isLoadMore) return null;
                 return item.isShortage ? (
                     <span className="font-bold text-danger-main bg-danger-main/10 px-2 py-1 rounded text-xs whitespace-nowrap">
-                        Shortage: {item.requiredQuantity - item.stockQuantity}
+                        Shortage: {item.requiredQuantity - item.stockQuantity} <span className="font-medium text-[10px] ml-0.5">{item.unit !== 'No Unit' ? item.unit : ''}</span>
                     </span>
                 ) : (
                     <span className="font-bold text-success-main bg-success-main/10 px-2 py-1 rounded text-xs whitespace-nowrap">

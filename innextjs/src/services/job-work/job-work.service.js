@@ -214,7 +214,7 @@ export const getAllJobWorks = async (page = 1, limit = 10, search = '') => {
                     createdBy: true,
                     updatedBy: true,
                     product: {
-                        select: { name: true, code: true }
+                        select: { name: true, code: true, unit: { select: { id: true, name: true, shortName: true } } }
                     }
                 },
                 orderBy: {
@@ -277,7 +277,7 @@ export const getJobWorkById = async (id) => {
                 bomId: true,
                 createdAt: true,
                 product: {
-                    select: { id: true, name: true, code: true }
+                    select: { id: true, name: true, code: true, unit: { select: { id: true, name: true, shortName: true } } }
                 },
                 items: {
                     select: {
@@ -285,7 +285,7 @@ export const getJobWorkById = async (id) => {
                         requiredQty: true,
                         allocatedQty: true,
                         product: {
-                            select: { id: true, name: true, code: true }
+                            select: { id: true, name: true, code: true, unit: { select: { id: true, name: true, shortName: true } } }
                         }
                     }
                 }

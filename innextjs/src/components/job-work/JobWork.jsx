@@ -136,7 +136,9 @@ export default function JobWork() {
       label: 'Main Product',
       render: (row) => (
         <span className="inline-flex items-center gap-1 text-sm text-grey-text max-w-[250px]" title={row.product?.name}>
-          <span className="text-grey-text-strong font-medium text-[13px]">{row.product ? row.product.name : '-'}</span>
+          <span className="text-grey-text-strong font-medium text-[13px]">
+            {row.product ? row.product.name : '-'}
+          </span>
         </span>
       ),
     },
@@ -148,6 +150,7 @@ export default function JobWork() {
         <div className="text-center">
           <span className="font-semibold text-sm text-grey-text-strong">
             {row.quantity || 0}
+            {row.product && row.product.unit && <span className="font-normal text-xs text-grey-muted ml-1">{row.product.unit.shortName || row.product.unit.name}</span>}
           </span>
         </div>
       ),

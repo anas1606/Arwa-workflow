@@ -20,7 +20,7 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
                             items: {
                                 include: {
                                     product: {
-                                        select: { id: true, name: true, code: true, image: true, stockQuantity: true, origin: true }
+                                        select: { id: true, name: true, code: true, image: true, stockQuantity: true, origin: true, unit: { select: { id: true, name: true, shortName: true } } }
                                     }
                                 }
                             }
@@ -41,7 +41,7 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
             if (!bom || bom.items.length === 0) {
                 const product = await prisma.product.findUnique({
                     where: { id: p.productId, is_deleted: false },
-                    select: { id: true, name: true, code: true, image: true, stockQuantity: true, origin: true }
+                    select: { id: true, name: true, code: true, image: true, stockQuantity: true, origin: true, unit: { select: { id: true, name: true, shortName: true } } }
                 });
                 if (product) {
                     rootEntries.push({
@@ -162,6 +162,7 @@ export const calculateRawMaterialPlanning = async ({ products, isReserved, origi
                 productId: m.product.id,
                 productName: m.product.name,
                 productCode: m.product.code,
+                unit: m.product.unit ? (m.product.unit.shortName || m.product.unit.name) : 'No Unit',
                 image: m.product.image || null,
                 origin: m.product.origin,
                 isIdentifier: m.isIdentifier,

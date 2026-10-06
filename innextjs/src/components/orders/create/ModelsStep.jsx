@@ -255,7 +255,7 @@ export default function ModelsStep({
                       <div className="flex-1 min-w-0">
                         <p className={clsx('font-bold text-sm', isSelected ? 'text-primary-text' : 'text-grey-text-strong')}>{m.name}</p>
                         <p className="text-xs text-grey-muted mt-0.5 flex items-center gap-1">
-                          <span className="text-[10px]">⊙</span> {m.code} · {m.category?.name || 'No Category'}
+                          <span className="text-[10px]">⊙</span> {m.code} · {m.category?.name || 'No Category'} · {m.unit ? (m.unit.shortName || m.unit.name) : 'No Unit'}
                         </p>
                       </div>
                       {isSelected && <Check size={16} className="text-primary shrink-0" />}
@@ -310,7 +310,7 @@ export default function ModelsStep({
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="font-bold text-xs text-grey-text-strong truncate">{line.model.name}</p>
-                      <p className="text-[10px] text-grey-icon font-mono">{line.model.code}</p>
+                      <p className="text-[10px] text-grey-icon font-mono">{line.model.code} · {line.model.unit ? (line.model.unit.shortName || line.model.unit.name) : 'No Unit'}</p>
                     </div>
                     <button
                       onClick={() => handleRemoveLine(idx)}
