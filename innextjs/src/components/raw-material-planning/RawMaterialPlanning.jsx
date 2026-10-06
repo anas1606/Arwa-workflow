@@ -55,7 +55,7 @@ export default function RawMaterialPlanning() {
                 const res = await getProductsApi(1, 20, '', 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
                 if (res.data?.success) {
                     setDefaultProducts(res.data.data.data.map(p => ({ 
-                        label: p.name + (p.code ? ` (${p.code})` : ''), 
+                        label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` · ${p.unit.shortName || p.unit.name}` : ''), 
                         value: p.id 
                     })));
                 }
@@ -73,7 +73,7 @@ export default function RawMaterialPlanning() {
         const res = await getProductsApi(1, 20, input, 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
         if (res.data?.success) {
             return res.data.data.data.map(p => ({ 
-                label: p.name + (p.code ? ` (${p.code})` : ''), 
+                label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` · ${p.unit.shortName || p.unit.name}` : ''), 
                 value: p.id 
             }));
         }
@@ -237,7 +237,7 @@ export default function RawMaterialPlanning() {
             label: 'REQUIRED',
             align: 'center',
             render: (item) => (
-                <span className="font-semibold text-grey-text-strong">{item.requiredQuantity}</span>
+                <span className="font-semibold text-grey-text-strong">{item.requiredQuantity} <span className="text-xs font-normal text-grey-muted">{item.unit !== 'No Unit' ? item.unit : ''}</span></span>
             )
         },
         {
@@ -245,7 +245,7 @@ export default function RawMaterialPlanning() {
             label: 'RESERVED',
             align: 'center',
             render: (item) => (
-                <span className="font-semibold text-primary">{item.reservedQuantity}</span>
+                <span className="font-semibold text-primary">{item.reservedQuantity} <span className="text-xs font-normal text-grey-muted/70">{item.unit !== 'No Unit' ? item.unit : ''}</span></span>
             )
         },
         {
@@ -255,7 +255,7 @@ export default function RawMaterialPlanning() {
             render: (item) => {
                 return (
                     <div className="flex flex-col items-center">
-                        <span className="font-semibold text-grey-text-strong">{item.actualStock}</span>
+                        <span className="font-semibold text-grey-text-strong">{item.actualStock} <span className="text-xs font-normal text-grey-muted">{item.unit !== 'No Unit' ? item.unit : ''}</span></span>
                     </div>
                 );
             }
@@ -268,7 +268,7 @@ export default function RawMaterialPlanning() {
                 const needsOrder = item.needsToOrder > 0;
                 return (
                     <span className={`font-bold px-2 py-1 rounded-md text-xs ${needsOrder ? 'bg-danger-main/10 text-danger-main' : 'bg-success-main/10 text-success-main'}`}>
-                        {item.needsToOrder}
+                        {item.needsToOrder} <span className="font-normal opacity-80">{item.unit !== 'No Unit' ? item.unit : ''}</span>
                     </span>
                 );
             }

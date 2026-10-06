@@ -594,7 +594,10 @@ export default function Customisation() {
             )}
             <div className="min-w-0 max-w-[200px]">
               <p className="font-semibold text-grey-text-strong truncate" title={row.name}>{row.name}</p>
-              <p className="font-mono text-2xs text-grey-muted truncate">{row.code} · {row.category}</p>
+              <p className="font-mono text-2xs text-grey-muted truncate">
+                {row.code} · {row.category}
+                {row.unit && (row.unit.shortName || row.unit.name) ? ` · ${row.unit.shortName || row.unit.name}` : ''}
+              </p>
             </div>
           </div>
         ),

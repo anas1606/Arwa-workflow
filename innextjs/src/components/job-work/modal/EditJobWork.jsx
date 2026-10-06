@@ -21,6 +21,7 @@ export default function EditJobWorkModal({ isOpen, onClose, onEdit, jobWork }) {
   const [quantity, setQuantity] = useState('');
   const [status, setStatus] = useState('CREATED');
   const [productName, setProductName] = useState('');
+  const [productUnit, setProductUnit] = useState('');
   const [jobWorkNumber, setJobWorkNumber] = useState('');
   
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -50,6 +51,7 @@ export default function EditJobWorkModal({ isOpen, onClose, onEdit, jobWork }) {
           if (res.data?.success) {
             const data = res.data.data;
             setProductName(data.product?.name || '');
+            setProductUnit(data.product?.unit ? (data.product.unit.shortName || data.product.unit.name) : '');
             setJobWorkNumber(data.jobWorkNumber || '');
             setQuantity(data.quantity || '');
             setStatus(data.status || 'CREATED');
@@ -72,6 +74,7 @@ export default function EditJobWorkModal({ isOpen, onClose, onEdit, jobWork }) {
     setQuantity('');
     setStatus('CREATED');
     setProductName('');
+    setProductUnit('');
     setJobWorkNumber('');
   };
 
@@ -180,7 +183,7 @@ export default function EditJobWorkModal({ isOpen, onClose, onEdit, jobWork }) {
             <form id="jobwork-edit-form" className="flex flex-col gap-4" onSubmit={submit}>
               <div>
                 <label className="block text-sm font-semibold text-grey-text-strong mb-1">Target Product</label>
-                <Input value={productName} disabled className="bg-grey-bg" />
+                <Input value={productName + (productUnit ? ` · ${productUnit}` : '')} disabled className="bg-grey-bg" />
               </div>
               
               <Input
