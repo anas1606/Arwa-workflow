@@ -142,6 +142,8 @@ export const getAllProducts = async (page = 1, limit = 10, search = '', statusFi
             name: true,
             code: true,
             stockQuantity: true,
+            unitId: true,
+            unit: { select: { id: true, name: true, shortName: true } },
             category: { select: { id: true, name: true } }
         } : {
             id: true,

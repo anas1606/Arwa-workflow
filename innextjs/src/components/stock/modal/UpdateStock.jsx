@@ -5,7 +5,7 @@ import Button from '@/common/buttons/Button';
 import Input from '@/common/input/Input';
 import AsyncSelectInput from '@/common/input/AsyncSelectInput';
 import { toast } from 'sonner';
-import { updateStockApi, getProductsApi } from '@/lib/fetcher';
+import { updateStockApi, getProductsApi, getUnitsApi } from '@/lib/fetcher';
 
 function getModalRoot() {
   if (typeof document === 'undefined') return null;
@@ -22,6 +22,7 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [action, setAction] = useState('increase');
   const [amount, setAmount] = useState('');
+  const [unit, setUnit] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const titleId = useId();
@@ -36,6 +37,7 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
       setSelectedProduct(null);
       setAction('increase');
       setAmount('');
+      setUnit(null);
     } else if (shouldRender) {
       setIsAnimatingOut(true);
       timer = setTimeout(() => {
@@ -51,6 +53,7 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
     setSelectedProduct(null);
     setAction('increase');
     setAmount('');
+    setUnit(null);
   };
 
   const handleClose = () => {
@@ -88,10 +91,11 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
       const response = await getProductsApi(1, 100, inputValue, 'ALL', 'ALL', 'ALL', 'ALL', true);
       if (response?.data?.success) {
         const prods = response.data.data.data || [];
-        return prods.map(p => ({ 
-          label: `${p.name} ${p.code ? `(${p.code})` : ''}`, 
+        return prods.map(p => ({
+          label: `${p.name} ${p.code ? `(${p.code})` : ''}`,
           value: p.id,
-          stock: p.stockQuantity 
+          stock: p.stockQuantity,
+          unit: p.unit
         }));
       }
       return [];
@@ -104,6 +108,7 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
     setSelectedProduct(option);
     setAction('increase');
     setAmount('');
+    setUnit(option?.unit ? { label: `${option.unit.name} ${option.unit.shortName ? `(${option.unit.shortName})` : ''}`, value: option.unit.id } : null);
   };
 
   const submit = async (e) => {
@@ -112,7 +117,7 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
       toast.error('Please select a product');
       return;
     }
-    
+
     const delta = parseFloat(amount);
     if (isNaN(delta) || delta <= 0) {
       toast.error('Please enter a valid amount greater than 0');
@@ -136,7 +141,8 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
     try {
       const payload = {
         productId: selectedProduct.value,
-        quantity: finalQuantity
+        quantity: finalQuantity,
+        unitId: unit?.value
       };
       const response = await updateStockApi(payload);
 
@@ -187,7 +193,7 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
           <form id="stock-update-form" className="flex flex-col gap-4" onSubmit={submit}>
-            
+
             <div className="flex flex-col gap-1">
               <AsyncSelectInput
                 id="product-select"
@@ -231,7 +237,25 @@ export default function UpdateStock({ isOpen, onClose, onUpdate }) {
                 onChange={(e) => setAmount(e.target.value)}
                 placeholder="e.g. 10"
                 disabled={!selectedProduct}
-                className="sm:w-2/3"
+                className="sm:w-1/3"
+              />
+
+              <AsyncSelectInput
+                id="product-unit"
+                label="Unit"
+                value={unit}
+                onChange={(opt) => setUnit(opt || null)}
+                placeholder="Select unit"
+                defaultOptions={true}
+                disabled={!selectedProduct}
+                className="sm:w-1/3"
+                loadOptions={async (input) => {
+                  const res = await getUnitsApi(1, 10, input, 'ACTIVE');
+                  if (res.data?.success) {
+                    return res.data.data.data.map(u => ({ label: `${u.name} ${u.shortName ? '(' + u.shortName + ')' : ''}`, value: u.id }));
+                  }
+                  return [];
+                }}
               />
             </div>
 
