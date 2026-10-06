@@ -15,14 +15,14 @@ export default async function handler(req, res) {
                 return errorResponse(res, 'Failed to fetch Stock data', result.message);
             }
             case 'PUT': {
-                const { productId, quantity } = req.body;
+                const { productId, quantity, unitId } = req.body;
                 
                 if (!productId || quantity === undefined || quantity === null) {
                     return errorResponse(res, 'Validation Error', 'Product ID and quantity are required', 400);
                 }
                 
                 const userId = req.headers['x-user-id'] || null;
-                const result = await updateStock(productId, quantity, userId);
+                const result = await updateStock(productId, quantity, unitId, userId);
                 
                 if (result.success) {
                     return successResponse(res, 'Stock updated successfully', result.data);

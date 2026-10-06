@@ -38,12 +38,12 @@ export default function EditBom() {
         setName(bomData.name);
         setNote(bomData.note || '');
         if (bomData.product) {
-          setMainProduct({ label: bomData.product.name + (bomData.product.code ? ` (${bomData.product.code})` : ''), value: bomData.product.id });
+          setMainProduct({ label: bomData.product.name + (bomData.product.code ? ` (${bomData.product.code})` : '') + (bomData.product.unit ? ` - ${bomData.product.unit.shortName || bomData.product.unit.name}` : ''), value: bomData.product.id });
         }
 
         if (bomData.items && bomData.items.length > 0) {
           setItems(bomData.items.map(item => ({
-            product: { label: item.product.name + (item.product.code ? ` (${item.product.code})` : ''), value: item.product.id },
+            product: { label: item.product.name + (item.product.code ? ` (${item.product.code})` : '') + (item.product.unit ? ` - ${item.product.unit.shortName || item.product.unit.name}` : ''), value: item.product.id },
             quantity: item.quantity.toString(),
             isIdentifier: item.isIdentifier || false
           })));
@@ -71,7 +71,7 @@ export default function EditBom() {
     const fetchDefaultProducts = async () => {
       const res = await getProductsApi(1, 10, '', 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
       if (res.data?.success) {
-        setDefaultProducts(res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id })));
+        setDefaultProducts(res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` - ${p.unit.shortName || p.unit.name}` : ''), value: p.id })));
       }
     };
     fetchDefaultProducts();
@@ -81,7 +81,7 @@ export default function EditBom() {
     if (!input) return defaultProducts;
     const res = await getProductsApi(1, 20, input, 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
     if (res.data?.success) {
-      return res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id }));
+      return res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` - ${p.unit.shortName || p.unit.name}` : ''), value: p.id }));
     }
     return [];
   };
@@ -97,7 +97,7 @@ export default function EditBom() {
     if (res.data?.success) {
       return res.data.data.data
         .filter(p => !selectedIds.includes(p.id))
-        .map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id }));
+        .map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` - ${p.unit.shortName || p.unit.name}` : ''), value: p.id }));
     }
     return [];
   };

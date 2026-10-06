@@ -158,7 +158,7 @@ export const getStockCategories = async (page = 1, limit = 10, search = '', pare
     }
 };
 
-export const updateStock = async (productId, quantity, userId = null) => {
+export const updateStock = async (productId, quantity, unitId = null, userId = null) => {
     try {
         const product = await prisma.product.findUnique({
             where: { id: productId, is_deleted: false }
@@ -168,12 +168,17 @@ export const updateStock = async (productId, quantity, userId = null) => {
             return { success: false, message: 'Product not found' };
         }
 
+        const dataToUpdate = {
+            stockQuantity: parseFloat(quantity),
+            updatedBy: userId
+        };
+        if (unitId !== undefined && unitId !== null) {
+            dataToUpdate.unitId = unitId;
+        }
+
         const updatedProduct = await prisma.product.update({
             where: { id: productId },
-            data: {
-                stockQuantity: parseFloat(quantity),
-                updatedBy: userId
-            }
+            data: dataToUpdate
         });
 
         return { success: true, data: updatedProduct, message: 'Stock updated successfully' };

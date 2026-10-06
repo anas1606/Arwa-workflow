@@ -29,7 +29,7 @@ export default function AddBom() {
     const fetchDefaultProducts = async () => {
       const res = await getProductsApi(1, 10, '', 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
       if (res.data?.success) {
-        setDefaultProducts(res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id })));
+        setDefaultProducts(res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` - ${p.unit.shortName || p.unit.name}` : ''), value: p.id })));
       }
     };
     fetchDefaultProducts();
@@ -39,7 +39,7 @@ export default function AddBom() {
     if (!input) return defaultProducts;
     const res = await getProductsApi(1, 20, input, 'ACTIVE', 'ALL', 'ALL', 'ALL', true);
     if (res.data?.success) {
-      return res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id }));
+      return res.data.data.data.map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` - Unit: ${p.unit.shortName || p.unit.name}` : ''), value: p.id }));
     }
     return [];
   };
@@ -55,7 +55,7 @@ export default function AddBom() {
     if (res.data?.success) {
       return res.data.data.data
         .filter(p => !selectedIds.includes(p.id))
-        .map(p => ({ label: p.name + (p.code ? ` (${p.code})` : ''), value: p.id }));
+        .map(p => ({ label: p.name + (p.code ? ` (${p.code})` : '') + (p.unit ? ` - Unit: ${p.unit.shortName || p.unit.name}` : ''), value: p.id }));
     }
     return [];
   };
