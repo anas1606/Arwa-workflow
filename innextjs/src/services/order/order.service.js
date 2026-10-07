@@ -231,7 +231,14 @@ export const getAllOrders = async (page = 1, limit = 10, search = '', filters = 
                             id: true,
                             quantity: true,
                             orderType: true,
-                            product: { select: { id: true, name: true, code: true } }
+                            product: { 
+                                select: { 
+                                    id: true, 
+                                    name: true, 
+                                    code: true,
+                                    unit: { select: { id: true, name: true, shortName: true } }
+                                } 
+                            }
                         }
                     }
                 }
@@ -336,6 +343,7 @@ export const getOrderById = async (id) => {
                                 name: true,
                                 code: true,
                                 stockQuantity: true,
+                                unit: { select: { id: true, name: true, shortName: true } }
                             }
                         },
                         bodyDesign: { select: { id: true, name: true } },

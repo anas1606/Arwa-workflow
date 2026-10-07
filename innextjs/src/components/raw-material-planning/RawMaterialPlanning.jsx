@@ -169,14 +169,14 @@ export default function RawMaterialPlanning() {
                 { header: 'Product Name', key: 'productName', width: 34, align: 'left' },
                 { header: 'Product Image', key: 'image', isImage: true, width: 16 },
                 { header: 'Product Code', key: (row) => row.productCode || '', width: 16 },
-                { header: 'Required', key: 'requiredQuantity', width: 12 },
-                { header: 'Reserved', key: 'reservedQuantity', width: 12 },
-                { header: 'In Stock', key: 'availableQuantity', width: 12 },
+                { header: 'Required', key: (row) => `${row.requiredQuantity}${row.unit && row.unit !== 'No Unit' ? ' ' + row.unit : ''}`, width: 12 },
+                { header: 'Reserved', key: (row) => `${row.reservedQuantity}${row.unit && row.unit !== 'No Unit' ? ' ' + row.unit : ''}`, width: 12 },
+                { header: 'In Stock', key: (row) => `${row.availableQuantity}${row.unit && row.unit !== 'No Unit' ? ' ' + row.unit : ''}`, width: 12 },
                 { 
                     header: 'Needs To Order', 
-                    key: 'needsToOrder', 
+                    key: (row) => `${row.needsToOrder}${row.unit && row.unit !== 'No Unit' ? ' ' + row.unit : ''}`, 
                     width: 16, 
-                    style: (val) => val > 0 
+                    style: (val, row) => row.needsToOrder > 0 
                         ? { fontColor: 'FFDC2626', pdfColor: [220, 38, 38], bold: true } 
                         : { pdfColor: [22, 163, 74] } 
                 }
@@ -319,7 +319,10 @@ export default function RawMaterialPlanning() {
                 </div>
 
                 {/* Toolbar */}
-                <div className="card-panel flex w-full flex-col gap-3 border-none !p-3 shadow-sm shrink-0">
+                <form 
+                    onSubmit={(e) => { e.preventDefault(); handleCalculate(); }}
+                    className="card-panel flex w-full flex-col gap-3 border-none !p-3 shadow-sm shrink-0"
+                >
                     <div className="flex flex-col gap-2">
                         {selectedProducts.map((row, index) => (
                             <div key={index} className="flex flex-col sm:flex-row sm:items-center gap-2">
@@ -347,6 +350,7 @@ export default function RawMaterialPlanning() {
                                     </div>
                                     {selectedProducts.length > 1 && (
                                         <button 
+                                            type="button"
                                             onClick={() => removeProductRow(index)}
                                             className="w-[44px] h-[44px] flex items-center justify-center text-danger-main bg-danger-main/5 hover:bg-danger-main/15 rounded-[0.67rem] transition-colors shrink-0"
                                         >
@@ -361,6 +365,7 @@ export default function RawMaterialPlanning() {
                     <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between border-t border-grey-border pt-3">
                         <div className="flex flex-wrap items-center gap-4">
                             <button 
+                                type="button"
                                 onClick={addProductRow}
                                 className="text-sm font-semibold text-primary hover:text-primary-dark flex items-center gap-1 transition-colors shrink-0"
                             >
@@ -415,6 +420,7 @@ export default function RawMaterialPlanning() {
                             />
                             <Button
                                 id="rmp-calculate"
+                                type="submit"
                                 variant="primary"
                                 className="col-span-2 w-full xl:w-auto whitespace-nowrap"
                                 onClick={() => handleCalculate()}
@@ -438,7 +444,7 @@ export default function RawMaterialPlanning() {
                             ]}
                         />
                     </div>
-                </div>
+                </form>
 
         {/* Table Area */}
         <div className="bg-white rounded-xl shadow-sm border border-grey-border overflow-hidden">

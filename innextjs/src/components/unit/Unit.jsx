@@ -202,6 +202,7 @@ export default function Unit() {
     {
       key: 'quantityUnit',
       label: 'QUANTITY UNIT',
+      align: 'center',
       render: (row) => (
         <span className="font-mono text-sm font-semibold tabular-nums text-grey-text-dark">
           {row.quantityUnit}

@@ -258,12 +258,18 @@ export default function OrdersView() {
     {
       key: 'qty',
       label: 'Qty',
-      align: 'right',
-      render: (row) => (
-        <span className="text-sm font-semibold tabular-nums text-grey-text-dark">
-          {(row.orderLines || []).reduce((sum, line) => sum + line.quantity, 0)}
-        </span>
-      ),
+      align: 'left',
+      render: (row) => {
+        const qty = (row.orderLines || []).reduce((sum, line) => sum + line.quantity, 0);
+        const allUnits = [...new Set((row.orderLines || []).map(line => line.product?.unit?.shortName || line.product?.unit?.name || line.unit).filter(Boolean))];
+        const unitDisplay = allUnits.length === 1 && allUnits[0] !== 'No Unit' ? ` ${allUnits[0]}` : '';
+
+        return (
+          <span className="text-sm font-semibold tabular-nums text-grey-text-dark whitespace-nowrap">
+            {qty}{unitDisplay}
+          </span>
+        );
+      },
     },
     {
       key: 'priority',

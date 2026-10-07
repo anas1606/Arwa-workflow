@@ -177,7 +177,13 @@ export default function OrderDetailsModal({
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
                   <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Hash size={14} /> Total Qty</p>
-                  <p className="text-sm font-bold text-grey-text-strong mt-1">{totalQty}</p>
+                  <p className="text-sm font-bold text-grey-text-strong mt-1 whitespace-nowrap">
+                    {totalQty}
+                    {(() => {
+                        const allUnits = [...new Set((displayOrder.orderLines || []).map(line => line.product?.unit?.shortName || line.product?.unit?.name).filter(Boolean))];
+                        return allUnits.length === 1 && allUnits[0] !== 'No Unit' ? ` ${allUnits[0]}` : '';
+                    })()}
+                  </p>
                 </div>
                 <div className="bg-white p-4 rounded-xl border border-grey-surface/60 shadow-sm flex flex-col gap-1">
                   <p className="text-xs font-bold text-grey-muted uppercase tracking-wide flex items-center gap-1.5"><Box size={14} /> Order Type</p>
@@ -203,7 +209,7 @@ export default function OrderDetailsModal({
                     <thead>
                       <tr className="bg-grey-bg/50 text-grey-icon text-xs font-bold border-b border-grey-surface">
                         <th className="py-2.5 px-4 font-semibold uppercase tracking-wider">Product</th>
-                        <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-right">Qty</th>
+                        <th className="py-2.5 px-4 font-semibold uppercase tracking-wider text-center">Qty</th>
                         <th className="py-2.5 px-4 font-semibold uppercase tracking-wider">Specs</th>
                       </tr>
                     </thead>
@@ -214,7 +220,10 @@ export default function OrderDetailsModal({
                             {line.product?.name || '-'}
                             <div className="text-xs text-grey-muted font-normal mt-0.5">{line.product?.code || ''}</div>
                           </td>
-                          <td className="py-3 px-4 text-right font-bold tabular-nums text-grey-text-dark align-top">{line.quantity}</td>
+                          <td className="py-3 px-4 text-center font-bold tabular-nums text-grey-text-dark align-top whitespace-nowrap">
+                            {line.quantity}
+                            {line.product?.unit?.shortName || line.product?.unit?.name ? (line.product.unit.shortName || line.product.unit.name) !== 'No Unit' ? ` ${line.product.unit.shortName || line.product.unit.name}` : '' : ''}
+                          </td>
                           <td className="py-3 px-4 align-top">
                             <div className="flex flex-col gap-2">
                               <div className="flex flex-wrap gap-2 text-xs">
@@ -294,7 +303,12 @@ export default function OrderDetailsModal({
                         </div>
                         <div className="text-right shrink-0">
                           <p className="text-[10px] font-bold text-grey-muted uppercase tracking-wider">Qty</p>
-                          <p className="font-bold text-lg tabular-nums text-primary leading-none mt-1">{line.quantity}</p>
+                          <p className="font-bold text-lg tabular-nums text-primary leading-none mt-1 whitespace-nowrap">
+                            {line.quantity}
+                            <span className="text-sm ml-1 opacity-80 font-medium">
+                                {line.product?.unit?.shortName || line.product?.unit?.name ? (line.product.unit.shortName || line.product.unit.name) !== 'No Unit' ? (line.product.unit.shortName || line.product.unit.name) : '' : ''}
+                            </span>
+                          </p>
                         </div>
                       </div>
                       <div className="flex flex-col gap-2">
