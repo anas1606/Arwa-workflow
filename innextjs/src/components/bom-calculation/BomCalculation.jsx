@@ -412,7 +412,10 @@ export default function BomCalculation() {
                 </div>
 
                 {/* Search & Filters */}
-                <div className="card-panel flex w-full flex-col gap-3 border-none !p-3 shadow-sm shrink-0">
+                <form 
+                    onSubmit={(e) => { e.preventDefault(); handleCheck(); }}
+                    className="card-panel flex w-full flex-col gap-3 border-none !p-3 shadow-sm shrink-0"
+                >
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                         <div className="flex-1 z-[60]">
                             <AsyncSelectInput
@@ -441,6 +444,7 @@ export default function BomCalculation() {
                             />
                         </div>
                         <Button
+                            type="submit"
                             variant="primary"
                             className="w-full sm:w-auto"
                             onClick={handleCheck}
@@ -457,7 +461,7 @@ export default function BomCalculation() {
                             selectedRowIndex={selectedRowIndex}
                         />
                     </div>
-                </div>
+                </form>
 
                 {/* Table Area */}
                 <CommonTable
