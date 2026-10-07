@@ -53,7 +53,9 @@ export const getStockCategories = async (page = 1, limit = 10, search = '', pare
                     code: true,
                     categoryId: true,
                     stockQuantity: true,
-                    unit: { select: { shortName: true } }
+                    unit: { select: { shortName: true } },
+                    updatedAt: true,
+                    updatedBy: true
                 }
             });
         } else if (parentId !== undefined && parentId !== null && parentId !== 'null') {
@@ -65,7 +67,9 @@ export const getStockCategories = async (page = 1, limit = 10, search = '', pare
                     code: true,
                     categoryId: true,
                     stockQuantity: true,
-                    unit: { select: { shortName: true } }
+                    unit: { select: { shortName: true } },
+                    updatedAt: true,
+                    updatedBy: true
                 }
             });
         }
@@ -135,11 +139,31 @@ export const getStockCategories = async (page = 1, limit = 10, search = '', pare
 
         const totalPages = Math.ceil(total / take);
 
+        const userIds = new Set();
+        nodeProducts.forEach(p => {
+            if (p.updatedBy) userIds.add(p.updatedBy);
+        });
+
+        let enrichedProducts = nodeProducts;
+        if (userIds.size > 0) {
+            const users = await prisma.user.findMany({
+                where: { id: { in: Array.from(userIds) } },
+                select: { id: true, username: true }
+            });
+            const userMap = {};
+            users.forEach(u => userMap[u.id] = u.username);
+            
+            enrichedProducts = nodeProducts.map(p => ({
+                ...p,
+                updatedByName: userMap[p.updatedBy] || null
+            }));
+        }
+
         return { 
             success: true, 
             data: {
                 data: mappedData,
-                products: nodeProducts,
+                products: enrichedProducts,
                 kpis: {
                     totalProducts: totalProductsCount,
                     totalStock: globalTotalStock

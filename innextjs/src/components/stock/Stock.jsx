@@ -379,7 +379,29 @@ export default function Stock() {
                         {row.totalStock || 0} {row.unit?.shortName ? <span className="text-xs text-grey-muted font-normal ml-1">{row.unit.shortName}</span> : ''}
                     </span>
                 );
-            },
+            }
+        },
+        {
+            key: 'updatedBy',
+            label: 'Updated By',
+            render: (row) => {
+                if (row.rowType === 'load-more' || row.rowType === 'skeleton' || row.rowType === 'category') return null;
+                
+                return (
+                    <div className="flex flex-col">
+                        {row.updatedByName ? (
+                            <>
+                                <span className="text-[15px] font-bold text-[#1a2332]">{row.updatedByName}</span>
+                                <span className="text-sm text-[#718096] mt-0.5">
+                                    {row.updatedAt ? new Date(row.updatedAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                                </span>
+                            </>
+                        ) : (
+                            <span className="text-sm font-semibold text-grey-muted">-</span>
+                        )}
+                    </div>
+                );
+            }
         }
     ];
 
