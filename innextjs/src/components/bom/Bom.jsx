@@ -10,7 +10,7 @@ import { usePermission } from '@/hooks/usePermission';
 import { KeyboardShortcutBar, useKeyboardShortcuts } from '@/common/KeyboardShortcut';
 import { useRouter } from 'next/router';
 import DeleteModal from '@/common/modal/DeleteModal';
-import BomDetailModal from '@/common/modal/BomDetailModal';
+import BomDetailModal from './modal/BomDetailModal';
 
 export default function Bom() {
   const router = useRouter();

@@ -196,14 +196,24 @@ export const getBomById = async (id) => {
                 name: true,
                 note: true,
                 product: {
-                    select: { id: true, name: true, code: true }
+                    select: { 
+                        id: true, 
+                        name: true, 
+                        code: true,
+                        unit: { select: { id: true, name: true, shortName: true } }
+                    }
                 },
                 items: {
                     select: {
                         quantity: true,
                         isIdentifier: true,
                         product: {
-                            select: { id: true, name: true, code: true }
+                            select: { 
+                                id: true, 
+                                name: true, 
+                                code: true,
+                                unit: { select: { id: true, name: true, shortName: true } }
+                            }
                         }
                     }
                 }

@@ -191,8 +191,13 @@ export default function BomDetailModal({ open, bomId, onClose }) {
                                 </span>
                               )}
                             </td>
-                            <td className="px-5 py-3 font-semibold text-grey-text-strong text-center">
-                              {item.quantity}
+                            <td className="px-5 py-3 text-center">
+                              <span className="font-bold text-grey-text-strong text-[15px]">{item.quantity}</span>
+                              {item.product?.unit && (
+                                <span className="text-xs font-medium text-slate-500 ml-1.5 uppercase tracking-wide">
+                                  {item.product.unit.shortName || item.product.unit.name}
+                                </span>
+                              )}
                             </td>
                           </tr>
                         ))}
